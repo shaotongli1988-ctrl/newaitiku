@@ -9,7 +9,26 @@ SUBSCRIPTION_STATUS_EXPIRED = "EXPIRED"
 REDEEM_STATUS_UNUSED = "UNUSED"
 ORDER_STATUS_CREATED = "CREATED"
 ORDER_STATUS_PAID = "PAID"
+QUICK_DIAGNOSIS_SESSION_EXT_KEY = "quickDiagnosisSession"
+QUICK_DIAGNOSIS_STATUS_STARTED = "STARTED"
+QUICK_DIAGNOSIS_STATUS_COMPLETED = "COMPLETED"
+STUDENT_PROFILE_STATE_BASE_KEYS = {
+    "id",
+    "studentUserId",
+    "examCategoryCode",
+    "jointExamGroupCode",
+    "points",
+    "title",
+    "unlockedTitles",
+    "checkInDates",
+    "aiQuota",
+    "examSession",
+    "createTime",
+    "updateTime",
+}
 CONVERSION_OVERVIEW_EVENT_KEYS = {
+    "QUICK_DIAGNOSIS_START": "quickDiagnosisStartCount",
+    "QUICK_DIAGNOSIS_COMPLETE": "quickDiagnosisCompleteCount",
     "REDEEM_SUBMIT": "redeemSubmitCount",
     "REDEEM_SUCCESS": "redeemSuccessCount",
     "MOCK_ORDER_CREATED": "mockOrderCreatedCount",
@@ -167,6 +186,317 @@ class StudentMonetizationServiceMixin:
             }
         )
         return updated
+
+    def _normalize_quick_diagnosis_answer(self, answer: object) -> str:
+        normalized = str(answer or "").strip().upper()
+        normalized = re.sub(r"\s+", "", normalized)
+        alnum_only = re.sub(r"[^A-Z0-9]", "", normalized)
+        if not alnum_only:
+            return normalized
+        if re.fullmatch(r"[A-Z]+", alnum_only):
+            deduplicated = "".join(dict.fromkeys(alnum_only))
+            return "".join(sorted(deduplicated))
+        return alnum_only
+
+    def _load_student_profile_state_ext_json(self, student_user_id: str) -> Tuple[Dict[str, object], Dict[str, object]]:
+        state = self.repository.get_student_profile_state(student_user_id) or {}
+        ext_json = state.get("extJson", {})
+        if not isinstance(ext_json, dict):
+            ext_json = {}
+        if not ext_json and isinstance(state, dict):
+            ext_json = {
+                key: value
+                for key, value in state.items()
+                if key not in STUDENT_PROFILE_STATE_BASE_KEYS
+            }
+        return state, ext_json
+
+    def _save_quick_diagnosis_session_state(
+        self,
+        student_user_id: str,
+        session_payload: Dict[str, object],
+        now_iso: str,
+    ) -> None:
+        state, ext_json = self._load_student_profile_state_ext_json(student_user_id)
+        next_ext_json = dict(ext_json)
+        next_ext_json[QUICK_DIAGNOSIS_SESSION_EXT_KEY] = session_payload
+        payload = {
+            **state,
+            "studentUserId": student_user_id,
+            "extJson": next_ext_json,
+            "updateTime": now_iso,
+        }
+        if not str(payload.get("createTime", "")).strip():
+            payload["createTime"] = now_iso
+        self.repository.upsert_student_profile_state(payload)
+
+    def _build_quick_diagnosis_recommendation(self, accuracy: float) -> Dict[str, str]:
+        if accuracy >= 0.8:
+            return {
+                "level": "HIGH",
+                "title": "基础较稳，建议直接进入提分强化",
+                "nextAction": "优先使用 AI 提分订阅，针对薄弱章节点做高频训练。",
+            }
+        if accuracy >= 0.5:
+            return {
+                "level": "MEDIUM",
+                "title": "有提升空间，建议先补关键知识点",
+                "nextAction": "先完成今日诊断建议，再使用订阅权益进行专项练习。",
+            }
+        return {
+            "level": "LOW",
+            "title": "基础待夯实，建议尽快开启系统训练",
+            "nextAction": "建议立即开通提分权益，按系统推荐路径完成首周任务。",
+        }
+
+    def start_student_quick_diagnosis(self, payload: Dict[str, object], actor: Actor) -> Dict[str, object]:
+        _, _, profile = self._load_student_profile_bundle(actor.user_id)
+        self._assert_student_profile_complete(profile)
+        now_dt = datetime.now(timezone.utc)
+        now_iso = self._to_iso_z(now_dt)
+
+        question_count = int(payload.get("questionCount", 5) or 5)
+        question_count = min(5, max(3, question_count))
+        subject_code = str(payload.get("subjectCode", "")).strip()
+        source_type = str(payload.get("sourceType", "ONBOARDING")).strip().upper() or "ONBOARDING"
+
+        filters = {
+            "knowledgeId": "",
+            "subjectId": "",
+            "chapter": "",
+            "type": "",
+            "difficulty": "",
+            "keyword": "",
+            "examCategoryCode": str(profile.get("examCategoryCode", "")).strip(),
+            "jointExamGroupCode": str(profile.get("jointExamGroupCode", "")).strip(),
+            "subjectCode": subject_code,
+        }
+        rows = self.repository.list_visible_published_questions(filters, actor.role, actor.user_id)
+        objective_rows = [
+            row
+            for row in rows
+            if str(row.get("type", "")).strip() in {"single_choice", "multiple_choice", "judge"}
+            and str(row.get("answer", "")).strip()
+        ]
+        if len(objective_rows) < question_count:
+            raise failed_dependency("当前可用于快诊的题目不足，请稍后重试。")
+
+        selected_question_ids: List[str] = []
+        seen_question_ids: set[str] = set()
+        for row in objective_rows:
+            question_id = str(row.get("id", "")).strip()
+            if not question_id or question_id in seen_question_ids:
+                continue
+            seen_question_ids.add(question_id)
+            selected_question_ids.append(question_id)
+            if len(selected_question_ids) >= question_count:
+                break
+        if len(selected_question_ids) < question_count:
+            raise failed_dependency("当前可用于快诊的题目不足，请稍后重试。")
+
+        session_id = f"quick-diag-{uuid.uuid4().hex[:12]}"
+        expires_at = self._to_iso_z(now_dt + timedelta(minutes=30))
+        session_payload: Dict[str, object] = {
+            "sessionId": session_id,
+            "status": QUICK_DIAGNOSIS_STATUS_STARTED,
+            "questionIds": selected_question_ids,
+            "questionCount": question_count,
+            "subjectCode": subject_code,
+            "sourceType": source_type,
+            "startedAt": now_iso,
+            "submittedAt": "",
+            "expiresAt": expires_at,
+            "answerCount": 0,
+            "correctCount": 0,
+            "accuracy": 0.0,
+            "elapsedSec": 0,
+            "result": {},
+        }
+        self._save_quick_diagnosis_session_state(actor.user_id, session_payload, now_iso)
+        self.repository.create_conversion_event_log(
+            {
+                "id": f"conversion-event-{uuid.uuid4().hex[:12]}",
+                "studentUserId": actor.user_id,
+                "eventType": "QUICK_DIAGNOSIS_START",
+                "eventTime": now_iso,
+                "eventDate": now_iso[:10],
+                "sessionId": session_id,
+                "channelCode": "DIAGNOSIS",
+                "extJson": {
+                    "questionCount": question_count,
+                    "subjectCode": subject_code,
+                    "sourceType": source_type,
+                },
+                "createTime": now_iso,
+                "updateTime": now_iso,
+            }
+        )
+        return {
+            "sessionId": session_id,
+            "status": QUICK_DIAGNOSIS_STATUS_STARTED,
+            "questionIds": selected_question_ids,
+            "questionCount": question_count,
+            "subjectCode": subject_code,
+            "startedAt": now_iso,
+            "expiresAt": expires_at,
+        }
+
+    def submit_student_quick_diagnosis(self, session_id: str, payload: Dict[str, object], actor: Actor) -> Dict[str, object]:
+        normalized_session_id = str(session_id or "").strip()
+        if not normalized_session_id:
+            raise validation_failed("sessionId 不能为空。")
+        now_iso = self._now_iso()
+        _, _, profile = self._load_student_profile_bundle(actor.user_id)
+        self._assert_student_profile_complete(profile)
+        _, ext_json = self._load_student_profile_state_ext_json(actor.user_id)
+        session_payload = ext_json.get(QUICK_DIAGNOSIS_SESSION_EXT_KEY, {})
+        if not isinstance(session_payload, dict):
+            session_payload = {}
+        if str(session_payload.get("sessionId", "")).strip() != normalized_session_id:
+            raise not_found("快诊会话不存在。")
+
+        session_status = str(session_payload.get("status", "")).strip().upper()
+        if session_status == QUICK_DIAGNOSIS_STATUS_COMPLETED:
+            result = session_payload.get("result", {})
+            if not isinstance(result, dict):
+                result = {}
+            return {
+                "idempotent": True,
+                "sessionId": normalized_session_id,
+                "status": QUICK_DIAGNOSIS_STATUS_COMPLETED,
+                "answeredCount": int(session_payload.get("answerCount", 0) or 0),
+                "correctCount": int(session_payload.get("correctCount", 0) or 0),
+                "accuracy": float(session_payload.get("accuracy", 0.0) or 0.0),
+                "elapsedSec": int(session_payload.get("elapsedSec", 0) or 0),
+                "submittedAt": str(session_payload.get("submittedAt", "")).strip(),
+                "result": result,
+            }
+
+        expires_at = str(session_payload.get("expiresAt", "")).strip()
+        expires_dt = self._parse_iso_datetime_or_none(expires_at)
+        if expires_dt and expires_dt <= datetime.now(timezone.utc):
+            raise validation_failed("快诊会话已过期，请重新开始。")
+
+        question_ids = [
+            str(item).strip()
+            for item in (session_payload.get("questionIds", []) if isinstance(session_payload.get("questionIds", []), list) else [])
+            if str(item).strip()
+        ]
+        if not question_ids:
+            raise validation_failed("快诊会话题目为空，请重新开始。")
+        question_rows = self.repository.list_questions_by_ids(question_ids)
+        question_map = {str(row.get("id", "")).strip(): row for row in question_rows if str(row.get("id", "")).strip()}
+
+        answer_rows = payload.get("answers", [])
+        if not isinstance(answer_rows, list) or not answer_rows:
+            raise validation_failed("answers 不能为空。")
+
+        merged_answers: Dict[str, Dict[str, object]] = {}
+        for row in answer_rows:
+            if not isinstance(row, dict):
+                continue
+            question_id = str(row.get("questionId", "")).strip()
+            if not question_id or question_id not in question_map:
+                continue
+            merged_answers[question_id] = {
+                "questionId": question_id,
+                "answer": str(row.get("answer", "")).strip(),
+                "elapsedSec": max(0, int(row.get("elapsedSec", 0) or 0)),
+            }
+        if not merged_answers:
+            raise validation_failed("提交答案与快诊题目不匹配。")
+
+        submitted_items: List[Dict[str, object]] = []
+        correct_count = 0
+        elapsed_sec = 0
+        for question_id in question_ids:
+            submitted = merged_answers.get(question_id)
+            if not isinstance(submitted, dict):
+                continue
+            question = question_map.get(question_id, {})
+            expected_answer = self._normalize_quick_diagnosis_answer(question.get("answer", ""))
+            actual_answer = self._normalize_quick_diagnosis_answer(submitted.get("answer", ""))
+            is_correct = bool(expected_answer and actual_answer and expected_answer == actual_answer)
+            if is_correct:
+                correct_count += 1
+            elapsed_sec += max(0, int(submitted.get("elapsedSec", 0) or 0))
+            submitted_items.append(
+                {
+                    "questionId": question_id,
+                    "isCorrect": is_correct,
+                    "elapsedSec": max(0, int(submitted.get("elapsedSec", 0) or 0)),
+                }
+            )
+        answered_count = len(submitted_items)
+        if answered_count <= 0:
+            raise validation_failed("请至少提交 1 道快诊题答案。")
+        accuracy = round((correct_count / answered_count), 4) if answered_count > 0 else 0.0
+        recommendation = self._build_quick_diagnosis_recommendation(accuracy)
+
+        completed_payload = {
+            **session_payload,
+            "status": QUICK_DIAGNOSIS_STATUS_COMPLETED,
+            "submittedAt": now_iso,
+            "answerCount": answered_count,
+            "correctCount": correct_count,
+            "accuracy": accuracy,
+            "elapsedSec": elapsed_sec,
+            "result": {
+                "recommendation": recommendation,
+                "submittedItems": submitted_items,
+            },
+        }
+        self._save_quick_diagnosis_session_state(actor.user_id, completed_payload, now_iso)
+
+        profile_state = self.repository.get_student_profile_state(actor.user_id) or {}
+        exam_session = profile_state.get("examSession", {})
+        if not isinstance(exam_session, dict):
+            exam_session = {}
+        self.repository.set_student_profile_exam_session(
+            actor.user_id,
+            {
+                "answeredCount": max(int(exam_session.get("answeredCount", 0) or 0), answered_count),
+                "elapsedSec": max(int(exam_session.get("elapsedSec", 0) or 0), elapsed_sec),
+                "updateTime": now_iso,
+            },
+            now_iso,
+        )
+        # Keep diagnosis session snapshot in profile extJson after exam session hot-state update.
+        self._save_quick_diagnosis_session_state(actor.user_id, completed_payload, now_iso)
+        source_type = str(payload.get("sourceType", "")).strip().upper() or str(session_payload.get("sourceType", "")).strip().upper()
+        self.repository.create_conversion_event_log(
+            {
+                "id": f"conversion-event-{uuid.uuid4().hex[:12]}",
+                "studentUserId": actor.user_id,
+                "eventType": "QUICK_DIAGNOSIS_COMPLETE",
+                "eventTime": now_iso,
+                "eventDate": now_iso[:10],
+                "sessionId": normalized_session_id,
+                "channelCode": "DIAGNOSIS",
+                "extJson": {
+                    "answeredCount": answered_count,
+                    "correctCount": correct_count,
+                    "accuracy": accuracy,
+                    "sourceType": source_type,
+                },
+                "createTime": now_iso,
+                "updateTime": now_iso,
+            }
+        )
+        return {
+            "idempotent": False,
+            "sessionId": normalized_session_id,
+            "status": QUICK_DIAGNOSIS_STATUS_COMPLETED,
+            "answeredCount": answered_count,
+            "correctCount": correct_count,
+            "accuracy": accuracy,
+            "elapsedSec": elapsed_sec,
+            "submittedAt": now_iso,
+            "result": {
+                "recommendation": recommendation,
+                "submittedItems": submitted_items,
+            },
+        }
 
     def list_student_subscription_plans(self, actor: Actor) -> List[Dict[str, object]]:
         _ = actor

@@ -76,6 +76,8 @@ from app.contracts import (
     QuestionUpdateRequest,
     StudentAiMarkingSubmitRequest,
     StudentAiTutorAskRequest,
+    StudentDiagnosisQuickStartRequest,
+    StudentDiagnosisQuickSubmitRequest,
     StudentSubscriptionMockOrderConfirmRequest,
     StudentSubscriptionMockOrderCreateRequest,
     StudentSubscriptionRedeemRequest,
@@ -2045,6 +2047,27 @@ def create_app(db_path: Union[Path, str] = DEFAULT_DB_PATH) -> FastAPI:
         require_student(actor)
         ensure_actor_ready(actor, svc)
         return success(svc.get_student_subscription_status(actor))
+
+    @app.post("/api/question-bank/student/diagnosis/quick/start", response_model=BaseResponse)
+    async def start_student_quick_diagnosis(
+        payload: StudentDiagnosisQuickStartRequest,
+        actor: Actor = Depends(get_actor),
+        svc: QuestionBankService = Depends(service),
+    ):
+        require_student(actor)
+        ensure_actor_ready(actor, svc)
+        return success(svc.start_student_quick_diagnosis(payload.model_dump(by_alias=True), actor))
+
+    @app.post("/api/question-bank/student/diagnosis/quick/{sessionId}/submit", response_model=BaseResponse)
+    async def submit_student_quick_diagnosis(
+        sessionId: str,
+        payload: StudentDiagnosisQuickSubmitRequest,
+        actor: Actor = Depends(get_actor),
+        svc: QuestionBankService = Depends(service),
+    ):
+        require_student(actor)
+        ensure_actor_ready(actor, svc)
+        return success(svc.submit_student_quick_diagnosis(sessionId, payload.model_dump(by_alias=True), actor))
 
     @app.post("/api/question-bank/student/subscription/redeem", response_model=BaseResponse)
     async def redeem_student_subscription(

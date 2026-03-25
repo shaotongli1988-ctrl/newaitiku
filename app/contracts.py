@@ -928,6 +928,29 @@ class StudentSubscriptionMockOrderConfirmRequest(BaseModel):
     paid_at: str = Field(default="", max_length=64)
 
 
+class StudentDiagnosisQuickStartRequest(BaseModel):
+    model_config = REQUEST_MODEL_CONFIG
+
+    question_count: int = Field(default=5, ge=3, le=5)
+    subject_code: str = Field(default="", max_length=64)
+    source_type: str = Field(default="ONBOARDING", max_length=64)
+
+
+class StudentDiagnosisQuickSubmitAnswerItem(BaseModel):
+    model_config = REQUEST_MODEL_CONFIG
+
+    question_id: str = Field(min_length=1, max_length=128)
+    answer: str = Field(min_length=1, max_length=200)
+    elapsed_sec: int = Field(default=0, ge=0, le=3600)
+
+
+class StudentDiagnosisQuickSubmitRequest(BaseModel):
+    model_config = REQUEST_MODEL_CONFIG
+
+    answers: list[StudentDiagnosisQuickSubmitAnswerItem] = Field(min_length=1, max_length=20)
+    source_type: str = Field(default="ONBOARDING", max_length=64)
+
+
 class LearningMethodPracticeStartRequest(BaseModel):
     model_config = REQUEST_MODEL_CONFIG
 

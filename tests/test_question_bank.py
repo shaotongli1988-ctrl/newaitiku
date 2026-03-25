@@ -7021,3 +7021,76 @@ def test_admin_conversion_overview_returns_expected_counters(tmp_path: Path):
     counters = {str(item.get("eventType", "")): int(item.get("eventCount", 0) or 0) for item in data["eventTypeCounters"]}
     assert counters.get("REDEEM_SUCCESS", 0) >= 1
     assert counters.get("MOCK_PAYMENT_SUCCESS", 0) >= 1
+
+
+def test_student_quick_diagnosis_start_submit_and_idempotent(tmp_path: Path):
+    client = make_client(tmp_path)
+
+    start_response = client.post(
+        "/api/question-bank/student/diagnosis/quick/start",
+        headers=student_headers(),
+        json={"questionCount": 3},
+    )
+    assert start_response.status_code == 200
+    start_data = start_response.json()["data"]
+    session_id = str(start_data["sessionId"])
+    question_ids = list(start_data["questionIds"])
+    assert session_id
+    assert len(question_ids) == 3
+
+    repo = client.app.state.service.repository
+    question_rows = {str(row["id"]): row for row in repo.list_questions_by_ids(question_ids)}
+    submit_payload = {
+        "answers": [
+            {
+                "questionId": question_id,
+                "answer": str(question_rows[question_id]["answer"]),
+                "elapsedSec": 12,
+            }
+            for question_id in question_ids
+        ],
+        "sourceType": "ONBOARDING",
+    }
+    submit_response = client.post(
+        f"/api/question-bank/student/diagnosis/quick/{session_id}/submit",
+        headers=student_headers(),
+        json=submit_payload,
+    )
+    assert submit_response.status_code == 200
+    submit_data = submit_response.json()["data"]
+    assert submit_data["idempotent"] is False
+    assert submit_data["status"] == "COMPLETED"
+    assert submit_data["answeredCount"] == 3
+    assert submit_data["correctCount"] == 3
+    assert submit_data["accuracy"] == 1.0
+
+    idempotent_response = client.post(
+        f"/api/question-bank/student/diagnosis/quick/{session_id}/submit",
+        headers=student_headers(),
+        json=submit_payload,
+    )
+    assert idempotent_response.status_code == 200
+    idempotent_data = idempotent_response.json()["data"]
+    assert idempotent_data["idempotent"] is True
+    assert idempotent_data["status"] == "COMPLETED"
+    assert idempotent_data["answeredCount"] == 3
+
+    admin_headers = super_admin_auth_headers(client)
+    overview_response = client.get(
+        "/api/question-bank/admin/conversion/overview?startDate=2000-01-01&endDate=2099-12-31",
+        headers=admin_headers,
+    )
+    assert overview_response.status_code == 200
+    summary = overview_response.json()["data"]["summary"]
+    assert summary["quickDiagnosisStartCount"] >= 1
+    assert summary["quickDiagnosisCompleteCount"] >= 1
+
+
+def test_teacher_cannot_access_student_quick_diagnosis_api(tmp_path: Path):
+    client = make_client(tmp_path)
+    start_response = client.post(
+        "/api/question-bank/student/diagnosis/quick/start",
+        headers=teacher_headers(),
+        json={"questionCount": 3},
+    )
+    assert start_response.status_code == 403
