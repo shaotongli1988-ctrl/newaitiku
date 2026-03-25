@@ -6875,3 +6875,149 @@ def test_student_subscription_mock_order_confirm_idempotent(tmp_path: Path):
     assert second_data["idempotent"] is True
     assert second_data["order"]["status"] == "PAID"
     assert str(second_data["subscription"]["endTime"]) == first_end_time
+
+
+def test_admin_can_create_redeem_code_batch(tmp_path: Path):
+    client = make_client(tmp_path)
+    admin_headers = super_admin_auth_headers(client)
+    response = client.post(
+        "/api/question-bank/admin/redeem-code/batches",
+        headers=admin_headers,
+        json={
+            "batchName": "春季拉新",
+            "totalCount": 3,
+            "planCode": "AI_SCORE_BOOST_30D",
+            "channelCode": "SPRING",
+            "expiresAt": "2099-12-31T00:00:00Z",
+            "codePrefix": "SPRING26",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    batch = payload["batch"]
+    codes = payload["codes"]
+    assert batch["batchName"] == "春季拉新"
+    assert batch["totalCount"] == 3
+    assert batch["usedCount"] == 0
+    assert batch["unusedCount"] == 3
+    assert len(codes) == 3
+
+
+def test_non_super_admin_cannot_create_redeem_code_batch(tmp_path: Path):
+    client = make_client(tmp_path)
+    teacher_token_headers = teacher_auth_headers(client)
+    response = client.post(
+        "/api/question-bank/admin/redeem-code/batches",
+        headers=teacher_token_headers,
+        json={
+            "batchName": "无权限批次",
+            "totalCount": 1,
+            "planCode": "AI_SCORE_BOOST_30D",
+            "channelCode": "TEST",
+            "expiresAt": "2099-12-31T00:00:00Z",
+            "codePrefix": "NOAUTH",
+        },
+    )
+    assert response.status_code == 403
+
+
+def test_admin_list_redeem_code_batches_contains_usage_counters(tmp_path: Path):
+    client = make_client(tmp_path)
+    admin_headers = super_admin_auth_headers(client)
+
+    created = client.post(
+        "/api/question-bank/admin/redeem-code/batches",
+        headers=admin_headers,
+        json={
+            "batchName": "统计批次",
+            "totalCount": 2,
+            "planCode": "AI_SCORE_BOOST_30D",
+            "channelCode": "STATS",
+            "expiresAt": "2099-12-31T00:00:00Z",
+            "codePrefix": "STATS",
+        },
+    )
+    assert created.status_code == 200
+    created_payload = created.json()["data"]
+    created_batch = created_payload["batch"]
+    redeem_code = str(created_payload["codes"][0])
+
+    redeem_response = client.post(
+        "/api/question-bank/student/subscription/redeem",
+        headers=student_headers(),
+        json={"code": redeem_code},
+    )
+    assert redeem_response.status_code == 200
+
+    listed = client.get(
+        "/api/question-bank/admin/redeem-code/batches?page=1&size=20&status=ACTIVE",
+        headers=admin_headers,
+    )
+    assert listed.status_code == 200
+    page_payload = listed.json()["data"]
+    items = page_payload["items"]
+    matched = [item for item in items if str(item.get("id", "")) == str(created_batch["id"])]
+    assert matched
+    first = matched[0]
+    assert first["usedCount"] == 1
+    assert first["unusedCount"] == 1
+    assert first["usageRate"] == 0.5
+
+
+def test_admin_conversion_overview_returns_expected_counters(tmp_path: Path):
+    client = make_client(tmp_path)
+    admin_headers = super_admin_auth_headers(client)
+
+    created = client.post(
+        "/api/question-bank/admin/redeem-code/batches",
+        headers=admin_headers,
+        json={
+            "batchName": "转化总览批次",
+            "totalCount": 1,
+            "planCode": "AI_SCORE_BOOST_30D",
+            "channelCode": "OVERVIEW",
+            "expiresAt": "2099-12-31T00:00:00Z",
+            "codePrefix": "OVERVIEW",
+        },
+    )
+    assert created.status_code == 200
+    redeem_code = str(created.json()["data"]["codes"][0])
+
+    redeem_response = client.post(
+        "/api/question-bank/student/subscription/redeem",
+        headers=student_headers(),
+        json={"code": redeem_code},
+    )
+    assert redeem_response.status_code == 200
+
+    order_response = client.post(
+        "/api/question-bank/student/subscription/mock-orders",
+        headers=student_headers(),
+        json={"planCode": "AI_SCORE_BOOST_30D"},
+    )
+    assert order_response.status_code == 200
+    order_id = str(order_response.json()["data"]["order"]["orderId"])
+    assert order_id
+
+    confirm_response = client.post(
+        f"/api/question-bank/student/subscription/mock-orders/{order_id}/confirm",
+        headers=student_headers(),
+        json={"transactionNo": "MOCK-TXN-OVERVIEW-001"},
+    )
+    assert confirm_response.status_code == 200
+
+    overview_response = client.get(
+        "/api/question-bank/admin/conversion/overview?startDate=2000-01-01&endDate=2099-12-31",
+        headers=admin_headers,
+    )
+    assert overview_response.status_code == 200
+    data = overview_response.json()["data"]
+    summary = data["summary"]
+    assert summary["redeemSubmitCount"] >= 1
+    assert summary["redeemSuccessCount"] >= 1
+    assert summary["mockOrderCreatedCount"] >= 1
+    assert summary["mockPaymentSuccessCount"] >= 1
+    assert summary["subscriptionActivatedCount"] >= 2
+    counters = {str(item.get("eventType", "")): int(item.get("eventCount", 0) or 0) for item in data["eventTypeCounters"]}
+    assert counters.get("REDEEM_SUCCESS", 0) >= 1
+    assert counters.get("MOCK_PAYMENT_SUCCESS", 0) >= 1

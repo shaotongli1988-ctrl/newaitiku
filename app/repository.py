@@ -4073,6 +4073,85 @@ class QuestionRepository:
             ).fetchall()
         return [self._decode_redeem_code_batch_row(row) for row in rows]
 
+    def list_redeem_code_batches_paginated(
+        self,
+        status: str,
+        keyword: str,
+        page: int,
+        size: int,
+    ) -> Tuple[List[Dict[str, object]], int]:
+        clauses = ["1 = 1"]
+        params: Dict[str, object] = {}
+        normalized_status = str(status or "").strip()
+        normalized_keyword = str(keyword or "").strip()
+        if normalized_status:
+            clauses.append("status = :status")
+            params["status"] = normalized_status
+        if normalized_keyword:
+            clauses.append("(batchCode LIKE :keyword OR batchName LIKE :keyword OR channelCode LIKE :keyword)")
+            params["keyword"] = f"%{normalized_keyword}%"
+
+        where_clause = " AND ".join(clauses)
+        offset = (max(1, page) - 1) * max(1, size)
+        params.update({"limit": max(1, size), "offset": max(0, offset)})
+        with get_connection(self.db_path) as connection:
+            total = self._safe_int(
+                connection.execute(
+                    f"SELECT COUNT(*) AS total FROM redeem_code_batch WHERE {where_clause}",
+                    params,
+                ).fetchone()["total"],
+                0,
+            )
+            rows = connection.execute(
+                f"""
+                SELECT {REDEEM_CODE_BATCH_SELECT_SQL}
+                FROM redeem_code_batch
+                WHERE {where_clause}
+                ORDER BY updateTime DESC, createTime DESC, batchCode ASC
+                LIMIT :limit OFFSET :offset
+                """,
+                params,
+            ).fetchall()
+        return [self._decode_redeem_code_batch_row(row) for row in rows], total
+
+    def get_redeem_code_batch_usage_summary(self, batch_ids: List[str]) -> Dict[str, Dict[str, int]]:
+        normalized_batch_ids: List[str] = []
+        seen_batch_ids: set[str] = set()
+        for raw_batch_id in batch_ids:
+            normalized_batch_id = str(raw_batch_id or "").strip()
+            if not normalized_batch_id or normalized_batch_id in seen_batch_ids:
+                continue
+            seen_batch_ids.add(normalized_batch_id)
+            normalized_batch_ids.append(normalized_batch_id)
+        if not normalized_batch_ids:
+            return {}
+
+        placeholders = ", ".join("?" for _ in normalized_batch_ids)
+        with get_connection(self.db_path) as connection:
+            rows = connection.execute(
+                f"""
+                SELECT
+                  batchId,
+                  COUNT(*) AS totalCodes,
+                  SUM(CASE WHEN status = 'USED' THEN 1 ELSE 0 END) AS usedCodes,
+                  SUM(CASE WHEN status = 'UNUSED' THEN 1 ELSE 0 END) AS unusedCodes
+                FROM redeem_code
+                WHERE batchId IN ({placeholders})
+                GROUP BY batchId
+                """,
+                tuple(normalized_batch_ids),
+            ).fetchall()
+
+        summary: Dict[str, Dict[str, int]] = {}
+        for row in rows:
+            batch_id = str(row["batchId"])
+            summary[batch_id] = {
+                "totalCodes": self._safe_int(row["totalCodes"], 0),
+                "usedCodes": self._safe_int(row["usedCodes"], 0),
+                "unusedCodes": self._safe_int(row["unusedCodes"], 0),
+            }
+        return summary
+
     def update_redeem_code_batch(self, payload: Dict[str, object]) -> Dict[str, object]:
         batch_id = str(payload.get("id", "")).strip()
         if not batch_id:
@@ -4498,6 +4577,84 @@ class QuestionRepository:
                 params,
             ).fetchall()
         return [self._decode_conversion_event_log_row(row) for row in rows], total
+
+    def aggregate_conversion_event_counts(self, start_date: str = "", end_date: str = "") -> List[Dict[str, object]]:
+        clauses = ["1 = 1"]
+        params: Dict[str, object] = {}
+        normalized_start_date = str(start_date or "").strip()
+        normalized_end_date = str(end_date or "").strip()
+        if normalized_start_date:
+            clauses.append("eventDate >= :start_date")
+            params["start_date"] = normalized_start_date
+        if normalized_end_date:
+            clauses.append("eventDate <= :end_date")
+            params["end_date"] = normalized_end_date
+
+        where_clause = " AND ".join(clauses)
+        with get_connection(self.db_path) as connection:
+            rows = connection.execute(
+                f"""
+                SELECT
+                  eventType,
+                  COUNT(*) AS eventCount,
+                  COUNT(DISTINCT studentUserId) AS uniqueStudentCount
+                FROM conversion_event_log
+                WHERE {where_clause}
+                GROUP BY eventType
+                ORDER BY eventType ASC
+                """,
+                params,
+            ).fetchall()
+
+        items: List[Dict[str, object]] = []
+        for row in rows:
+            items.append(
+                {
+                    "eventType": str(row["eventType"]),
+                    "eventCount": self._safe_int(row["eventCount"], 0),
+                    "uniqueStudentCount": self._safe_int(row["uniqueStudentCount"], 0),
+                }
+            )
+        return items
+
+    def aggregate_conversion_event_daily_counts(self, start_date: str = "", end_date: str = "") -> List[Dict[str, object]]:
+        clauses = ["1 = 1"]
+        params: Dict[str, object] = {}
+        normalized_start_date = str(start_date or "").strip()
+        normalized_end_date = str(end_date or "").strip()
+        if normalized_start_date:
+            clauses.append("eventDate >= :start_date")
+            params["start_date"] = normalized_start_date
+        if normalized_end_date:
+            clauses.append("eventDate <= :end_date")
+            params["end_date"] = normalized_end_date
+
+        where_clause = " AND ".join(clauses)
+        with get_connection(self.db_path) as connection:
+            rows = connection.execute(
+                f"""
+                SELECT
+                  eventDate,
+                  eventType,
+                  COUNT(*) AS eventCount
+                FROM conversion_event_log
+                WHERE {where_clause}
+                GROUP BY eventDate, eventType
+                ORDER BY eventDate ASC, eventType ASC
+                """,
+                params,
+            ).fetchall()
+
+        items: List[Dict[str, object]] = []
+        for row in rows:
+            items.append(
+                {
+                    "eventDate": str(row["eventDate"]),
+                    "eventType": str(row["eventType"]),
+                    "eventCount": self._safe_int(row["eventCount"], 0),
+                }
+            )
+        return items
 
     def list_tasks(
         self,

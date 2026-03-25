@@ -1133,6 +1133,17 @@ class AdminStudentsImportRequest(BaseModel):
     csv_text: str = Field(min_length=1)
 
 
+class AdminRedeemCodeBatchCreateRequest(BaseModel):
+    model_config = REQUEST_MODEL_CONFIG
+
+    batch_name: str = Field(min_length=1, max_length=80)
+    total_count: int = Field(ge=1, le=5000)
+    plan_code: str = Field(default="AI_SCORE_BOOST_30D", min_length=1, max_length=64)
+    channel_code: str = Field(default="MANUAL", max_length=64)
+    expires_at: str = Field(default="", max_length=64)
+    code_prefix: str = Field(default="RC", min_length=1, max_length=16)
+
+
 class MessagesReadBatchRequest(BaseModel):
     model_config = REQUEST_MODEL_CONFIG
 

@@ -31,6 +31,7 @@ from app.auth import (
 )
 from app.contracts import (
     AdminManagedUserSaveRequest,
+    AdminRedeemCodeBatchCreateRequest,
     AdminSyllabusVersionCreateRequest,
     AdminSyllabusWeightsSaveRequest,
     AdminStudentsImportRequest,
@@ -1073,6 +1074,47 @@ def create_app(db_path: Union[Path, str] = DEFAULT_DB_PATH) -> FastAPI:
     ):
         ensure_actor_ready(actor, svc, "student:manage")
         return success(svc.export_managed_students(format, actor))
+
+    @app.post("/api/question-bank/admin/redeem-code/batches", response_model=BaseResponse)
+    async def create_admin_redeem_code_batch(
+        payload: AdminRedeemCodeBatchCreateRequest,
+        csrf_checked: None = Depends(require_admin_csrf),
+        actor: Actor = Depends(ensure_admin_api_actor),
+        svc: QuestionBankService = Depends(service),
+    ):
+        require_super_admin(actor)
+        ensure_actor_ready(actor, svc, "settings:manage")
+        return success(svc.create_admin_redeem_code_batch(payload.model_dump(by_alias=True), actor))
+
+    @app.get("/api/question-bank/admin/redeem-code/batches", response_model=BaseResponse)
+    async def list_admin_redeem_code_batches(
+        page: int = Query(default=1, ge=1),
+        size: int = Query(default=20, ge=1, le=200),
+        status: str = Query(default=""),
+        keyword: str = Query(default=""),
+        actor: Actor = Depends(ensure_admin_api_actor),
+        svc: QuestionBankService = Depends(service),
+    ):
+        require_super_admin(actor)
+        ensure_actor_ready(actor, svc, "settings:manage")
+        items, total = svc.list_admin_redeem_code_batches(
+            {"status": status.strip(), "keyword": keyword.strip()},
+            page,
+            size,
+            actor,
+        )
+        return success(pagination(items, page, size, total))
+
+    @app.get("/api/question-bank/admin/conversion/overview", response_model=BaseResponse)
+    async def admin_conversion_overview(
+        startDate: str = Query(default="", alias="startDate"),
+        endDate: str = Query(default="", alias="endDate"),
+        actor: Actor = Depends(ensure_admin_api_actor),
+        svc: QuestionBankService = Depends(service),
+    ):
+        require_super_admin(actor)
+        ensure_actor_ready(actor, svc, "settings:manage")
+        return success(svc.get_admin_conversion_overview({"startDate": startDate.strip(), "endDate": endDate.strip()}, actor))
 
     @app.get("/api/question-bank/admin/learning-methods", response_model=BaseResponse)
     async def list_admin_learning_methods(
