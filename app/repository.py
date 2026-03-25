@@ -4173,6 +4173,18 @@ class QuestionRepository:
             ).fetchone()
         return self._decode_redeem_code_row(row) if row else None
 
+    def has_used_redeem_code_by_user(self, student_user_id: str) -> bool:
+        with get_connection(self.db_path) as connection:
+            row = connection.execute(
+                """
+                SELECT COUNT(*) AS total
+                FROM redeem_code
+                WHERE usedByUserId = ? AND status = 'USED'
+                """,
+                (str(student_user_id or "").strip(),),
+            ).fetchone()
+        return self._safe_int(row["total"] if row else 0, 0) > 0
+
     def list_redeem_codes_by_batch(self, batch_id: str, status: str = "") -> List[Dict[str, object]]:
         clauses = ["batchId = :batch_id"]
         params: Dict[str, object] = {"batch_id": str(batch_id or "").strip()}
