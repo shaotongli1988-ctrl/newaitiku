@@ -2,9 +2,12 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchStudentSubscriptionStatus } from '../../api/services/student.js'
+import { useUserStore } from '../../stores/userStore.js'
+import { markStudentOnboardingCompleted } from '../../utils/studentOnboarding.js'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 
 const loading = ref(false)
 const statusPayload = ref({})
@@ -27,6 +30,9 @@ async function loadStatus() {
   loading.value = true
   try {
     statusPayload.value = (await fetchStudentSubscriptionStatus()) || {}
+    if (Boolean(statusPayload.value?.subscriptionActive)) {
+      markStudentOnboardingCompleted(userStore.userId)
+    }
   } finally {
     loading.value = false
   }

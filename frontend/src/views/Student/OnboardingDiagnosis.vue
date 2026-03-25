@@ -2,13 +2,16 @@
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from '@/ui/feedback'
 import { useRoute, useRouter } from 'vue-router'
+import { useUserStore } from '../../stores/userStore.js'
 import {
   startStudentQuickDiagnosisSession,
   submitStudentQuickDiagnosisSession,
 } from '../../api/services/student.js'
+import { markStudentOnboardingCompleted } from '../../utils/studentOnboarding.js'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 
 const loading = ref(false)
 const submitting = ref(false)
@@ -77,6 +80,9 @@ async function submitDiagnosis() {
       sourceType: 'ONBOARDING',
     })
     submitResult.value = payload
+    if (String(payload?.status || '').trim().toUpperCase() === 'COMPLETED') {
+      markStudentOnboardingCompleted(userStore.userId)
+    }
     ElMessage.success('快诊完成，已生成学习建议。')
   } catch (error) {
     ElMessage.error(error?.message || '快诊提交失败，请稍后重试。')
