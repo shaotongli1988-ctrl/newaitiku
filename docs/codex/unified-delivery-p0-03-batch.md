@@ -1,0 +1,78 @@
+# Unified Delivery Output
+
+_Template Source: /Users/shaotongli/.codex/skills/fullstack-unified-development-standards/references/unified-delivery-template.md_
+
+## Change Summary
+- Request: batch / newaitiku
+- Contract mode: global unless question-bank guard says otherwise
+- Affected modules: studentOnboarding.js, studentOnboarding.test.js, TODO.codex.md
+- Owner: TBD
+
+## Implementation Alignment
+- Database / model: no evidence
+- Backend / API: no evidence
+- Frontend / UI: yes
+- Permission / RBAC: yes
+- State machine: yes
+- Validation / error handling: yes
+
+## Runtime Controls
+- Concurrency / idempotency: no evidence
+- Data consistency: no evidence
+- Performance / cache: no evidence
+- Deployment / config: defer to delivery stage final gate
+- Security baseline: defer to delivery stage final gate
+
+## Evidence
+- Tests: present
+- Docs: present
+- Guard reports: 1 warning item(s)
+- Pilot tooling outputs: none
+- Auto remediation: enabled (1 action(s))
+
+## Exit Checklist
+- Drift resolved: still has warnings
+- Remediation loop: ready (0 blocking)
+- Legacy path removed: verify separately when migration or dual-path exists
+- Release handoff ready: not yet
+
+## Template Reference
+
+# Unified Delivery Template
+
+## Change Summary
+
+- Request:
+- Contract mode:
+- Affected modules:
+- Owner:
+
+## Implementation Alignment
+
+- Database / model:
+- Backend / API:
+- Frontend / UI:
+- Permission / RBAC:
+- State machine:
+- Validation / error handling:
+
+## Runtime Controls
+
+- Concurrency / idempotency:
+- Data consistency:
+- Performance / cache:
+- Deployment / config:
+- Security baseline:
+
+## Evidence
+
+- Tests:
+- Docs:
+- Guard reports:
+- Pilot tooling outputs:
+
+## Exit Checklist
+
+- Drift resolved:
+- Legacy path removed:
+- Release handoff ready:

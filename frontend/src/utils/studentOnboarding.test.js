@@ -40,7 +40,7 @@ describe('student onboarding helpers', () => {
     expect(isStudentOnboardingFlowPath('/student/home')).toBe(false)
   })
 
-  it('redirects incomplete student to onboarding entry', () => {
+  it('正常路径: redirects incomplete student to onboarding entry', () => {
     expect(resolveStudentOnboardingRedirect({
       role: 'student',
       path: '/student/home',
@@ -85,11 +85,27 @@ describe('student onboarding helpers', () => {
     })).toBe('/student/onboarding/diagnosis')
   })
 
-  it('never redirects non-student roles', () => {
+  it('异常路径: never redirects non-student roles', () => {
     expect(resolveStudentOnboardingRedirect({
       role: 'teacher',
       path: '/student/home',
       userId: 'teacher-001',
+    })).toBe('')
+  })
+
+  it('treats role matching as case-insensitive', () => {
+    expect(resolveStudentOnboardingRedirect({
+      role: 'STUDENT',
+      path: '/student/home',
+      userId: 'student-001',
+    })).toBe('/student/onboarding/diagnosis')
+  })
+
+  it('边界路径: skips redirect for non-student route path', () => {
+    expect(resolveStudentOnboardingRedirect({
+      role: 'student',
+      path: '/teacher/home',
+      userId: 'student-001',
     })).toBe('')
   })
 })

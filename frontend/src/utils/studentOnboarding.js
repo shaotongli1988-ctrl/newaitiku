@@ -6,7 +6,7 @@ function normalizePath(path = '') {
 }
 
 function normalizeRole(role = '') {
-  return String(role || '').trim()
+  return String(role || '').trim().toLowerCase()
 }
 
 function normalizeUserId(userId = '') {
