@@ -249,6 +249,61 @@ class StudentMonetizationServiceMixin:
             "nextAction": "建议立即开通提分权益，按系统推荐路径完成首周任务。",
         }
 
+    def _resolve_student_onboarding_snapshot(self, student_user_id: str) -> Dict[str, object]:
+        _, ext_json = self._load_student_profile_state_ext_json(student_user_id)
+        quick_diagnosis_session = ext_json.get(QUICK_DIAGNOSIS_SESSION_EXT_KEY, {})
+        if not isinstance(quick_diagnosis_session, dict):
+            quick_diagnosis_session = {}
+
+        diagnosis_status = str(quick_diagnosis_session.get("status", "")).strip().upper()
+        quick_diagnosis_completed = diagnosis_status == QUICK_DIAGNOSIS_STATUS_COMPLETED
+        answered_count = int(
+            quick_diagnosis_session.get("answerCount", quick_diagnosis_session.get("answeredCount", 0)) or 0
+        )
+        correct_count = int(quick_diagnosis_session.get("correctCount", 0) or 0)
+        try:
+            accuracy = float(quick_diagnosis_session.get("accuracy", 0.0) or 0.0)
+        except (TypeError, ValueError):
+            accuracy = 0.0
+        latest_quick_diagnosis_session = {
+            "sessionId": str(quick_diagnosis_session.get("sessionId", "")).strip(),
+            "status": diagnosis_status,
+            "submittedAt": str(quick_diagnosis_session.get("submittedAt", "")).strip(),
+            "answeredCount": max(0, answered_count),
+            "correctCount": max(0, correct_count),
+            "accuracy": accuracy if accuracy >= 0 else 0.0,
+        }
+
+        raw_subscription = self.repository.get_student_subscription(student_user_id)
+        if raw_subscription:
+            subscription = self._refresh_subscription_expired_status(raw_subscription)
+            public_subscription = self._public_subscription_status(subscription)
+        else:
+            public_subscription = self._public_subscription_status(
+                {
+                    "status": SUBSCRIPTION_STATUS_INACTIVE,
+                    "currentPlanCode": "",
+                    "startTime": "",
+                    "endTime": "",
+                    "lastActivatedAt": "",
+                    "lastExpiredAt": "",
+                    "totalActivatedDays": 0,
+                    "sourceType": "",
+                }
+            )
+
+        subscription_active = bool(public_subscription.get("subscriptionActive", False))
+        onboarding_completed = bool(quick_diagnosis_completed or subscription_active)
+        completion_source = "SUBSCRIPTION" if subscription_active else ("QUICK_DIAGNOSIS" if quick_diagnosis_completed else "NONE")
+
+        return {
+            "completed": onboarding_completed,
+            "completionSource": completion_source,
+            "quickDiagnosisCompleted": quick_diagnosis_completed,
+            "subscriptionActive": subscription_active,
+            "latestQuickDiagnosisSession": latest_quick_diagnosis_session,
+        }
+
     def start_student_quick_diagnosis(self, payload: Dict[str, object], actor: Actor) -> Dict[str, object]:
         _, _, profile = self._load_student_profile_bundle(actor.user_id)
         self._assert_student_profile_complete(profile)

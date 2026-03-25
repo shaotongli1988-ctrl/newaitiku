@@ -6698,6 +6698,10 @@ def test_dashboard_filtering(tmp_path: Path):
     assert dashboard.status_code == 200
     data = dashboard.json()["data"]
     assert data["examCategoryCode"] == "SCIENCE_ENGINEERING"
+    onboarding = data.get("onboarding", {})
+    assert onboarding.get("completed") is False
+    assert onboarding.get("subscriptionActive") is False
+    assert onboarding.get("quickDiagnosisCompleted") is False
     subject_codes = {str(item.get("subjectCode", "")) for item in data.get("coreSubjects", []) if isinstance(item, dict)}
     assert "ART_INTRODUCTION" not in subject_codes
     assert "FINE_ARTS_COMPREHENSIVE" not in subject_codes
@@ -6830,6 +6834,12 @@ def test_student_subscription_redeem_once_limit(tmp_path: Path):
     first_data = first.json()["data"]
     assert first_data["subscription"]["status"] == "ACTIVE"
     assert first_data["subscription"]["subscriptionActive"] is True
+    dashboard_after_redeem = client.get("/api/question-bank/student/dashboard", headers=student_headers())
+    assert dashboard_after_redeem.status_code == 200
+    onboarding = dashboard_after_redeem.json()["data"]["onboarding"]
+    assert onboarding["completed"] is True
+    assert onboarding["subscriptionActive"] is True
+    assert onboarding["quickDiagnosisCompleted"] is False
 
     second = client.post(
         "/api/question-bank/student/subscription/redeem",
@@ -7074,6 +7084,14 @@ def test_student_quick_diagnosis_start_submit_and_idempotent(tmp_path: Path):
     assert idempotent_data["idempotent"] is True
     assert idempotent_data["status"] == "COMPLETED"
     assert idempotent_data["answeredCount"] == 3
+    dashboard_response = client.get("/api/question-bank/student/dashboard", headers=student_headers())
+    assert dashboard_response.status_code == 200
+    onboarding = dashboard_response.json()["data"]["onboarding"]
+    assert onboarding["completed"] is True
+    assert onboarding["quickDiagnosisCompleted"] is True
+    assert onboarding["subscriptionActive"] is False
+    assert onboarding["latestQuickDiagnosisSession"]["status"] == "COMPLETED"
+    assert onboarding["latestQuickDiagnosisSession"]["sessionId"] == session_id
 
     admin_headers = super_admin_auth_headers(client)
     overview_response = client.get(

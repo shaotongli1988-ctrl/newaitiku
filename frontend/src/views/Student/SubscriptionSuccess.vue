@@ -32,6 +32,7 @@ async function loadStatus() {
     statusPayload.value = (await fetchStudentSubscriptionStatus()) || {}
     if (Boolean(statusPayload.value?.subscriptionActive)) {
       markStudentOnboardingCompleted(userStore.userId)
+      userStore.setStudentOnboardingCompleted(true)
     }
   } finally {
     loading.value = false

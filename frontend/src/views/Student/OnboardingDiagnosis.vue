@@ -82,6 +82,7 @@ async function submitDiagnosis() {
     submitResult.value = payload
     if (String(payload?.status || '').trim().toUpperCase() === 'COMPLETED') {
       markStudentOnboardingCompleted(userStore.userId)
+      userStore.setStudentOnboardingCompleted(true)
     }
     ElMessage.success('快诊完成，已生成学习建议。')
   } catch (error) {

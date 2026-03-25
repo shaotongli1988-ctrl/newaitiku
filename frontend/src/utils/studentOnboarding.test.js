@@ -69,6 +69,22 @@ describe('student onboarding helpers', () => {
     expect(hasStudentOnboardingCompleted('student-001')).toBe(false)
   })
 
+  it('uses server completion state before local fallback', () => {
+    expect(resolveStudentOnboardingRedirect({
+      role: 'student',
+      path: '/student/home',
+      userId: 'student-001',
+      completed: true,
+    })).toBe('')
+
+    expect(resolveStudentOnboardingRedirect({
+      role: 'student',
+      path: '/student/home',
+      userId: 'student-001',
+      completed: false,
+    })).toBe('/student/onboarding/diagnosis')
+  })
+
   it('never redirects non-student roles', () => {
     expect(resolveStudentOnboardingRedirect({
       role: 'teacher',

@@ -77,6 +77,7 @@ export function createScopedRouter({ routes = [], entryType = 'student' } = {}) 
       role: userStore.role,
       path: to.path,
       userId: userStore.userId,
+      completed: userStore.studentOnboardingCompleted,
     })
     if (onboardingRedirectPath) {
       return {

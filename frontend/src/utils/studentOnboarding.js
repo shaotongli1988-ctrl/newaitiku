@@ -13,6 +13,16 @@ function normalizeUserId(userId = '') {
   return String(userId || '').trim()
 }
 
+function normalizeCompleted(value) {
+  if (value === true) {
+    return true
+  }
+  if (value === false) {
+    return false
+  }
+  return null
+}
+
 function resolveStorageKey(userId = '') {
   const normalizedUserId = normalizeUserId(userId)
   if (!normalizedUserId) {
@@ -54,9 +64,10 @@ export function clearStudentOnboardingCompleted(userId = '') {
   localStorage.removeItem(resolveStorageKey(userId))
 }
 
-export function resolveStudentOnboardingRedirect({ role = '', path = '', userId = '' } = {}) {
+export function resolveStudentOnboardingRedirect({ role = '', path = '', userId = '', completed = null } = {}) {
   const normalizedRole = normalizeRole(role)
   const normalizedPath = normalizePath(path)
+  const normalizedCompleted = normalizeCompleted(completed)
 
   if (normalizedRole !== 'student') {
     return ''
@@ -66,6 +77,12 @@ export function resolveStudentOnboardingRedirect({ role = '', path = '', userId 
   }
   if (isStudentOnboardingFlowPath(normalizedPath)) {
     return ''
+  }
+  if (normalizedCompleted === true) {
+    return ''
+  }
+  if (normalizedCompleted === false) {
+    return STUDENT_ONBOARDING_ENTRY_PATH
   }
   if (hasStudentOnboardingCompleted(userId)) {
     return ''
