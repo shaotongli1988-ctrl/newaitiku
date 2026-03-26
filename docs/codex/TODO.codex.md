@@ -29,6 +29,7 @@
 | P1-03 | P1 | chore | 收敛守卫高优先告警（API 契约漂移与复用守卫噪音） | 在不依赖 break-glass 的情况下通过 `unified_delivery_guard --phase batch/final` | P0-03 | done | `frontend/src/api/contracts.ts`、`tests/test_openapi_schema_scope.py`、`docs/codex/unified-delivery-p1-03-batch.md`、`docs/codex/unified-delivery-p1-03-final.md` |
 | P1-04 | P1 | docs | 清算遗留阻塞并固化微小改动门槛 | 全量 API 漂移复验为 0 且 Blockers/Run Log 回填治理证据 | P1-03 | done | `docs/codex/api-schema-drift-p1-04-final.md`、`docs/codex/blocker-decision-sla.md`、`docs/codex/three-stage-routing-p1-04.md` |
 | P1-05 | P1 | docs | 收敛文档治理场景的守卫路径误报 | `unified_delivery_guard --phase final` 在文档治理样本中无 LOW 误报 | P1-04 | done | `docs/codex/three-stage-handoff-p1-05.md`、`docs/codex/drift-baseline-p1-05-final.md`、`docs/codex/unified-delivery-p1-05-final.md` |
+| P1-06 | P1 | test | 复验全局 DoD 基线命令稳定性 | DoD 5 条命令在同一轮执行全部通过并形成证据 | P1-05 | done | `docs/codex/dod-baseline-p1-06.md`、`docs/codex/unified-delivery-p1-06-final.md` |
 
 状态只允许使用: `todo` / `doing` / `blocked` / `done`
 
@@ -55,6 +56,7 @@
 | 2026-03-26 11:40 | P1-03 | `frontend/src/api/contracts.ts`, `tests/test_openapi_schema_scope.py`, `docs/codex/three-stage-routing-p1-03.md`, `docs/codex/unified-delivery-p1-03-batch.md`, `docs/codex/unified-delivery-p1-03-final.md`, `docs/codex/TODO.codex.md` | `python3 -m pytest -q tests/test_openapi_schema_scope.py` + `unified_delivery_guard --phase batch/final` | pass(无 break-glass) | 等待下一条任务 |
 | 2026-03-26 11:53 | P1-04 | `docs/codex/three-stage-routing-p1-04.md`, `docs/codex/api-schema-drift-p1-04-final.md`, `docs/codex/blocker-decision-sla.md`, `docs/codex/unified-delivery-p1-04-batch.md`, `docs/codex/unified-delivery-p1-04-final.md`, `docs/codex/TODO.codex.md` | `schema_drift_guard --phase final --report-md docs/codex/api-schema-drift-p1-04-final.md` + `unified_delivery_guard --phase batch/final` | warn(2 条 LOW 提醒已解释，`frontend: n/a`, `extJson: n/a`) | 等待下一条任务 |
 | 2026-03-26 13:52 | P1-05 | `docs/codex/three-stage-handoff-p1-05.md`, `docs/codex/drift-baseline-p1-05-final.md`, `docs/codex/blocker-decision-sla.md`, `docs/codex/unified-delivery-p1-05-batch.md`, `docs/codex/unified-delivery-p1-05-final.md`, `docs/codex/TODO.codex.md` | `schema_drift_guard --phase final --report-md docs/codex/drift-baseline-p1-05-final.md` + `unified_delivery_guard --phase batch/final` | pass(无 warnings) | 等待下一条任务 |
+| 2026-03-26 13:58 | P1-06 | `docs/codex/three-stage-handoff-p1-06.md`, `docs/codex/dod-baseline-p1-06.md`, `docs/codex/unified-delivery-p1-06-batch.md`, `docs/codex/unified-delivery-p1-06-final.md`, `docs/codex/TODO.codex.md` | `npm --prefix frontend run build` + `python3 -m pytest -q tests/test_question_bank.py -k "knowledge_tree_response_allows_wrong_count_field"` + `python3 -m pytest -q tests/test_question_bank.py -k "dashboard_filtering"` + `npm --prefix frontend run test -- frontend/src/utils/studentOnboarding.test.js` + `python3 -m compileall app` + `unified_delivery_guard --phase batch/final` | pass(DoD 全量复验通过) | 等待下一条任务 |
 
 ## 6) 提交规范
 - Commit 格式: `<type>(<scope>): <subject>`
