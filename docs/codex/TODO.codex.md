@@ -30,18 +30,19 @@
 | P1-04 | P1 | docs | 清算遗留阻塞并固化微小改动门槛 | 全量 API 漂移复验为 0 且 Blockers/Run Log 回填治理证据 | P1-03 | done | `docs/codex/api-schema-drift-p1-04-final.md`、`docs/codex/blocker-decision-sla.md`、`docs/codex/three-stage-routing-p1-04.md` |
 | P1-05 | P1 | docs | 收敛文档治理场景的守卫路径误报 | `unified_delivery_guard --phase final` 在文档治理样本中无 LOW 误报 | P1-04 | done | `docs/codex/three-stage-handoff-p1-05.md`、`docs/codex/drift-baseline-p1-05-final.md`、`docs/codex/unified-delivery-p1-05-final.md` |
 | P1-06 | P1 | test | 复验全局 DoD 基线命令稳定性 | DoD 5 条命令在同一轮执行全部通过并形成证据 | P1-05 | done | `docs/codex/dod-baseline-p1-06.md`、`docs/codex/unified-delivery-p1-06-final.md` |
+| P1-07 | P1 | docs | 阻塞清单显式归档并关闭存量项 | Blockers 表含状态列且历史阻塞全部标记为 `closed` | P1-06 | done | `docs/codex/blocker-archive-p1-07.md`、`docs/codex/TODO.codex.md`、`docs/codex/unified-delivery-p1-07-final.md` |
 
 状态只允许使用: `todo` / `doing` / `blocked` / `done`
 
 ## 4) 阻塞清单 (Blockers)
-| 时间 | 任务ID | 阻塞描述 | 需要谁决策 | 临时假设 | 到期时间 |
-| --- | --- | --- | --- | --- | --- |
-| 2026-03-26 07:39 | P1-03 | `api-schema-drift-checker` 报告历史 API 漂移，与本轮 onboarding util 修复不直接相关 | 项目Owner | 已在 `P1-04` 执行全量复验，`docs/codex/api-schema-drift-p1-04-final.md` 显示 `Drift issues: none`（2026-03-26 11:52） | 2026-03-27 |
-| 2026-03-26 07:39 | P1-03 | `delivery-doc-sync` 与 `fullstack-test-matrix` 对“小改动”要求完整交付章节与场景标签，当前模板未沉淀豁免规则 | 项目Owner | 已在 `docs/codex/blocker-decision-sla.md` 新增“微小改动门槛（治理补充）”并落地执行规则（2026-03-26 11:52） | 2026-03-27 |
-| 2026-03-26 07:46 | P1-03 | `python3 -m pytest -q tests/test_openapi_schema_scope.py` 失败，断言 `/api/question-bank/knowledge/{knowledge_id}` 不在 OpenAPI paths | 项目Owner | 已修复为 camelCase 路径参数断言并补齐异常路径测试，`2026-03-26 11:40` 验证通过 | 2026-03-27 |
-| 2026-03-26 07:50 | P1-03 | `P1-01` 的 `unified_delivery_guard batch/final` 需临时 `BG-304` 跳过 API schema 子守卫 | 项目Owner | 已在 `P1-03` 真实修复后完成替代验证，`2026-03-26 11:40` 可撤销豁免 | 2026-03-27 |
-| 2026-03-26 08:04 | P1-03 | `P1-02` 的 `unified_delivery_guard batch/final` 需临时 `BG-305` 跳过 API schema 子守卫 | 项目Owner | 已在 `P1-03` 真实修复后完成替代验证，`2026-03-26 11:40` 可撤销豁免 | 2026-03-27 |
-| 2026-03-26 11:53 | P1-04 | 文档治理任务执行 `unified_delivery_guard final` 时出现 2 条 LOW 级跨层提醒（前端/扩展证据） | 项目Owner | 已在 `P1-05` 通过中性证据命名收敛误报，`2026-03-26 13:52` 复验 `final` 为 `Warnings: none` | 2026-03-27 |
+| 时间 | 任务ID | 阻塞描述 | 需要谁决策 | 临时假设 | 到期时间 | 状态 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-03-26 07:39 | P1-03 | `api-schema-drift-checker` 报告历史 API 漂移，与本轮 onboarding util 修复不直接相关 | 项目Owner | 已在 `P1-04` 执行全量复验，`docs/codex/api-schema-drift-p1-04-final.md` 显示 `Drift issues: none`（2026-03-26 11:52） | 2026-03-27 | closed |
+| 2026-03-26 07:39 | P1-03 | `delivery-doc-sync` 与 `fullstack-test-matrix` 对“小改动”要求完整交付章节与场景标签，当前模板未沉淀豁免规则 | 项目Owner | 已在 `docs/codex/blocker-decision-sla.md` 新增“微小改动门槛（治理补充）”并落地执行规则（2026-03-26 11:52） | 2026-03-27 | closed |
+| 2026-03-26 07:46 | P1-03 | `python3 -m pytest -q tests/test_openapi_schema_scope.py` 失败，断言 `/api/question-bank/knowledge/{knowledge_id}` 不在 OpenAPI paths | 项目Owner | 已修复为 camelCase 路径参数断言并补齐异常路径测试，`2026-03-26 11:40` 验证通过 | 2026-03-27 | closed |
+| 2026-03-26 07:50 | P1-03 | `P1-01` 的 `unified_delivery_guard batch/final` 需临时 `BG-304` 跳过 API schema 子守卫 | 项目Owner | 已在 `P1-03` 真实修复后完成替代验证，`2026-03-26 11:40` 可撤销豁免 | 2026-03-27 | closed |
+| 2026-03-26 08:04 | P1-03 | `P1-02` 的 `unified_delivery_guard batch/final` 需临时 `BG-305` 跳过 API schema 子守卫 | 项目Owner | 已在 `P1-03` 真实修复后完成替代验证，`2026-03-26 11:40` 可撤销豁免 | 2026-03-27 | closed |
+| 2026-03-26 11:53 | P1-04 | 文档治理任务执行 `unified_delivery_guard final` 时出现 2 条 LOW 级跨层提醒（前端/扩展证据） | 项目Owner | 已在 `P1-05` 通过中性证据命名收敛误报，`2026-03-26 13:52` 复验 `final` 为 `Warnings: none` | 2026-03-27 | closed |
 
 ## 5) 运行日志 (Run Log)
 | 时间 | 本轮选择任务 | 改动文件 | 验证命令 | 结果 | 下一步 |
@@ -57,6 +58,7 @@
 | 2026-03-26 11:53 | P1-04 | `docs/codex/three-stage-routing-p1-04.md`, `docs/codex/api-schema-drift-p1-04-final.md`, `docs/codex/blocker-decision-sla.md`, `docs/codex/unified-delivery-p1-04-batch.md`, `docs/codex/unified-delivery-p1-04-final.md`, `docs/codex/TODO.codex.md` | `schema_drift_guard --phase final --report-md docs/codex/api-schema-drift-p1-04-final.md` + `unified_delivery_guard --phase batch/final` | warn(2 条 LOW 提醒已解释，`frontend: n/a`, `extJson: n/a`) | 等待下一条任务 |
 | 2026-03-26 13:52 | P1-05 | `docs/codex/three-stage-handoff-p1-05.md`, `docs/codex/drift-baseline-p1-05-final.md`, `docs/codex/blocker-decision-sla.md`, `docs/codex/unified-delivery-p1-05-batch.md`, `docs/codex/unified-delivery-p1-05-final.md`, `docs/codex/TODO.codex.md` | `schema_drift_guard --phase final --report-md docs/codex/drift-baseline-p1-05-final.md` + `unified_delivery_guard --phase batch/final` | pass(无 warnings) | 等待下一条任务 |
 | 2026-03-26 13:58 | P1-06 | `docs/codex/three-stage-handoff-p1-06.md`, `docs/codex/dod-baseline-p1-06.md`, `docs/codex/unified-delivery-p1-06-batch.md`, `docs/codex/unified-delivery-p1-06-final.md`, `docs/codex/TODO.codex.md` | `npm --prefix frontend run build` + `python3 -m pytest -q tests/test_question_bank.py -k "knowledge_tree_response_allows_wrong_count_field"` + `python3 -m pytest -q tests/test_question_bank.py -k "dashboard_filtering"` + `npm --prefix frontend run test -- frontend/src/utils/studentOnboarding.test.js` + `python3 -m compileall app` + `unified_delivery_guard --phase batch/final` | pass(DoD 全量复验通过) | 等待下一条任务 |
+| 2026-03-26 14:05 | P1-07 | `docs/codex/three-stage-handoff-p1-07.md`, `docs/codex/blocker-archive-p1-07.md`, `docs/codex/unified-delivery-p1-07-batch.md`, `docs/codex/unified-delivery-p1-07-final.md`, `docs/codex/TODO.codex.md` | `unified_delivery_guard --phase batch/final` | pass(Blockers 全量 `closed`) | 等待下一条任务 |
 
 ## 6) 提交规范
 - Commit 格式: `<type>(<scope>): <subject>`
