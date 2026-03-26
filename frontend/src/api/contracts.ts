@@ -156,6 +156,15 @@ export interface AdminStudentsImportRequest {
   csvText?: string
 }
 
+export interface AdminRedeemCodeBatchCreateRequest {
+  batchName: string
+  totalCount: number
+  planCode?: string
+  channelCode?: string
+  expiresAt?: string
+  codePrefix?: string
+}
+
 export interface BatchQuestionCreateRequest {
   items: unknown[]
   sourceTaskId?: string
@@ -519,6 +528,7 @@ export type BatchQuestionStatusModel = QuestionStatusBatchTransitionRequest
 export type ImportResultModel = Record<string, unknown>
 export type KnowledgeWriteModel = KnowledgeWriteRequest
 export type ManagedUserModel = AdminManagedUserSaveRequest
+export type RedeemCodeBatchCreateModel = AdminRedeemCodeBatchCreateRequest
 export type MessageSettingsModel = MessagesSettingsSaveRequest
 export type PaperAutoRuleModel = PaperAutoRuleRequest
 
