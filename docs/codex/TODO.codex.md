@@ -31,6 +31,8 @@
 | P1-05 | P1 | docs | 收敛文档治理场景的守卫路径误报 | `unified_delivery_guard --phase final` 在文档治理样本中无 LOW 误报 | P1-04 | done | `docs/codex/three-stage-handoff-p1-05.md`、`docs/codex/drift-baseline-p1-05-final.md`、`docs/codex/unified-delivery-p1-05-final.md` |
 | P1-06 | P1 | test | 复验全局 DoD 基线命令稳定性 | DoD 5 条命令在同一轮执行全部通过并形成证据 | P1-05 | done | `docs/codex/dod-baseline-p1-06.md`、`docs/codex/unified-delivery-p1-06-final.md` |
 | P1-07 | P1 | docs | 阻塞清单显式归档并关闭存量项 | Blockers 表含状态列且历史阻塞全部标记为 `closed` | P1-06 | done | `docs/codex/blocker-archive-p1-07.md`、`docs/codex/TODO.codex.md`、`docs/codex/unified-delivery-p1-07-final.md` |
+| P2-01 | P2 | docs | 固化 P0/P1 完成后的持续循环续航策略 | `docs/codex/continuous-loop-p2-01.md` 存在且定义任务补货、证据闭环、节奏停止规则 | P1-07 | done | `docs/codex/three-stage-handoff-p1-08.md`、`docs/codex/continuous-loop-p2-01.md`、`docs/codex/unified-delivery-p2-01-final.md` |
+| P2-02 | P2 | chore | 实现 TODO 自动选题 dry-run 脚本 | `scripts/codex_next_task.sh` 可输出下一条候选任务且不改写业务文件 | P2-01 | todo | `n/a` |
 
 状态只允许使用: `todo` / `doing` / `blocked` / `done`
 
@@ -59,6 +61,7 @@
 | 2026-03-26 13:52 | P1-05 | `docs/codex/three-stage-handoff-p1-05.md`, `docs/codex/drift-baseline-p1-05-final.md`, `docs/codex/blocker-decision-sla.md`, `docs/codex/unified-delivery-p1-05-batch.md`, `docs/codex/unified-delivery-p1-05-final.md`, `docs/codex/TODO.codex.md` | `schema_drift_guard --phase final --report-md docs/codex/drift-baseline-p1-05-final.md` + `unified_delivery_guard --phase batch/final` | pass(无 warnings) | 等待下一条任务 |
 | 2026-03-26 13:58 | P1-06 | `docs/codex/three-stage-handoff-p1-06.md`, `docs/codex/dod-baseline-p1-06.md`, `docs/codex/unified-delivery-p1-06-batch.md`, `docs/codex/unified-delivery-p1-06-final.md`, `docs/codex/TODO.codex.md` | `npm --prefix frontend run build` + `python3 -m pytest -q tests/test_question_bank.py -k "knowledge_tree_response_allows_wrong_count_field"` + `python3 -m pytest -q tests/test_question_bank.py -k "dashboard_filtering"` + `npm --prefix frontend run test -- frontend/src/utils/studentOnboarding.test.js` + `python3 -m compileall app` + `unified_delivery_guard --phase batch/final` | pass(DoD 全量复验通过) | 等待下一条任务 |
 | 2026-03-26 14:05 | P1-07 | `docs/codex/three-stage-handoff-p1-07.md`, `docs/codex/blocker-archive-p1-07.md`, `docs/codex/unified-delivery-p1-07-batch.md`, `docs/codex/unified-delivery-p1-07-final.md`, `docs/codex/TODO.codex.md` | `unified_delivery_guard --phase batch/final` | pass(Blockers 全量 `closed`) | 等待下一条任务 |
+| 2026-03-26 14:10 | P2-01 | `docs/codex/three-stage-handoff-p1-08.md`, `docs/codex/continuous-loop-p2-01.md`, `docs/codex/unified-delivery-p2-01-batch.md`, `docs/codex/unified-delivery-p2-01-final.md`, `docs/codex/TODO.codex.md` | `unified_delivery_guard --phase batch/final --changed-file ...` | pass(`Final gate: pass`, `Warnings: none`) | P2-02 |
 
 ## 6) 提交规范
 - Commit 格式: `<type>(<scope>): <subject>`
