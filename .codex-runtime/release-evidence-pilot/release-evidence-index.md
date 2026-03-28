@@ -6,7 +6,7 @@
 - Environment: delivery-pilot
 - Owner: codex
 - Evidence Root: /Users/shaotongli/Code/newaitiku/.codex-runtime/release-evidence-pilot
-- Evidence Files: 70
+- Evidence Files: 66
 
 ## Included Evidence
 ### Contracts
@@ -78,10 +78,6 @@
 - /Users/shaotongli/Code/newaitiku/docs/release/teacher-role-rbac-release-gate-summary-2026-03-28.md
 - /Users/shaotongli/Code/newaitiku/docs/release/teacher-role-rbac-rollback-switch-2026-03-28.md
 - /Users/shaotongli/Code/newaitiku/docs/release/uat-handoff-2026-03-20.md
-- /Users/shaotongli/Code/newaitiku/deploy/Dockerfile.frontend
-- /Users/shaotongli/Code/newaitiku/deploy/docker-compose.prod.yml
-- /Users/shaotongli/Code/newaitiku/deploy/nginx.conf
-- /Users/shaotongli/Code/newaitiku/deploy/release-preflight-teacher-role-rbac-2026-03-28.md
 
 ## Missing Or Weak Evidence
 - [LOW] 缺少 release decision contract schema 定义。

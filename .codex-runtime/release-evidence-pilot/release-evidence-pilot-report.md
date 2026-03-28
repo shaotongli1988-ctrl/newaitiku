@@ -1,6 +1,6 @@
 Release Evidence Packager: final
 Working directory: /Users/shaotongli/Code/newaitiku
-Changed files: 70
+Changed files: 66
 Fail threshold: none
 Summary: 0 high, 0 medium, 10 low
   - /Users/shaotongli/Code/newaitiku/.codex-runtime/release-evidence-pilot/release-evidence-index.md
