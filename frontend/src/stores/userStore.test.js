@@ -180,3 +180,47 @@ describe('userStore student initialization', () => {
     expect(store.studentOnboardingCompleted).toBe(true)
   })
 })
+
+describe('userStore teacher post tags', () => {
+  it('routes recruit-only teacher to student account entry path', async () => {
+    const { useUserStore } = await loadUserStore()
+    const store = useUserStore()
+
+    store.setRole('teacher')
+    store.setPermissions(['student:manage', 'analytics:view', 'message:send'])
+    store.setPostTags(['recruit'])
+
+    expect(store.homePath).toBe('/teacher/student-accounts')
+    expect(store.teacherHomePath).toBe('/teacher/student-accounts')
+  })
+
+  it('hydrates teacher post tags from management profile and persists home path decision', async () => {
+    mocks.fetchManagementProfileMock.mockResolvedValue({
+      data: {
+        userId: 'teacher-recruit-001',
+        role: 'teacher',
+        permissions: ['student:manage', 'analytics:view', 'message:send'],
+        postTags: ['recruit'],
+        assigned_joint_group_code: '',
+      },
+    })
+    mocks.fetchContentBaselineMock.mockResolvedValue(SCIENCE_ENGINEERING_BASELINE)
+    globalThis.window.__QB_ENTRY_TYPE__ = 'teacher'
+    mocks.getAccessTokenMock.mockReturnValue('token-teacher')
+
+    const { useUserStore } = await loadUserStore()
+    const store = useUserStore()
+
+    await store.initialize({
+      routePath: '/teacher/home',
+      entryType: 'teacher',
+      force: true,
+    })
+
+    expect(store.isHydrated).toBe(true)
+    expect(store.role).toBe('teacher')
+    expect(store.postTags).toEqual(['recruit'])
+    expect(store.homePath).toBe('/teacher/student-accounts')
+    expect(localStorage.getItem('qbTeacherPostTags')).toBe(JSON.stringify(['recruit']))
+  })
+})

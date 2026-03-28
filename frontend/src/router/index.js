@@ -1,6 +1,7 @@
 import { ElMessage } from '@/ui/feedback'
 import { createRouter, createWebHistory } from 'vue-router'
 import { getAccessToken } from '../api/request'
+import { usePermission } from '../composables/usePermission.js'
 import { useUserStore } from '../stores/userStore.js'
 import { isRoutePathAllowedInEntry } from '../utils/navigationScope.js'
 import { resolveStudentOnboardingRedirect } from '../utils/studentOnboarding.js'
@@ -32,6 +33,7 @@ export function createScopedRouter({ routes = [], entryType = 'student' } = {}) 
 
   router.beforeEach(async (to) => {
     const userStore = useUserStore()
+    const { canAccess } = usePermission(userStore)
     const hasToken = Boolean(String(getAccessToken() || '').trim())
     if (!userStore.isHydrated && hasToken) {
       await userStore.initialize({ routePath: to.path })
@@ -46,7 +48,18 @@ export function createScopedRouter({ routes = [], entryType = 'student' } = {}) 
       return resolveEntryFallbackPath(router, entryType, userStore.homePath)
     }
 
-    const accessResult = userStore.ensureAccess({
+    if (
+      entryType === 'teacher'
+      && String(userStore.role || '').trim() === 'teacher'
+      && String(to.path || '').trim() === '/teacher/home'
+    ) {
+      const preferredTeacherPath = String(userStore.homePath || '').trim()
+      if (preferredTeacherPath && preferredTeacherPath !== '/teacher/home') {
+        return preferredTeacherPath
+      }
+    }
+
+    const accessResult = canAccess({
       allowedRoles: to.meta?.allowedRoles,
       requiredPermissions: to.meta?.requiredPermissions,
     })

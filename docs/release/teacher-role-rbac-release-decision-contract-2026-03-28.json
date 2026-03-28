@@ -1,0 +1,18 @@
+{
+  "release": "teacher-role-rbac",
+  "date": "2026-03-28",
+  "status": "READY_FOR_UAT",
+  "action": "FIX_THEN_RELEASE",
+  "reason": "Implementation completed; release branch cleanliness must be confirmed before go-live.",
+  "owners": {
+    "product": "teaching-platform",
+    "engineering": "question-bank",
+    "ops": "release-ops"
+  },
+  "evidence": {
+    "acceptance": "docs/release/teacher-role-rbac-acceptance-2026-03-28.md",
+    "config": "docs/release/teacher-role-rbac-config-checklist-2026-03-28.md",
+    "rollback": "docs/release/teacher-role-rbac-rollback-switch-2026-03-28.md",
+    "summary": "docs/release/teacher-role-rbac-release-gate-summary-2026-03-28.md"
+  }
+}

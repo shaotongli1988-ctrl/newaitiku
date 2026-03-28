@@ -1,18 +1,58 @@
 {
-  "generatedAt": "2026-03-27T01:40:29.438146Z",
+  "generatedAt": "2026-03-28T02:06:29.573630Z",
   "phase": "final",
   "mode": "auto",
-  "warningCount": 1,
-  "blockingCount": 1,
+  "warningCount": 5,
+  "blockingCount": 5,
   "actions": [
     {
-      "warningCode": "fullstack-test-matrix-warning",
+      "warningCode": "api-schema-drift-checker-warning",
       "severity": "high",
-      "source": "fullstack-test-matrix",
-      "warning": "[HIGH][fullstack-test-matrix] fullstack-test-matrix returned non-zero (1). Resolve high-risk test matrix gaps or explicitly justify blocking issues.",
-      "owner": "qa-owner",
-      "suggestedSkill": "fullstack-test-matrix",
-      "fixHint": "先修复 `fullstack-test-matrix` 告警，再回跑该守卫并更新关联证据。",
+      "source": "api-schema-drift-checker",
+      "warning": "[HIGH][api-schema-drift-checker] api-schema-drift-checker returned non-zero (1). Resolve schema drift or explicitly justify blocking issues.",
+      "owner": "backend-api-owner",
+      "suggestedSkill": "api-schema-drift-checker",
+      "fixHint": "先修复 `api-schema-drift-checker` 告警，再回跑该守卫并更新关联证据。",
+      "autoFixEligible": false
+    },
+    {
+      "warningCode": "rbac-alignment-guard-warning",
+      "severity": "high",
+      "source": "rbac-alignment-guard",
+      "warning": "[HIGH][rbac-alignment-guard] rbac-alignment-guard returned non-zero (1). Resolve RBAC alignment drift or explicitly justify blocking issues.",
+      "owner": "rbac-owner",
+      "suggestedSkill": "rbac-alignment-guard",
+      "fixHint": "先修复 `rbac-alignment-guard` 告警，再回跑该守卫并更新关联证据。",
+      "autoFixEligible": false
+    },
+    {
+      "warningCode": "delivery-doc-sync-warning",
+      "severity": "high",
+      "source": "delivery-doc-sync",
+      "warning": "[HIGH][delivery-doc-sync] delivery-doc-sync returned non-zero (1). Resolve delivery document sync drift or explicitly justify blocking issues.",
+      "owner": "docs-owner",
+      "suggestedSkill": "delivery-doc-sync",
+      "fixHint": "先修复 `delivery-doc-sync` 告警，再回跑该守卫并更新关联证据。",
+      "autoFixEligible": false
+    },
+    {
+      "warningCode": "component-reuse-shared-logic-guard-warning",
+      "severity": "high",
+      "source": "component-reuse-shared-logic-guard",
+      "warning": "[HIGH][component-reuse-shared-logic-guard] component-reuse-shared-logic-guard returned non-zero (1). Resolve implementation-layer reuse drift or explicitly justify blocking issues.",
+      "owner": "frontend-owner",
+      "suggestedSkill": "component-reuse-shared-logic-guard",
+      "fixHint": "先修复 `component-reuse-shared-logic-guard` 告警，再回跑该守卫并更新关联证据。",
+      "autoFixEligible": false
+    },
+    {
+      "warningCode": "cache-consistency-guard-warning",
+      "severity": "high",
+      "source": "cache-consistency-guard",
+      "warning": "[HIGH][cache-consistency-guard] cache-consistency-guard returned non-zero (1). Resolve cache consistency drift or explicitly justify blocking issues.",
+      "owner": "runtime-owner",
+      "suggestedSkill": "cache-consistency-guard",
+      "fixHint": "先修复 `cache-consistency-guard` 告警，再回跑该守卫并更新关联证据。",
       "autoFixEligible": false
     }
   ],

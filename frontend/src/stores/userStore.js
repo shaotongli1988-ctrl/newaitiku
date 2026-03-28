@@ -7,17 +7,20 @@ import { fetchStudentDashboard } from '../api/services/student'
 const ROLE_STORAGE_KEY = 'qbUserRole'
 const USER_ID_STORAGE_KEY = 'qbUserId'
 const PERMISSIONS_STORAGE_KEY = 'qbPermissionKeys'
+const TEACHER_POST_TAGS_STORAGE_KEY = 'qbTeacherPostTags'
 const EXAM_CATEGORY_STORAGE_KEY = 'qbExamCategoryCode'
 const JOINT_EXAM_GROUP_STORAGE_KEY = 'qbJointExamGroupCode'
 const ASSIGNED_JOINT_GROUP_STORAGE_KEY = 'qbAssignedJointGroupCode'
 const ACTIVE_SCOPE_STORAGE_KEY = 'qbActiveScope'
 const EXAM_CATEGORIES_STORAGE_KEY = 'qbExamCategoryOptions'
 
-const ROLE_HOME_MAP = {
+const ROLE_HOME_FALLBACK_MAP = {
   super_admin: '/admin/home',
   teacher: '/teacher/home',
   student: '/student/home',
 }
+
+const TEACHER_POST_TAGS = ['recruit', 'teach']
 
 const DEFAULT_EXAM_CATEGORIES = [
   {
@@ -108,6 +111,42 @@ function normalizePermissions(permissions) {
     dedupedPermissions.push(permissionKey)
   })
   return dedupedPermissions
+}
+
+function normalizeTeacherPostTags(postTags) {
+  if (!Array.isArray(postTags)) {
+    return []
+  }
+  const normalized = []
+  postTags.forEach((postTagItem) => {
+    const postTag = String(postTagItem || '').trim()
+    if (!postTag || !TEACHER_POST_TAGS.includes(postTag) || normalized.includes(postTag)) {
+      return
+    }
+    normalized.push(postTag)
+  })
+  return normalized
+}
+
+function resolveTeacherHomePath({ postTags = [], permissions = [] } = {}) {
+  const normalizedPostTags = normalizeTeacherPostTags(postTags)
+  if (normalizedPostTags.includes('recruit') && !normalizedPostTags.includes('teach')) {
+    return '/teacher/student-accounts'
+  }
+  if (normalizedPostTags.includes('teach')) {
+    return '/teacher/home'
+  }
+  const normalizedPermissions = normalizePermissions(permissions)
+  const hasTeachingPermission = normalizedPermissions.some((permissionKey) =>
+    ['question:manage', 'paper:manage', 'analytics:view'].includes(permissionKey),
+  )
+  if (hasTeachingPermission) {
+    return '/teacher/home'
+  }
+  if (normalizedPermissions.includes('student:manage')) {
+    return '/teacher/student-accounts'
+  }
+  return '/teacher/home'
 }
 
 function normalizeSubjectList(subjects, { examCategoryCode = '', jointExamGroupCode = '' } = {}) {
@@ -277,6 +316,7 @@ export const useUserStore = defineStore('user', {
     role: null,
     userId: '',
     permissions: [],
+    postTags: [],
     examCategoryCode: '',
     jointExamGroupCode: '',
     assigned_joint_group_code: '',
@@ -291,12 +331,27 @@ export const useUserStore = defineStore('user', {
       const normalizedPermissionKey = String(permissionKey || '').trim()
       return normalizedPermissionKey ? state.permissions.includes(normalizedPermissionKey) : false
     },
+    hasPostTag: (state) => (postTag) => {
+      const normalizedPostTag = String(postTag || '').trim()
+      return normalizedPostTag ? state.postTags.includes(normalizedPostTag) : false
+    },
+
+    teacherHomePath: (state) => resolveTeacherHomePath({
+      postTags: state.postTags,
+      permissions: state.permissions,
+    }),
 
     homePath: (state) => {
       if (!state.role) {
         return '/login'
       }
-      return ROLE_HOME_MAP[state.role] || '/login'
+      if (state.role === 'teacher') {
+        return resolveTeacherHomePath({
+          postTags: state.postTags,
+          permissions: state.permissions,
+        })
+      }
+      return ROLE_HOME_FALLBACK_MAP[state.role] || '/login'
     },
     currentScope: (state) => {
       const normalizedRole = normalizeRole(state.role) || ''
@@ -334,6 +389,12 @@ export const useUserStore = defineStore('user', {
         this.permissions = normalizePermissions(rawPermissions ? JSON.parse(rawPermissions) : [])
       } catch (error) {
         this.permissions = []
+      }
+      const rawPostTags = localStorage.getItem(TEACHER_POST_TAGS_STORAGE_KEY)
+      try {
+        this.postTags = normalizeTeacherPostTags(rawPostTags ? JSON.parse(rawPostTags) : [])
+      } catch (error) {
+        this.postTags = []
       }
 
       this.examCategoryCode = String(localStorage.getItem(EXAM_CATEGORY_STORAGE_KEY) || '').trim()
@@ -375,6 +436,7 @@ export const useUserStore = defineStore('user', {
       localStorage.setItem(ROLE_STORAGE_KEY, this.role)
       localStorage.setItem(USER_ID_STORAGE_KEY, this.userId)
       localStorage.setItem(PERMISSIONS_STORAGE_KEY, JSON.stringify(this.permissions))
+      localStorage.setItem(TEACHER_POST_TAGS_STORAGE_KEY, JSON.stringify(this.postTags))
       localStorage.setItem(EXAM_CATEGORY_STORAGE_KEY, this.examCategoryCode)
       localStorage.setItem(JOINT_EXAM_GROUP_STORAGE_KEY, this.jointExamGroupCode)
       localStorage.setItem(ASSIGNED_JOINT_GROUP_STORAGE_KEY, this.assigned_joint_group_code)
@@ -389,6 +451,9 @@ export const useUserStore = defineStore('user', {
       if (this.role !== 'student') {
         this.studentOnboardingCompleted = null
       }
+      if (this.role !== 'teacher') {
+        this.postTags = []
+      }
     },
 
     setUserId(userId) {
@@ -397,6 +462,10 @@ export const useUserStore = defineStore('user', {
 
     setPermissions(permissions) {
       this.permissions = normalizePermissions(permissions)
+    },
+
+    setPostTags(postTags) {
+      this.postTags = normalizeTeacherPostTags(postTags)
     },
 
     setStudentOnboardingCompleted(completed) {
@@ -541,6 +610,10 @@ export const useUserStore = defineStore('user', {
       this.syncActiveScope()
     },
 
+    usePermission(permissionKey) {
+      return this.hasPermission(permissionKey)
+    },
+
     ensureAccess({ role = '', allowedRoles = [], requiredPermissions = [] } = {}) {
       if (this.role === 'super_admin') {
         return { allowed: true, reason: '' }
@@ -562,7 +635,7 @@ export const useUserStore = defineStore('user', {
       const normalizedRequiredPermissions = normalizePermissions(requiredPermissions)
       if (
         normalizedRequiredPermissions.length &&
-        !normalizedRequiredPermissions.every((permissionKey) => this.hasPermission(permissionKey))
+        !normalizedRequiredPermissions.every((permissionKey) => this.usePermission(permissionKey))
       ) {
         return { allowed: false, reason: 'permission' }
       }
@@ -578,6 +651,7 @@ export const useUserStore = defineStore('user', {
         this.setRole(profileData.role)
         this.setUserId(profileData.userId)
         this.setPermissions(profileData.permissions)
+        this.setPostTags(profileData.postTags)
         this.setAssignedJointGroupCode(
           profileData.assigned_joint_group_code
           || profileData.assignedJointGroupCode
@@ -642,6 +716,7 @@ export const useUserStore = defineStore('user', {
         this.setRole('student')
         this.setUserId(dashboardData.userId || this.userId)
         this.setPermissions([])
+        this.setPostTags([])
         this.setStudentOnboardingCompleted(
           normalizeOnboardingCompleted(dashboardData?.onboarding?.completed),
         )
@@ -699,6 +774,7 @@ export const useUserStore = defineStore('user', {
 
         this.setRole('student')
         this.setPermissions([])
+        this.setPostTags([])
         this.setStudentOnboardingCompleted(null)
         this.setExamCategoryOptions(normalizedBaselineCategories, resolvedExamCategoryCode)
         this.setAssignedJointGroupCode(resolvedJointExamGroupCode)
@@ -798,6 +874,7 @@ export const useUserStore = defineStore('user', {
       this.setRole(loginData.role)
       this.setUserId(loginData.userId)
       this.setPermissions([])
+      this.setPostTags(loginData.postTags)
       this.setAssignedJointGroupCode(
         loginData.assigned_joint_group_code
         || loginData.assignedJointGroupCode
@@ -827,6 +904,7 @@ export const useUserStore = defineStore('user', {
       clearAccessToken()
       clearQuestionBankStorage()
       this.permissions = []
+      this.setPostTags([])
       this.setRole(null)
       this.setUserId('')
       this.setAssignedJointGroupCode('')

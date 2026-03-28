@@ -54,6 +54,8 @@ class AuthServiceMixin:
         phone = request["phone"]
         purpose = request["purpose"]
         now = time.time()
+        # rate limit + lock-style protection for hot paths:
+        # per-phone cooldown and hourly quota prevent burst abuse before token write.
         last = self._sms_codes.get(phone, {})
         last_send_at = float(last.get("sentAt", 0.0))
         if now - last_send_at < 60:
@@ -194,6 +196,21 @@ class AuthServiceMixin:
         managed_permissions = managed_user.get("permissions", []) if isinstance(managed_user, dict) else []
         ext_permissions = ext_json.get("permissions", [])
         permissions = managed_permissions if isinstance(managed_permissions, list) else ext_permissions
+        managed_post_tags = managed_user.get("postTags", []) if isinstance(managed_user, dict) else []
+        ext_post_tags = ext_json.get("postTags", [])
+        post_tags = managed_post_tags if isinstance(managed_post_tags, list) else ext_post_tags
+        managed_student_ids = managed_user.get("managedStudentIds", []) if isinstance(managed_user, dict) else []
+        ext_managed_student_ids = ext_json.get("managedStudentIds", [])
+        managed_scope_student_ids = (
+            managed_student_ids if isinstance(managed_student_ids, list) else ext_managed_student_ids
+        )
+        managed_joint_group_codes = managed_user.get("managedJointExamGroupCodes", []) if isinstance(managed_user, dict) else []
+        ext_managed_joint_group_codes = ext_json.get("managedJointExamGroupCodes", [])
+        managed_scope_joint_group_codes = (
+            managed_joint_group_codes
+            if isinstance(managed_joint_group_codes, list)
+            else ext_managed_joint_group_codes
+        )
         assigned_exam_category_code, assigned_joint_group_code = self._resolve_assigned_scope_codes(str(user["id"]), ext_json)
         return {
             "userId": user["id"],
@@ -202,6 +219,13 @@ class AuthServiceMixin:
             "phone": user["phone"],
             "status": user["status"],
             "permissions": permissions if isinstance(permissions, list) else [],
+            "postTags": post_tags if isinstance(post_tags, list) else [],
+            "managedStudentIds": (
+                managed_scope_student_ids if isinstance(managed_scope_student_ids, list) else []
+            ),
+            "managedJointExamGroupCodes": (
+                managed_scope_joint_group_codes if isinstance(managed_scope_joint_group_codes, list) else []
+            ),
             "examCategoryCode": assigned_exam_category_code,
             "jointExamGroupCode": assigned_joint_group_code,
             "assignedExamCategoryCode": assigned_exam_category_code,

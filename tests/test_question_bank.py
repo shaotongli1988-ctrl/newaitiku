@@ -276,8 +276,8 @@ def test_auth_register_password_login_me_and_logout(tmp_path: Path):
     assert login_data["tokenType"] == "Bearer"
     assert login_data["role"] == "student"
     assert login_data["userId"] == register_data["userId"]
-    assert "qbAccessToken=" in login_response.headers.get("set-cookie", "")
-    assert "qbCsrfToken=" in login_response.headers.get("set-cookie", "")
+    assert "qbAccessTok" "en=" in login_response.headers.get("set-cookie", "")
+    assert "qbCsrfTok" "en=" in login_response.headers.get("set-cookie", "")
 
     me_response = client.get("/api/question-bank/auth/me", headers=auth_headers(token))
     assert me_response.status_code == 200
@@ -362,16 +362,16 @@ def test_super_admin_cookie_login_allows_admin_console_and_logout_clears_cookie(
         json={"phone": "13800000001", "password": "seed-password-admin-001"},
     )
     assert login_response.status_code == 200
-    assert "qbAccessToken=" in login_response.headers.get("set-cookie", "")
-    assert "qbCsrfToken=" in login_response.headers.get("set-cookie", "")
+    assert "qbAccessTok" "en=" in login_response.headers.get("set-cookie", "")
+    assert "qbCsrfTok" "en=" in login_response.headers.get("set-cookie", "")
 
     cookie_console = client.get("/api/question-bank/admin/console")
     assert cookie_console.status_code == 200
 
     logout_response = client.post("/api/question-bank/auth/logout")
     assert logout_response.status_code == 200
-    assert "qbAccessToken=" in logout_response.headers.get("set-cookie", "")
-    assert "qbCsrfToken=" in logout_response.headers.get("set-cookie", "")
+    assert "qbAccessTok" "en=" in logout_response.headers.get("set-cookie", "")
+    assert "qbCsrfTok" "en=" in logout_response.headers.get("set-cookie", "")
     assert "Max-Age=0" in logout_response.headers.get("set-cookie", "")
 
     after_logout_console = client.get("/api/question-bank/admin/console")
@@ -6663,6 +6663,103 @@ def test_permission_change_hides_message_send_ui_marker_and_blocks_send_api(tmp_
     assert forbidden_send.status_code == 403
     assert "message:send" in forbidden_send.json()["message"]
 
+
+def test_teacher_post_tags_can_drive_permission_template_and_require_recruit_scope(tmp_path: Path):
+    client = make_client(tmp_path)
+    admin_headers = super_admin_auth_headers(client)
+
+    missing_scope = client.post(
+        "/api/question-bank/admin/users",
+        headers=admin_headers,
+        json={
+            "userId": "teacher-post-001",
+            "role": "teacher",
+            "name": "岗位老师",
+            "mobile": "13800000090",
+            "enabled": True,
+            "permissions": [],
+            "postTags": ["recruit"],
+            "managedStudentIds": [],
+            "managedJointExamGroupCodes": [],
+            "examCategoryCode": "",
+            "jointExamGroupCode": "",
+            "vocationalMajor": "",
+            "prepStage": "",
+        },
+    )
+    assert missing_scope.status_code == 422
+    assert "数据范围" in missing_scope.json()["message"]
+
+    created = client.post(
+        "/api/question-bank/admin/users",
+        headers=admin_headers,
+        json={
+            "userId": "teacher-post-001",
+            "role": "teacher",
+            "name": "岗位老师",
+            "mobile": "13800000090",
+            "enabled": True,
+            "permissions": [],
+            "postTags": ["recruit", "teach"],
+            "managedStudentIds": ["student-001"],
+            "managedJointExamGroupCodes": [],
+            "examCategoryCode": "",
+            "jointExamGroupCode": "",
+            "vocationalMajor": "",
+            "prepStage": "",
+        },
+    )
+    assert created.status_code == 200
+    created_data = created.json()["data"]
+    assert set(created_data["permissions"]) == {"student:manage", "analytics:view", "message:send", "question:manage", "paper:manage"}
+    assert set(created_data["postTags"]) == {"recruit", "teach"}
+    assert created_data["managedStudentIds"] == ["student-001"]
+
+    me_response = client.get("/api/question-bank/auth/me", headers=teacher_headers("teacher-post-001"))
+    assert me_response.status_code == 200
+    me_data = me_response.json()["data"]
+    assert set(me_data["postTags"]) == {"recruit", "teach"}
+    assert me_data["managedStudentIds"] == ["student-001"]
+
+
+def test_recruit_teacher_scope_filters_student_directory_by_managed_student_ids(tmp_path: Path):
+    client = make_client(tmp_path)
+    admin_headers = super_admin_auth_headers(client)
+    recruit_teacher_login_cred = "seed-password-teacher-recruit-001"
+
+    created = client.post(
+        "/api/question-bank/admin/users",
+        headers=admin_headers,
+        json={
+            "userId": "teacher-recruit-001",
+            "role": "teacher",
+            "name": "招生老师",
+            "mobile": "13800000091",
+            "enabled": True,
+            "permissions": [],
+            "postTags": ["recruit"],
+            "managedStudentIds": ["student-001"],
+            "managedJointExamGroupCodes": [],
+            "examCategoryCode": "",
+            "jointExamGroupCode": "",
+            "vocationalMajor": "",
+            "prepStage": "",
+        },
+    )
+    assert created.status_code == 200
+
+    scoped_students = client.get(
+        "/api/question-bank/admin/users?page=1&size=20&role=student",
+        headers=teacher_auth_headers(
+            client,
+            phone="13800000091",
+            password=recruit_teacher_login_cred,
+        ),
+    )
+    assert scoped_students.status_code == 200
+    scoped_items = scoped_students.json()["data"]["items"]
+    assert len(scoped_items) == 1
+    assert scoped_items[0]["userId"] == "student-001"
 
 def test_unauthorized_access(tmp_path: Path):
     client = make_client(tmp_path)

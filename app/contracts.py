@@ -161,6 +161,11 @@ ROLE_ALIAS_MAP = {
     LEGACY_ROLE_ACADEMIC_TEACHER: ROLE_TEACHER,
 }
 
+ROLE_LOCALIZED_ALIAS_MAP = {
+    ROLE_TEACHER: "教师",
+    ROLE_STUDENT: "学生",
+}
+
 ALL_ROLES = (
     ROLE_SUPER_ADMIN,
     ROLE_TEACHER,
@@ -186,6 +191,16 @@ MANAGED_PERMISSION_KEYS = (
     "settings:manage",
     "message:send",
 )
+
+MANAGED_TEACHER_POST_TAGS = (
+    "recruit",
+    "teach",
+)
+
+TEACHER_POST_PERMISSION_TEMPLATE = {
+    "recruit": ("student:manage", "analytics:view", "message:send"),
+    "teach": ("question:manage", "paper:manage", "analytics:view", "message:send"),
+}
 
 MESSAGE_CATEGORIES = (
     MessageCategoryEnum.TEACHER_QA.value,
@@ -1233,16 +1248,19 @@ class AdminSystemSettingsSaveRequest(BaseModel):
 class AdminManagedUserSaveRequest(BaseModel):
     model_config = REQUEST_MODEL_CONFIG
 
-    user_id: str = Field(min_length=1)
+    userId: str = Field(min_length=1)
     role: str = Field(min_length=1)
     name: str = Field(min_length=1)
     mobile: str = Field(min_length=11, max_length=11)
     enabled: bool = True
     permissions: list[str] = Field(default_factory=list)
-    exam_category_code: str = ""
-    joint_exam_group_code: str = ""
-    vocational_major: str = ""
-    prep_stage: str = ""
+    examCategoryCode: str = ""
+    jointExamGroupCode: str = ""
+    vocationalMajor: str = ""
+    prepStage: str = ""
+    postTags: list[str] = Field(default_factory=list)
+    managedStudentIds: list[str] = Field(default_factory=list)
+    managedJointExamGroupCodes: list[str] = Field(default_factory=list)
 
 
 class AdminStudentsImportRequest(BaseModel):
