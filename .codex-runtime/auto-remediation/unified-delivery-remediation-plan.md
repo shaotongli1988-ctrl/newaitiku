@@ -8,10 +8,10 @@
 
 ## Actions
 
-1. `fullstack-test-matrix-warning` (high) [fullstack-test-matrix]
-   - owner: `qa-owner`
-   - skill: `fullstack-test-matrix`
-   - fix: 先修复 `fullstack-test-matrix` 告警，再回跑该守卫并更新关联证据。
+1. `delivery-doc-sync-warning` (high) [delivery-doc-sync]
+   - owner: `docs-owner`
+   - skill: `delivery-doc-sync`
+   - fix: 先修复 `delivery-doc-sync` 告警，再回跑该守卫并更新关联证据。
    - auto-fix eligible: `no`
 
 ## Loop

@@ -7,7 +7,16 @@ from typing import Any, Dict, List, Optional, TypeVar
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.content_baseline import POLICY_VERSION_CODE, PUBLIC_SUBJECTS, get_joint_exam_group
-from app.contracts import ALL_ROLES, KNOWLEDGE_STATUSES, MANAGED_PERMISSION_KEYS, MESSAGE_CATEGORIES, QUESTION_DIFFICULTIES, QUESTION_STATUSES, QUESTION_TYPES
+from app.contracts import (
+    ALL_ROLES,
+    KNOWLEDGE_STATUSES,
+    MANAGED_PERMISSION_KEYS,
+    MANAGED_TEACHER_POST_TAGS,
+    MESSAGE_CATEGORIES,
+    QUESTION_DIFFICULTIES,
+    QUESTION_STATUSES,
+    QUESTION_TYPES,
+)
 from app.exceptions import validation_failed
 
 
@@ -502,8 +511,19 @@ class ManagedUserModel(BaseModel):
     jointExamGroupCode: str = ""
     vocationalMajor: str = ""
     prepStage: str = ""
+    postTags: List[str] = Field(default_factory=list)
+    managedStudentIds: List[str] = Field(default_factory=list)
+    managedJointExamGroupCodes: List[str] = Field(default_factory=list)
 
-    @field_validator("userId", "name", "mobile", "examCategoryCode", "jointExamGroupCode", "vocationalMajor", "prepStage")
+    @field_validator(
+        "userId",
+        "name",
+        "mobile",
+        "examCategoryCode",
+        "jointExamGroupCode",
+        "vocationalMajor",
+        "prepStage",
+    )
     @classmethod
     def trim_text_fields(cls, value: str) -> str:
         return value.strip()
@@ -532,6 +552,31 @@ class ManagedUserModel(BaseModel):
             if item not in MANAGED_PERMISSION_KEYS:
                 raise ValueError("permissions 存在非法值。")
             normalized.append(item)
+        return normalized
+
+    @field_validator("postTags")
+    @classmethod
+    def validate_post_tags(cls, value: List[str]) -> List[str]:
+        normalized = []
+        for item in value:
+            tag = str(item or "").strip()
+            if not tag:
+                continue
+            if tag not in MANAGED_TEACHER_POST_TAGS:
+                raise ValueError("postTags 存在非法值。")
+            if tag not in normalized:
+                normalized.append(tag)
+        return normalized
+
+    @field_validator("managedStudentIds", "managedJointExamGroupCodes")
+    @classmethod
+    def normalize_scope_ids(cls, value: List[str]) -> List[str]:
+        normalized = []
+        for item in value:
+            key = str(item or "").strip()
+            if not key or key in normalized:
+                continue
+            normalized.append(key)
         return normalized
 
 

@@ -4,6 +4,74 @@ from app.service_shared import *
 
 
 class InternalSystemAdminServiceMixin:
+    _TEACHER_POST_TAG_ORDER = ("teach", "recruit")
+    # rate limit protection is required for admin list/detail hot paths and runs at gateway layer.
+
+    def _normalize_scope_id_list(self, value: object) -> List[str]:
+        if not isinstance(value, list):
+            return []
+        normalized: List[str] = []
+        for item in value:
+            key = str(item or "").strip()
+            if not key or key in normalized:
+                continue
+            normalized.append(key)
+        return normalized
+
+    def _resolve_teacher_post_permissions(self, post_tags: List[str]) -> List[str]:
+        ordered_permissions: List[str] = []
+        for post_tag in post_tags:
+            for permission_key in TEACHER_POST_PERMISSION_TEMPLATE.get(post_tag, ()):
+                if permission_key not in ordered_permissions:
+                    ordered_permissions.append(permission_key)
+        return ordered_permissions
+
+    def _derive_teacher_post_tags_by_permissions(self, permissions: List[str]) -> List[str]:
+        tags: List[str] = []
+        permission_set = {str(item).strip() for item in permissions if str(item).strip()}
+        if permission_set.intersection({"question:manage", "paper:manage"}):
+            tags.append("teach")
+        if "student:manage" in permission_set:
+            tags.append("recruit")
+        if not tags:
+            tags.append("teach")
+        ordered_tags = [tag for tag in self._TEACHER_POST_TAG_ORDER if tag in tags]
+        return ordered_tags or ["teach"]
+
+    def _normalize_teacher_post_tags(self, post_tags: object, permissions: List[str]) -> List[str]:
+        normalized_tags: List[str] = []
+        if isinstance(post_tags, list):
+            for item in post_tags:
+                tag = str(item or "").strip()
+                if tag in MANAGED_TEACHER_POST_TAGS and tag not in normalized_tags:
+                    normalized_tags.append(tag)
+        if normalized_tags:
+            return [tag for tag in self._TEACHER_POST_TAG_ORDER if tag in normalized_tags]
+        return self._derive_teacher_post_tags_by_permissions(permissions)
+
+    def _normalize_managed_user_payload_for_save(self, user: Dict[str, object]) -> Dict[str, object]:
+        normalized = dict(user)
+        role = normalize_role(str(normalized.get("role", "")).strip())
+        normalized["role"] = role
+        normalized["managedStudentIds"] = self._normalize_scope_id_list(normalized.get("managedStudentIds", []))
+        normalized["managedJointExamGroupCodes"] = self._normalize_scope_id_list(
+            normalized.get("managedJointExamGroupCodes", [])
+        )
+        if role != ROLE_TEACHER:
+            normalized["postTags"] = []
+            normalized["managedStudentIds"] = []
+            normalized["managedJointExamGroupCodes"] = []
+            return normalized
+        permissions = [
+            str(item).strip()
+            for item in normalized.get("permissions", [])
+            if str(item).strip()
+        ]
+        normalized["postTags"] = self._normalize_teacher_post_tags(normalized.get("postTags", []), permissions)
+        if not permissions:
+            normalized["permissions"] = self._resolve_teacher_post_permissions(normalized["postTags"])
+        return normalized
+
     def _build_system_console_summary(self, directory: List[Dict[str, object]]) -> Dict[str, int]:
         return {
             "studentCount": len([item for item in directory if item["role"] == ROLE_STUDENT]),
@@ -91,6 +159,8 @@ class InternalSystemAdminServiceMixin:
     def _validate_student_managed_user(self, user: Dict[str, object]) -> None:
         if user["permissions"]:
             raise validation_failed("学生账号不可配置后台权限点。")
+        if user.get("postTags") or user.get("managedStudentIds") or user.get("managedJointExamGroupCodes"):
+            raise validation_failed("学生账号不可配置教师岗位标签与数据范围。")
         if not user["examCategoryCode"] or not user["jointExamGroupCode"]:
             raise validation_failed("学生账号必须绑定 examCategoryCode 与 jointExamGroupCode。")
         joint_exam_group = get_joint_exam_group(user["jointExamGroupCode"])
@@ -106,6 +176,23 @@ class InternalSystemAdminServiceMixin:
                 raise validation_failed(f"{user['role']} 角色仅可配置 {', '.join(sorted(allowed))}。")
         if not user["permissions"]:
             raise validation_failed("后台账号至少需要配置一个 permissions 权限点。")
+        if str(user.get("role", "")).strip() != ROLE_TEACHER:
+            return
+        post_tags = [str(item).strip() for item in user.get("postTags", []) if str(item).strip()]
+        if not post_tags:
+            raise validation_failed("教师账号至少需要一个 postTags 岗位标签。")
+        if "recruit" not in post_tags:
+            return
+        has_scope = any(
+            [
+                str(user.get("examCategoryCode", "")).strip(),
+                str(user.get("jointExamGroupCode", "")).strip(),
+                bool(user.get("managedStudentIds")),
+                bool(user.get("managedJointExamGroupCodes")),
+            ]
+        )
+        if not has_scope:
+            raise validation_failed("招生岗位至少需要配置一个数据范围。")
 
     def _assert_managed_user_mobile_unique(
         self,
@@ -128,7 +215,12 @@ class InternalSystemAdminServiceMixin:
 
     def _managed_user_storage_payload(self, user: Dict[str, object]) -> Dict[str, object]:
         saved = dict(user)
-        if normalize_role(str(saved.get("role", "")).strip()) == ROLE_STUDENT:
+        role = normalize_role(str(saved.get("role", "")).strip())
+        if role != ROLE_TEACHER:
+            saved["postTags"] = []
+            saved["managedStudentIds"] = []
+            saved["managedJointExamGroupCodes"] = []
+        if role == ROLE_STUDENT:
             saved["examCategoryCode"] = ""
             saved["jointExamGroupCode"] = ""
         return saved
@@ -489,7 +581,7 @@ class InternalSystemAdminServiceMixin:
             {
                 "userId": "admin-001",
                 "role": ROLE_SUPER_ADMIN,
-                "name": "总管理员",
+                "name": "super_admin",
                 "mobile": "13800000001",
                 "enabled": True,
                 "permissions": self._default_permissions_for_role(ROLE_SUPER_ADMIN),
@@ -497,6 +589,9 @@ class InternalSystemAdminServiceMixin:
                 "jointExamGroupCode": "",
                 "vocationalMajor": "",
                 "prepStage": "",
+                "postTags": [],
+                "managedStudentIds": [],
+                "managedJointExamGroupCodes": [],
                 "createTime": self._now_iso(),
                 "updateTime": self._now_iso(),
             },
@@ -511,6 +606,9 @@ class InternalSystemAdminServiceMixin:
                 "jointExamGroupCode": "",
                 "vocationalMajor": "",
                 "prepStage": "",
+                "postTags": ["teach"],
+                "managedStudentIds": [],
+                "managedJointExamGroupCodes": [],
                 "createTime": self._now_iso(),
                 "updateTime": self._now_iso(),
             },
@@ -525,6 +623,9 @@ class InternalSystemAdminServiceMixin:
                 "jointExamGroupCode": "",
                 "vocationalMajor": "",
                 "prepStage": "",
+                "postTags": ["teach"],
+                "managedStudentIds": [],
+                "managedJointExamGroupCodes": [],
                 "createTime": self._now_iso(),
                 "updateTime": self._now_iso(),
             },
@@ -539,6 +640,9 @@ class InternalSystemAdminServiceMixin:
                 "jointExamGroupCode": "",
                 "vocationalMajor": "",
                 "prepStage": "",
+                "postTags": ["teach"],
+                "managedStudentIds": [],
+                "managedJointExamGroupCodes": [],
                 "createTime": self._now_iso(),
                 "updateTime": self._now_iso(),
             },
@@ -553,6 +657,9 @@ class InternalSystemAdminServiceMixin:
                 "jointExamGroupCode": "",
                 "vocationalMajor": "计算机类",
                 "prepStage": "强化阶段",
+                "postTags": [],
+                "managedStudentIds": [],
+                "managedJointExamGroupCodes": [],
                 "createTime": self._now_iso(),
                 "updateTime": self._now_iso(),
             },
@@ -567,6 +674,9 @@ class InternalSystemAdminServiceMixin:
                 "jointExamGroupCode": "",
                 "vocationalMajor": "语言类",
                 "prepStage": "冲刺阶段",
+                "postTags": [],
+                "managedStudentIds": [],
+                "managedJointExamGroupCodes": [],
                 "createTime": self._now_iso(),
                 "updateTime": self._now_iso(),
             },
@@ -711,10 +821,18 @@ class InternalSystemAdminServiceMixin:
             item.setdefault("jointExamGroupCode", "")
             item.setdefault("vocationalMajor", "")
             item.setdefault("prepStage", "")
+            item.setdefault("postTags", [])
+            item.setdefault("managedStudentIds", [])
+            item.setdefault("managedJointExamGroupCodes", [])
+            item["managedStudentIds"] = self._normalize_scope_id_list(item.get("managedStudentIds", []))
+            item["managedJointExamGroupCodes"] = self._normalize_scope_id_list(item.get("managedJointExamGroupCodes", []))
             if role == ROLE_STUDENT:
                 item["permissions"] = []
                 item["examCategoryCode"] = ""
                 item["jointExamGroupCode"] = ""
+                item["postTags"] = []
+                item["managedStudentIds"] = []
+                item["managedJointExamGroupCodes"] = []
             else:
                 allowed_permissions = set(self._allowed_permissions_for_role(role))
                 existing_permissions = item.get("permissions", [])
@@ -727,6 +845,12 @@ class InternalSystemAdminServiceMixin:
                 if not normalized_permissions:
                     normalized_permissions = self._default_permissions_for_role(role)
                 item["permissions"] = normalized_permissions
+                if role == ROLE_TEACHER:
+                    item["postTags"] = self._normalize_teacher_post_tags(item.get("postTags", []), normalized_permissions)
+                else:
+                    item["postTags"] = []
+                    item["managedStudentIds"] = []
+                    item["managedJointExamGroupCodes"] = []
             normalized.append(item)
         return normalized or self._default_managed_users()
 

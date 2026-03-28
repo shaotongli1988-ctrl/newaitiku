@@ -1145,6 +1145,17 @@ class QuestionRepository:
             "jointExamGroupCode": joint_exam_group_code,
             "vocationalMajor": str(ext_json.get("vocationalMajor", "")),
             "prepStage": str(ext_json.get("prepStage", "")),
+            "postTags": list(ext_json.get("postTags", [])) if isinstance(ext_json.get("postTags"), list) else [],
+            "managedStudentIds": (
+                list(ext_json.get("managedStudentIds", []))
+                if isinstance(ext_json.get("managedStudentIds"), list)
+                else []
+            ),
+            "managedJointExamGroupCodes": (
+                list(ext_json.get("managedJointExamGroupCodes", []))
+                if isinstance(ext_json.get("managedJointExamGroupCodes"), list)
+                else []
+            ),
             "createTime": str(ext_json.get("createTime", row["createTime"])),
             "updateTime": str(ext_json.get("updateTime", row["updateTime"])),
         }
@@ -1169,6 +1180,9 @@ class QuestionRepository:
                 "permissions": list(user.get("permissions", [])),
                 "vocationalMajor": user.get("vocationalMajor", ""),
                 "prepStage": user.get("prepStage", ""),
+                "postTags": list(user.get("postTags", [])),
+                "managedStudentIds": list(user.get("managedStudentIds", [])),
+                "managedJointExamGroupCodes": list(user.get("managedJointExamGroupCodes", [])),
                 "createTime": user.get("createTime") or existing_ext.get("createTime") or (existing["createTime"] if existing else ""),
                 "updateTime": user.get("updateTime") or existing_ext.get("updateTime") or (existing["updateTime"] if existing else ""),
             }
@@ -1176,9 +1190,21 @@ class QuestionRepository:
         if str(user.get("role", "")).strip().lower() == "student":
             payload.pop("examCategoryCode", None)
             payload.pop("jointExamGroupCode", None)
+            payload.pop("postTags", None)
+            payload.pop("managedStudentIds", None)
+            payload.pop("managedJointExamGroupCodes", None)
+        elif str(user.get("role", "")).strip().lower() == "teacher":
+            payload["examCategoryCode"] = user.get("examCategoryCode", "")
+            payload["jointExamGroupCode"] = user.get("jointExamGroupCode", "")
+            payload["postTags"] = list(user.get("postTags", []))
+            payload["managedStudentIds"] = list(user.get("managedStudentIds", []))
+            payload["managedJointExamGroupCodes"] = list(user.get("managedJointExamGroupCodes", []))
         else:
             payload["examCategoryCode"] = user.get("examCategoryCode", "")
             payload["jointExamGroupCode"] = user.get("jointExamGroupCode", "")
+            payload.pop("postTags", None)
+            payload.pop("managedStudentIds", None)
+            payload.pop("managedJointExamGroupCodes", None)
         status = "ENABLED" if user.get("enabled", True) else "DISABLED"
         if existing:
             connection.execute(

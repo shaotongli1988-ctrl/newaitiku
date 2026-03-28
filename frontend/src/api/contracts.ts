@@ -150,6 +150,9 @@ export interface AdminManagedUserSaveRequest {
   jointExamGroupCode?: string
   vocationalMajor?: string
   prepStage?: string
+  postTags?: string[]
+  managedStudentIds?: string[]
+  managedJointExamGroupCodes?: string[]
 }
 
 export interface AdminStudentsImportRequest {
@@ -203,6 +206,8 @@ export interface ValidationError {
   loc: Array<string | number>
   msg: string
   type: string
+  input?: unknown
+  ctx?: Record<string, unknown>
 }
 
 export interface HTTPValidationError {
@@ -222,19 +227,19 @@ export interface Body_preview_template_import_api_question_bank_imports_template
 
 export interface Body_batch_parse_questions_api_question_bank_batch_parse_post {
   file: unknown
-  exam_category_code?: string
-  joint_exam_group_code?: string
-  subject_code?: string
-  policy_version?: string
+  examCategoryCode?: string
+  jointExamGroupCode?: string
+  subjectCode?: string
+  policyVersion?: string
 }
 
 export interface Body_parse_knowledge_graph_from_word_api_knowledge_graph_parse_from_word_post {
   file: unknown
-  exam_category_code?: string
-  joint_exam_group_code?: string
-  subject_code?: string
-  parse_mode?: string
-  policy_version?: string
+  examCategoryCode?: string
+  jointExamGroupCode?: string
+  subjectCode?: string
+  parseMode?: string
+  policyVersion?: string
 }
 
 export interface Body_ai_parse_admin_syllabus_api_question_bank_admin_syllabus__versionId__ai_parse_post {
@@ -242,7 +247,7 @@ export interface Body_ai_parse_admin_syllabus_api_question_bank_admin_syllabus__
 }
 
 export interface Body_create_teacher_qa_thread_api_question_bank_messages_teacher_qa_threads_post {
-  subject_code: string
+  subjectCode: string
   title: string
   content?: string
   attachments?: File[] | null

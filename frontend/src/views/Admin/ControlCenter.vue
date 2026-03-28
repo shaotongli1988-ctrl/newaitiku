@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from '@/ui/feedback'
+import { usePermission } from '../../composables/usePermission.js'
 import { useUserStore } from '../../stores/userStore.js'
 import { buildContentLabelMaps, resolveContentLabel } from '../../utils/contentBaseline.js'
 import {
@@ -13,6 +14,7 @@ import {
 } from '../../api/services/questionBank'
 
 const userStore = useUserStore()
+const { hasPermission } = usePermission(userStore)
 const summaryKeyOrder = ['studentCount', 'teacherCount', 'disabledCount', 'messageCount', 'templateCount']
 const summaryLabelMap = {
   studentCount: '学生人数',
@@ -24,12 +26,24 @@ const summaryLabelMap = {
 const roleLabelMap = {
   student: '学生',
   teacher: '教师',
-  super_admin: '超管',
+  super_admin: '总管理员',
 }
 const permissionOptionsByRole = {
   super_admin: ['question:manage', 'paper:manage', 'analytics:view', 'student:manage', 'settings:manage', 'message:send'],
   teacher: ['question:manage', 'paper:manage', 'analytics:view', 'student:manage', 'message:send'],
   student: [],
+}
+const teacherPostTagOptions = [
+  { label: '教学岗', value: 'teach' },
+  { label: '招生岗', value: 'recruit' },
+]
+const teacherPermissionTemplateByPostTag = {
+  recruit: ['student:manage', 'analytics:view', 'message:send'],
+  teach: ['question:manage', 'paper:manage', 'analytics:view', 'message:send'],
+}
+const teacherPostTagLabelMap = {
+  recruit: '招生岗',
+  teach: '教学岗',
 }
 
 const DEFAULT_MOCK_EXAM_RULE_PROFILES = {
@@ -232,11 +246,12 @@ const exportFormat = ref('csv')
 const managedUsers = ref([])
 const managedUsersTotal = ref(0)
 
-const canManageStudents = computed(() => userStore.hasPermission('student:manage'))
+const canManageStudents = computed(() => hasPermission('student:manage'))
 const scopeLabelMaps = computed(() => buildContentLabelMaps(userStore.availableExamCategories))
 const resolveExamCategoryLabel = (code) => resolveContentLabel(scopeLabelMaps.value.examCategoryNameMap, code)
 const resolveJointExamGroupLabel = (code) => resolveContentLabel(scopeLabelMaps.value.jointExamGroupNameMap, code)
 const isStudentRole = computed(() => managedUserForm.role === 'student')
+const isTeacherRole = computed(() => managedUserForm.role === 'teacher')
 const availablePermissionOptions = computed(() => permissionOptionsByRole[managedUserForm.role] || [])
 const summaryCards = computed(() =>
   summaryKeyOrder.map((key) => ({
@@ -253,6 +268,30 @@ const permissionInputValue = computed({
   set(value) {
     managedUserForm.permissions = normalizePermissionList(value)
   },
+})
+const managedStudentIdsInputValue = computed({
+  get() {
+    return Array.isArray(managedUserForm.managedStudentIds) ? managedUserForm.managedStudentIds.join(', ') : ''
+  },
+  set(value) {
+    managedUserForm.managedStudentIds = normalizeScopeIdList(value)
+  },
+})
+const managedJointExamGroupCodesInputValue = computed({
+  get() {
+    return Array.isArray(managedUserForm.managedJointExamGroupCodes)
+      ? managedUserForm.managedJointExamGroupCodes.join(', ')
+      : ''
+  },
+  set(value) {
+    managedUserForm.managedJointExamGroupCodes = normalizeScopeIdList(value)
+  },
+})
+const teacherTemplatePermissions = computed(() => {
+  if (!isTeacherRole.value) {
+    return []
+  }
+  return resolveTeacherTemplatePermissions(managedUserForm.postTags)
 })
 
 const settingsRules = {
@@ -274,6 +313,9 @@ function createManagedUserForm() {
     jointExamGroupCode: '',
     vocationalMajor: '',
     prepStage: '',
+    postTags: [],
+    managedStudentIds: [],
+    managedJointExamGroupCodes: [],
   }
 }
 
@@ -287,6 +329,48 @@ function normalizePermissionList(value) {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
+}
+
+function normalizeScopeIdList(value) {
+  const values = Array.isArray(value)
+    ? value
+    : String(value || '').split(',')
+  const normalized = []
+  values.forEach((item) => {
+    const key = String(item || '').trim()
+    if (!key || normalized.includes(key)) {
+      return
+    }
+    normalized.push(key)
+  })
+  return normalized
+}
+
+function normalizePostTags(value) {
+  const values = Array.isArray(value) ? value : []
+  const normalized = []
+  values.forEach((item) => {
+    const key = String(item || '').trim()
+    if (!teacherPostTagLabelMap[key] || normalized.includes(key)) {
+      return
+    }
+    normalized.push(key)
+  })
+  return normalized
+}
+
+function resolveTeacherTemplatePermissions(postTags = []) {
+  const normalizedPostTags = normalizePostTags(postTags)
+  const permissions = []
+  normalizedPostTags.forEach((postTag) => {
+    const templatePermissions = teacherPermissionTemplateByPostTag[postTag] || []
+    templatePermissions.forEach((permissionKey) => {
+      if (!permissions.includes(permissionKey)) {
+        permissions.push(permissionKey)
+      }
+    })
+  })
+  return permissions
 }
 
 function applyConsoleData(payload) {
@@ -322,6 +406,9 @@ function populateManagedUserForm(user) {
     jointExamGroupCode: String(user?.jointExamGroupCode || ''),
     vocationalMajor: String(user?.vocationalMajor || ''),
     prepStage: String(user?.prepStage || ''),
+    postTags: normalizePostTags(user?.postTags),
+    managedStudentIds: normalizeScopeIdList(user?.managedStudentIds),
+    managedJointExamGroupCodes: normalizeScopeIdList(user?.managedJointExamGroupCodes),
   })
   editingUserId.value = managedUserForm.userId
 }
@@ -339,6 +426,41 @@ function formatEnabledLabel(enabled) {
   return enabled ? '启用' : '停用'
 }
 
+function formatPostTagLabel(postTag) {
+  return teacherPostTagLabelMap[String(postTag || '').trim()] || String(postTag || '').trim()
+}
+
+function formatManagedUserScopeSummary(user) {
+  const ranges = []
+  const examCategoryCode = String(user?.examCategoryCode || '').trim()
+  const jointExamGroupCode = String(user?.jointExamGroupCode || '').trim()
+  if (examCategoryCode || jointExamGroupCode) {
+    ranges.push(`${resolveExamCategoryLabel(examCategoryCode)} / ${resolveJointExamGroupLabel(jointExamGroupCode)}`)
+  }
+  const managedStudentIds = normalizeScopeIdList(user?.managedStudentIds)
+  if (managedStudentIds.length) {
+    ranges.push(`负责学生 ${managedStudentIds.length} 人`)
+  }
+  const managedJointExamGroupCodes = normalizeScopeIdList(user?.managedJointExamGroupCodes)
+  if (managedJointExamGroupCodes.length) {
+    ranges.push(`负责专业组 ${managedJointExamGroupCodes.length} 个`)
+  }
+  return ranges.length ? ranges.join('；') : '-'
+}
+
+function applyTeacherPermissionTemplate() {
+  if (!isTeacherRole.value) {
+    return
+  }
+  const templatePermissions = resolveTeacherTemplatePermissions(managedUserForm.postTags)
+  if (!templatePermissions.length) {
+    ElMessage.warning('请先选择岗位标签。')
+    return
+  }
+  managedUserForm.permissions = templatePermissions
+  ElMessage.success('已按岗位标签填充权限模板。')
+}
+
 function validateManagedUserForm() {
   if (!String(managedUserForm.userId || '').trim()) {
     throw new Error('请填写用户ID。')
@@ -354,7 +476,37 @@ function validateManagedUserForm() {
       throw new Error('学生账号必须填写学科门类与联考专业组。')
     }
     managedUserForm.permissions = []
+    managedUserForm.postTags = []
+    managedUserForm.managedStudentIds = []
+    managedUserForm.managedJointExamGroupCodes = []
     return
+  }
+  if (isTeacherRole.value) {
+    managedUserForm.postTags = normalizePostTags(managedUserForm.postTags)
+    if (!managedUserForm.postTags.length) {
+      throw new Error('教师账号至少需要一个岗位标签（招生岗/教学岗）。')
+    }
+    managedUserForm.managedStudentIds = normalizeScopeIdList(managedUserForm.managedStudentIds)
+    managedUserForm.managedJointExamGroupCodes = normalizeScopeIdList(managedUserForm.managedJointExamGroupCodes)
+    if (managedUserForm.postTags.includes('recruit')) {
+      const hasScope = Boolean(
+        String(managedUserForm.examCategoryCode || '').trim()
+        || String(managedUserForm.jointExamGroupCode || '').trim()
+        || managedUserForm.managedStudentIds.length
+        || managedUserForm.managedJointExamGroupCodes.length,
+      )
+      if (!hasScope) {
+        throw new Error('招生岗位至少需要一个数据范围（学科门类/联考专业组/负责学生/负责专业组）。')
+      }
+    }
+    managedUserForm.permissions = normalizePermissionList(managedUserForm.permissions)
+    if (!managedUserForm.permissions.length) {
+      managedUserForm.permissions = resolveTeacherTemplatePermissions(managedUserForm.postTags)
+    }
+  } else {
+    managedUserForm.postTags = []
+    managedUserForm.managedStudentIds = []
+    managedUserForm.managedJointExamGroupCodes = []
   }
   managedUserForm.permissions = normalizePermissionList(managedUserForm.permissions)
   if (!managedUserForm.permissions.length) {
@@ -467,6 +619,9 @@ async function submitManagedUser() {
       jointExamGroupCode: managedUserForm.jointExamGroupCode,
       vocationalMajor: managedUserForm.vocationalMajor,
       prepStage: managedUserForm.prepStage,
+      postTags: managedUserForm.postTags,
+      managedStudentIds: managedUserForm.managedStudentIds,
+      managedJointExamGroupCodes: managedUserForm.managedJointExamGroupCodes,
     })
     resetManagedUserForm()
     managedUserQuery.page = 1
@@ -537,7 +692,18 @@ watch(
   (role) => {
     if (role === 'student') {
       managedUserForm.permissions = []
+      managedUserForm.postTags = []
+      managedUserForm.managedStudentIds = []
+      managedUserForm.managedJointExamGroupCodes = []
+      return
     }
+    if (role === 'teacher' && !managedUserForm.postTags.length) {
+      managedUserForm.postTags = ['teach']
+      return
+    }
+    managedUserForm.postTags = []
+    managedUserForm.managedStudentIds = []
+    managedUserForm.managedJointExamGroupCodes = []
   },
   { immediate: true },
 )
@@ -684,7 +850,7 @@ onMounted(() => {
                 <el-select v-model="managedUserForm.role">
                   <el-option label="学生" value="student" />
                   <el-option label="教师" value="teacher" />
-                  <el-option label="超管" value="super_admin" />
+                  <el-option label="总管理员" value="super_admin" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -710,11 +876,37 @@ onMounted(() => {
             </el-col>
             <el-col :span="12">
               <el-form-item label="权限点">
-                <el-input
-                  v-model="permissionInputValue"
-                  :disabled="isStudentRole"
-                  :placeholder="isStudentRole ? '学生账号不配置后台权限点' : availablePermissionOptions.join(', ')"
-                />
+                <div class="permission-editor">
+                  <el-input
+                    v-model="permissionInputValue"
+                    :disabled="isStudentRole"
+                    :placeholder="isStudentRole ? '该账号不配置后台权限点' : availablePermissionOptions.join(', ')"
+                  />
+                  <el-button
+                    v-if="isTeacherRole"
+                    size="small"
+                    type="primary"
+                    plain
+                    @click="applyTeacherPermissionTemplate"
+                  >
+                    按岗位套用权限
+                  </el-button>
+                </div>
+                <span v-if="isTeacherRole && teacherTemplatePermissions.length" class="helper-text">
+                  岗位模板建议：{{ teacherTemplatePermissions.join(', ') }}
+                </span>
+              </el-form-item>
+            </el-col>
+            <el-col v-if="isTeacherRole" :span="12">
+              <el-form-item label="岗位标签">
+                <el-select v-model="managedUserForm.postTags" multiple collapse-tags collapse-tags-tooltip>
+                  <el-option
+                    v-for="option in teacherPostTagOptions"
+                    :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
+                  />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -735,6 +927,22 @@ onMounted(() => {
             <el-col :span="12">
               <el-form-item label="备考阶段">
                 <el-input v-model="managedUserForm.prepStage" />
+              </el-form-item>
+            </el-col>
+            <el-col v-if="isTeacherRole" :span="12">
+              <el-form-item label="负责学生（userId，逗号分隔）">
+                <el-input
+                  v-model="managedStudentIdsInputValue"
+                  placeholder="示例：student-001, student-031"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col v-if="isTeacherRole" :span="12">
+              <el-form-item label="负责联考专业组（逗号分隔）">
+                <el-input
+                  v-model="managedJointExamGroupCodesInputValue"
+                  placeholder="示例：SCIENCE_ENGINEERING_3, MANAGEMENT_1"
+                />
               </el-form-item>
             </el-col>
           </el-row>
@@ -787,7 +995,7 @@ onMounted(() => {
               <el-select v-model="managedUserQuery.role" clearable placeholder="全部角色" @change="refreshManagedUsers">
                 <el-option label="学生" value="student" />
                 <el-option label="教师" value="teacher" />
-                <el-option label="超管" value="super_admin" />
+                <el-option label="总管理员" value="super_admin" />
               </el-select>
               <el-input
                 v-model="managedUserQuery.keyword"
@@ -816,9 +1024,14 @@ onMounted(() => {
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="范围信息" min-width="220">
+          <el-table-column label="岗位标签" min-width="160">
             <template #default="scope">
-              <span>{{ resolveExamCategoryLabel(scope.row.examCategoryCode) }} / {{ resolveJointExamGroupLabel(scope.row.jointExamGroupCode) }}</span>
+              {{ normalizePostTags(scope.row.postTags).map((item) => formatPostTagLabel(item)).join('、') || '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="范围信息" min-width="260">
+            <template #default="scope">
+              <span>{{ formatManagedUserScopeSummary(scope.row) }}</span>
             </template>
           </el-table-column>
           <el-table-column label="权限点" min-width="220">
@@ -918,6 +1131,12 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
+.permission-editor {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .export-select {
   width: 150px;
 }
@@ -976,6 +1195,12 @@ onMounted(() => {
   .card-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .permission-editor {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 </style>

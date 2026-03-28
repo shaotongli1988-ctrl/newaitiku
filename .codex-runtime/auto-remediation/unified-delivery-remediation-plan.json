@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-03-27T01:40:29.438146Z",
+  "generatedAt": "2026-03-28T06:07:53.831459Z",
   "phase": "final",
   "mode": "auto",
   "warningCount": 1,
   "blockingCount": 1,
   "actions": [
     {
-      "warningCode": "fullstack-test-matrix-warning",
+      "warningCode": "delivery-doc-sync-warning",
       "severity": "high",
-      "source": "fullstack-test-matrix",
-      "warning": "[HIGH][fullstack-test-matrix] fullstack-test-matrix returned non-zero (1). Resolve high-risk test matrix gaps or explicitly justify blocking issues.",
-      "owner": "qa-owner",
-      "suggestedSkill": "fullstack-test-matrix",
-      "fixHint": "先修复 `fullstack-test-matrix` 告警，再回跑该守卫并更新关联证据。",
+      "source": "delivery-doc-sync",
+      "warning": "[HIGH][delivery-doc-sync] delivery-doc-sync returned non-zero (1). Resolve delivery document sync drift or explicitly justify blocking issues.",
+      "owner": "docs-owner",
+      "suggestedSkill": "delivery-doc-sync",
+      "fixHint": "先修复 `delivery-doc-sync` 告警，再回跑该守卫并更新关联证据。",
       "autoFixEligible": false
     }
   ],

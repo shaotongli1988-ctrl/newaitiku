@@ -5,6 +5,20 @@ from app.service_shared import *
 
 
 class SystemServiceMixin:
+    def _resolve_teacher_managed_scope(self, actor_user_id: str) -> Dict[str, set[str]]:
+        managed_user = self._get_managed_user(actor_user_id) if hasattr(self, "_get_managed_user") else None
+        if not isinstance(managed_user, dict):
+            return {
+                "student_ids": set(),
+                "joint_group_codes": set(),
+            }
+        return {
+            "student_ids": set(self._normalize_scope_id_list(managed_user.get("managedStudentIds", []))),
+            "joint_group_codes": set(
+                self._normalize_scope_id_list(managed_user.get("managedJointExamGroupCodes", []))
+            ),
+        }
+
     def list_tasks(self, filters: Dict[str, str], page: int, size: int, actor: Actor) -> Tuple[List[Dict[str, object]], int]:
         normalized = self._validate_task_filters(filters)
         user_scope = "" if actor.role == ROLE_SUPER_ADMIN else actor.user_id
@@ -358,6 +372,15 @@ class SystemServiceMixin:
                 users = [item for item in users if str(item.get("examCategoryCode", "")).strip() == scoped_exam_category_code]
             if scoped_joint_exam_group_code:
                 users = [item for item in users if str(item.get("jointExamGroupCode", "")).strip() == scoped_joint_exam_group_code]
+            teacher_scope = self._resolve_teacher_managed_scope(actor.user_id)
+            if teacher_scope["joint_group_codes"]:
+                users = [
+                    item
+                    for item in users
+                    if str(item.get("jointExamGroupCode", "")).strip() in teacher_scope["joint_group_codes"]
+                ]
+            if teacher_scope["student_ids"]:
+                users = [item for item in users if str(item.get("userId", "")).strip() in teacher_scope["student_ids"]]
         users = sorted(users, key=lambda item: (item["role"], item["userId"]))
         paged, total = self._paginate_items(users, page, size)
         return paged, total
@@ -376,6 +399,13 @@ class SystemServiceMixin:
             raise forbidden("当前账号仅可维护所在学科门类下的学生。")
         if scoped_joint_exam_group_code and user_joint_exam_group_code != scoped_joint_exam_group_code:
             raise forbidden("当前账号仅可维护所在联考专业组下的学生。")
+        teacher_scope = self._resolve_teacher_managed_scope(actor.user_id)
+        if teacher_scope["joint_group_codes"] and user_joint_exam_group_code not in teacher_scope["joint_group_codes"]:
+            raise forbidden("当前账号仅可维护配置范围内的联考专业组学生。")
+        target_user_id = str(user.get("userId", "")).strip()
+        existing_target = self._get_managed_user(target_user_id) if target_user_id else None
+        if teacher_scope["student_ids"] and existing_target and target_user_id not in teacher_scope["student_ids"]:
+            raise forbidden("当前账号仅可维护配置范围内的学生。")
 
     def export_managed_students(self, export_format: str = "csv", actor: Optional[Actor] = None) -> Dict[str, str]:
         export_format = self._normalize_export_format(export_format, STUDENT_DIRECTORY_EXPORT_FORMATS, "考生目录导出", "csv")
@@ -388,6 +418,19 @@ class SystemServiceMixin:
                 students = [item for item in students if str(item.get("examCategoryCode", "")).strip() == scoped_exam_category_code]
             if scoped_joint_exam_group_code:
                 students = [item for item in students if str(item.get("jointExamGroupCode", "")).strip() == scoped_joint_exam_group_code]
+            teacher_scope = self._resolve_teacher_managed_scope(actor.user_id)
+            if teacher_scope["joint_group_codes"]:
+                students = [
+                    item
+                    for item in students
+                    if str(item.get("jointExamGroupCode", "")).strip() in teacher_scope["joint_group_codes"]
+                ]
+            if teacher_scope["student_ids"]:
+                students = [
+                    item
+                    for item in students
+                    if str(item.get("userId", "")).strip() in teacher_scope["student_ids"]
+                ]
         return {"format": export_format, "content": "\n".join(self._build_managed_students_export_lines(students, export_format))}
 
     def get_question_import_template_example(self) -> Dict[str, str]:
@@ -434,6 +477,7 @@ class SystemServiceMixin:
 
     def save_managed_user(self, payload: Dict[str, object], actor: Actor) -> Dict[str, object]:
         user = parse_managed_user_model(payload).model_dump()
+        user = self._normalize_managed_user_payload_for_save(user)
         self._assert_student_account_scope(user, actor)
         self._validate_managed_user_payload(user)
         existing = self._get_managed_user(user["userId"])

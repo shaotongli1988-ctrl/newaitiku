@@ -40,12 +40,14 @@ from app.contracts import (
     ALL_ROLES,
     AdaptivePracticeRequest,
     MANAGED_PERMISSION_KEYS,
+    MANAGED_TEACHER_POST_TAGS,
     MESSAGE_CATEGORIES,
     ROLE_TEACHER,
     ROLE_STUDENT,
     ROLE_SUPER_ADMIN,
     TASK_STATUSES,
     TASK_TYPES,
+    TEACHER_POST_PERMISSION_TEMPLATE,
     normalize_role,
 )
 from app.exceptions import (
