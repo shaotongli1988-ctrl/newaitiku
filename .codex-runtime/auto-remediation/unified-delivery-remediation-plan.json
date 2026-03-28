@@ -1,0 +1,24 @@
+{
+  "generatedAt": "2026-03-27T01:40:29.438146Z",
+  "phase": "final",
+  "mode": "auto",
+  "warningCount": 1,
+  "blockingCount": 1,
+  "actions": [
+    {
+      "warningCode": "fullstack-test-matrix-warning",
+      "severity": "high",
+      "source": "fullstack-test-matrix",
+      "warning": "[HIGH][fullstack-test-matrix] fullstack-test-matrix returned non-zero (1). Resolve high-risk test matrix gaps or explicitly justify blocking issues.",
+      "owner": "qa-owner",
+      "suggestedSkill": "fullstack-test-matrix",
+      "fixHint": "先修复 `fullstack-test-matrix` 告警，再回跑该守卫并更新关联证据。",
+      "autoFixEligible": false
+    }
+  ],
+  "loop": {
+    "step1": "按照 action 修复告警涉及代码/文档/测试",
+    "step2": "重新运行 unified_delivery_guard.py 校验告警是否收敛",
+    "step3": "将修复证据写入 release evidence 或 handoff 文档"
+  }
+}

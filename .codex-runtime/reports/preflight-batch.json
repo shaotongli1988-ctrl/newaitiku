@@ -1,0 +1,51 @@
+{
+  "guard": "release-preflight-guard",
+  "phase": "batch",
+  "cwd": "/Users/shaotongli/Code/newaitiku",
+  "failThreshold": "medium",
+  "changedFiles": [
+    "/Users/shaotongli/Code/newaitiku/tests/integration/test_learning_method_api.py",
+    "/Users/shaotongli/Code/newaitiku/app/service_modules/learning_method.py",
+    "/Users/shaotongli/Code/newaitiku/docs/contracts/current/module-summary.md",
+    "/Users/shaotongli/Code/newaitiku/docs/contracts/current/test-plan.md",
+    "/Users/shaotongli/Code/newaitiku/docs/contracts/current/contract.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/learning-method-release-archive-2026-03-25.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/learning-method-final-release-notice-onepage-2026-03-25.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/learning-method-enterprise-announcement-2026-03-25.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/learning-method-release-index-2026-03-25.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/learning-method-pr-final-copy-2026-03-25.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/learning-method-group-message-template-2026-03-25.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/learning-method-pr-description-2026-03-25.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/learning-method-ops-release-brief-2026-03-25.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/learning-method-test-handoff-2026-03-25.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/learning-method-rollback-switch-2026-03-25.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/learning-method-config-checklist-2026-03-25.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/learning-method-release-evidence-2026-03-25.md",
+    "/Users/shaotongli/Code/newaitiku/docs/contracts/current/waivers.json",
+    "/Users/shaotongli/Code/newaitiku/docs/contracts/current/contract.json",
+    "/Users/shaotongli/Code/newaitiku/docs/contracts/current/openapi.json",
+    "/Users/shaotongli/Code/newaitiku/docs/codex/unified-delivery-p1-01-final.md",
+    "/Users/shaotongli/Code/newaitiku/docs/codex/unified-delivery-p1-01-batch.md",
+    "/Users/shaotongli/Code/newaitiku/docs/codex/unified-delivery-p1-01-start.md",
+    "/Users/shaotongli/Code/newaitiku/docs/codex/TODO.codex.md",
+    "/Users/shaotongli/Code/newaitiku/docs/codex/three-stage-routing-p1-01.md",
+    "/Users/shaotongli/Code/newaitiku/docs/codex/codex-continuous-dev-prompt.md",
+    "/Users/shaotongli/Code/newaitiku/docs/codex/TODO.codex.template.md",
+    "/Users/shaotongli/Code/newaitiku/docs/codex/codex-continuous-readiness.md",
+    "/Users/shaotongli/Code/newaitiku/docs/codex/three-stage-routing.md"
+  ],
+  "summary": {
+    "high": 0,
+    "medium": 1,
+    "low": 0,
+    "total": 1
+  },
+  "warnings": [
+    {
+      "code": "deploy-evidence-missing",
+      "severity": "medium",
+      "message": "实现改动存在，但未发现部署/发布相关证据。",
+      "file": ""
+    }
+  ]
+}

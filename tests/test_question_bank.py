@@ -3254,6 +3254,14 @@ def test_new_pages_keep_fixed_layout_copy(tmp_path: Path):
     assert personal_bank_page.status_code == 307
     assert personal_bank_page.headers["location"].endswith("/student/question-bank/archive?role=student&userId=student-001")
 
+    question_bank_guide_page = client.get("/student/question-bank/guide", params={"role": "student", "userId": "student-001"})
+    assert question_bank_guide_page.status_code == 200
+    question_bank_guide_payload = parse_page_bootstrap(question_bank_guide_page.text)
+    assert question_bank_guide_payload["route"] == "/student/question-bank/guide"
+    assert question_bank_guide_payload["viewKey"] == "student-question-bank-guide"
+    assert question_bank_guide_payload["pageTitle"] == "使用文档"
+    assert question_bank_guide_payload["actor"] == {"role": "student", "userId": "student-001"}
+
     analysis_page = client.get("/student/analysis", params={"role": "student", "userId": "student-001"})
     assert analysis_page.status_code == 200
     analysis_payload = parse_page_bootstrap(analysis_page.text)
@@ -3305,6 +3313,33 @@ def test_new_pages_keep_fixed_layout_copy(tmp_path: Path):
     assert analytics_payload["viewKey"] == "teacher-analytics"
     assert analytics_payload["pageTitle"] == "学情页"
     assert analytics_payload["actor"] == {"role": "teacher", "userId": "teacher-001"}
+
+    import_history_page = client.get(
+        "/teacher/import-history",
+        params={"role": "teacher", "userId": "teacher-001"},
+        follow_redirects=False,
+    )
+    assert import_history_page.status_code == 307
+    assert import_history_page.headers["location"].endswith("/teacher/questions?role=teacher&userId=teacher-001#import-history")
+
+    import_history_detail_page = client.get(
+        "/teacher/import-history/task/task-demo-001",
+        params={"role": "teacher", "userId": "teacher-001"},
+    )
+    assert import_history_detail_page.status_code == 200
+    import_history_detail_payload = parse_page_bootstrap(import_history_detail_page.text)
+    assert import_history_detail_payload["route"] == "/teacher/import-history/task/task-demo-001"
+    assert import_history_detail_payload["viewKey"] == "teacher-import-history-detail"
+    assert import_history_detail_payload["pageTitle"] == "导入任务详情"
+    assert import_history_detail_payload["actor"] == {"role": "teacher", "userId": "teacher-001"}
+
+    teacher_guide_page = client.get("/teacher/guide", params={"role": "teacher", "userId": "teacher-001"})
+    assert teacher_guide_page.status_code == 200
+    teacher_guide_payload = parse_page_bootstrap(teacher_guide_page.text)
+    assert teacher_guide_payload["route"] == "/teacher/guide"
+    assert teacher_guide_payload["viewKey"] == "teacher-guide"
+    assert teacher_guide_payload["pageTitle"] == "使用文档"
+    assert teacher_guide_payload["actor"] == {"role": "teacher", "userId": "teacher-001"}
 
 
 def test_teacher_with_student_manage_permission_can_manage_student_accounts(tmp_path: Path):
@@ -6887,6 +6922,45 @@ def test_student_subscription_mock_order_confirm_idempotent(tmp_path: Path):
     assert str(second_data["subscription"]["endTime"]) == first_end_time
 
 
+def test_teacher_forbidden_but_super_admin_can_access_student_subscription_and_diagnosis_endpoints(tmp_path: Path):
+    client = make_client(tmp_path)
+    teacher_token_headers = teacher_auth_headers(client)
+    admin_headers = super_admin_auth_headers(client)
+
+    teacher_status_response = client.get(
+        "/api/question-bank/student/subscription/status",
+        headers=teacher_token_headers,
+    )
+    assert teacher_status_response.status_code == 403
+
+    teacher_diagnosis_start_response = client.post(
+        "/api/question-bank/student/diagnosis/quick/start",
+        headers=teacher_token_headers,
+        json={"questionCount": 3},
+    )
+    assert teacher_diagnosis_start_response.status_code == 403
+
+    teacher_redeem_response = client.post(
+        "/api/question-bank/student/subscription/redeem",
+        headers=teacher_token_headers,
+        json={"code": "TEST-REDEEM-FORBIDDEN"},
+    )
+    assert teacher_redeem_response.status_code == 403
+
+    admin_status_response = client.get(
+        "/api/question-bank/student/subscription/status",
+        headers=admin_headers,
+    )
+    assert admin_status_response.status_code == 200
+
+    admin_diagnosis_start_response = client.post(
+        "/api/question-bank/student/diagnosis/quick/start",
+        headers=admin_headers,
+        json={"questionCount": 3},
+    )
+    assert admin_diagnosis_start_response.status_code == 200
+
+
 def test_admin_can_create_redeem_code_batch(tmp_path: Path):
     client = make_client(tmp_path)
     admin_headers = super_admin_auth_headers(client)
@@ -7045,8 +7119,14 @@ def test_student_quick_diagnosis_start_submit_and_idempotent(tmp_path: Path):
     start_data = start_response.json()["data"]
     session_id = str(start_data["sessionId"])
     question_ids = list(start_data["questionIds"])
+    questions_preview = start_data.get("questions", [])
     assert session_id
     assert len(question_ids) == 3
+    assert isinstance(questions_preview, list)
+    assert len(questions_preview) == 3
+    for item in questions_preview:
+        assert str(item.get("questionId", "")).strip() in question_ids
+        assert "answer" not in item
 
     repo = client.app.state.service.repository
     question_rows = {str(row["id"]): row for row in repo.list_questions_by_ids(question_ids)}

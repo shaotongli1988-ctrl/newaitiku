@@ -1,0 +1,6 @@
+interface:
+  display_name: "发布分支就绪"
+  short_description: "检查 release 分支的未合并项、脏提交和风险 cherry-pick"
+  default_prompt: "使用 $release-branch-readiness-checker 检查当前 release 分支的发布准备情况，输出阻断项和风险差异。"
+policy:
+  allow_implicit_invocation: true

@@ -10,10 +10,12 @@ const StudentTasks = () => import('../views/Student/Tasks.vue')
 const StudentPractice = () => import('../views/Student/Practice.vue')
 const StudentExamTasks = () => import('../views/Student/ExamTasks.vue')
 const StudentPoints = () => import('../views/Student/Points.vue')
+const StudentLearningMethods = () => import('../views/Student/LearningMethods.vue')
 const StudentQuestionBankShell = () => import('../views/Student/QuestionBankShell.vue')
 const StudentWrongBook = () => import('../views/Student/WrongBook.vue')
 const StudentPersonalBank = () => import('../views/Student/PersonalBank.vue')
 const StudentQuestionBankSyllabus = () => import('../views/Student/QuestionBankSyllabus.vue')
+const StudentQuestionBankGuide = () => import('../views/Student/QuestionBankGuide.vue')
 const MessageCenter = () => import('../views/System/Messages.vue')
 const SystemError = () => import('../views/System/SystemError.vue')
 
@@ -64,6 +66,13 @@ export const studentRoutes = [
     path: '/student/personal-bank',
     redirect: (to) => ({
       path: '/student/question-bank/archive',
+      query: { ...(to?.query || {}) },
+    }),
+  },
+  {
+    path: '/student/learning-methods',
+    redirect: (to) => ({
+      path: '/student/question-bank/learning-methods',
       query: { ...(to?.query || {}) },
     }),
   },
@@ -277,6 +286,26 @@ export const studentRoutes = [
             component: StudentQuestionBankSyllabus,
             meta: {
               title: '考试大纲',
+              allowedRoles: ['student', 'super_admin'],
+              requiredPermissions: [],
+            },
+          },
+          {
+            path: 'learning-methods',
+            name: 'studentQuestionBankLearningMethods',
+            component: StudentLearningMethods,
+            meta: {
+              title: '学习方法',
+              allowedRoles: ['student', 'super_admin'],
+              requiredPermissions: [],
+            },
+          },
+          {
+            path: 'guide',
+            name: 'studentQuestionBankGuide',
+            component: StudentQuestionBankGuide,
+            meta: {
+              title: '使用文档',
               allowedRoles: ['student', 'super_admin'],
               requiredPermissions: [],
             },

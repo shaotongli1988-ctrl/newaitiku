@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>自由练习 | Azure Academix</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-bright": "#f7f9fb",
+                        "surface-container-high": "#e6e8ea",
+                        "surface-dim": "#d8dadc",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#b5c4ff",
+                        "on-secondary-container": "#005b78",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "background": "#f7f9fb",
+                        "on-tertiary-fixed": "#002113",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "on-tertiary-container": "#68f5b8",
+                        "surface-container-low": "#f2f4f6",
+                        "inverse-surface": "#2d3133",
+                        "on-primary-fixed": "#00174d",
+                        "surface-tint": "#1353d8",
+                        "surface-variant": "#e0e3e5",
+                        "secondary-container": "#7ed4fd",
+                        "on-primary-container": "#d4dcff",
+                        "on-surface-variant": "#434654",
+                        "surface": "#f7f9fb",
+                        "secondary-fixed-dim": "#7bd1fa",
+                        "secondary-fixed": "#c0e8ff",
+                        "on-error": "#ffffff",
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#dbe1ff",
+                        "on-secondary-fixed": "#001e2b",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-secondary-fixed-variant": "#004d66",
+                        "on-error-container": "#93000a",
+                        "secondary": "#006686",
+                        "primary-container": "#1a56db",
+                        "outline-variant": "#c3c5d7",
+                        "primary": "#003fb1",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-primary-fixed-variant": "#003dab",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "tertiary-container": "#006f4b",
+                        "on-surface": "#191c1e",
+                        "tertiary": "#005438",
+                        "surface-container": "#eceef0",
+                        "on-tertiary": "#ffffff",
+                        "on-background": "#191c1e",
+                        "outline": "#737686"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; color: #191c1e; }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-nav { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .bento-card { transition: transform 0.2s ease; }
+        .bento-card:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- SideNavBar Shell -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 flex flex-col p-4 space-y-2 z-40">
+<div class="px-4 py-6 mb-4">
+<h1 class="text-lg font-black text-blue-900 tracking-tight font-headline">Academic Sanctuary</h1>
+<p class="text-xs text-slate-500 font-medium">Zhuan Sheng Ben Prep</p>
+</div>
+<nav class="flex-grow space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 font-medium font-headline text-sm hover:bg-slate-200/50 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span>AI 进度</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 font-medium font-headline text-sm hover:bg-slate-200/50 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span>个人题库</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 font-medium font-headline text-sm hover:bg-slate-200/50 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span>错题本</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-blue-700 font-bold bg-blue-50/80 rounded-lg font-headline text-sm transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span>自由练习</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 font-medium font-headline text-sm hover:bg-slate-200/50 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+<span>消息中心</span>
+</a>
+</nav>
+<div class="pt-4 border-t border-slate-100 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 font-medium font-headline text-sm hover:bg-slate-200/50 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span>Help Center</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 font-medium font-headline text-sm hover:bg-slate-200/50 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen p-8 lg:p-12">
+<!-- Header Section -->
+<header class="mb-10 flex justify-between items-end">
+<div>
+<h2 class="text-3xl font-extrabold font-headline text-on-surface tracking-tight mb-2">自由练习</h2>
+<p class="text-on-surface-variant font-medium">定制您的学习路径，精准攻克知识薄弱点。</p>
+</div>
+<div class="flex gap-3">
+<button class="bg-surface-container-high text-on-surface font-semibold py-2.5 px-6 rounded-xl hover:bg-surface-dim transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="history">history</span>
+                    练习历史
+                </button>
+<button class="bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold py-2.5 px-8 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95 flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="play_circle">play_circle</span>
+                    开始随机练习
+                </button>
+</div>
+</header>
+<!-- Bento Grid: Stats and Filters -->
+<div class="grid grid-cols-12 gap-6 mb-10">
+<!-- Filter Section -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-xl p-6 shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-bold font-headline text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="filter_list">filter_list</span>
+                        筛选练习范围
+                    </h3>
+<button class="text-primary text-sm font-bold hover:underline">重置所有</button>
+</div>
+<div class="space-y-6">
+<div>
+<label class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">考试等级 (Difficulty)</label>
+<div class="flex flex-wrap gap-3">
+<span class="px-5 py-2 bg-primary-fixed text-on-primary-fixed border border-primary/10 rounded-full text-sm font-bold cursor-pointer">L3 基础入门</span>
+<span class="px-5 py-2 bg-surface-container-low text-on-surface-variant rounded-full text-sm font-medium hover:bg-surface-container-high transition-colors cursor-pointer">L4 强化提升</span>
+<span class="px-5 py-2 bg-surface-container-low text-on-surface-variant rounded-full text-sm font-medium hover:bg-surface-container-high transition-colors cursor-pointer">L5 冲刺模拟</span>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold text-outline uppercase tracking-wider mb-3">科目选择 (Subjects)</label>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+<div class="p-4 bg-primary/5 border border-primary/20 rounded-xl cursor-pointer">
+<p class="text-sm font-bold text-primary mb-1">高等数学</p>
+<p class="text-[10px] text-primary/60">1,240 道题目可用</p>
+</div>
+<div class="p-4 bg-surface-container-low hover:bg-surface-container-high rounded-xl cursor-pointer transition-colors">
+<p class="text-sm font-bold text-on-surface mb-1">大学英语</p>
+<p class="text-[10px] text-on-surface-variant">850 道题目可用</p>
+</div>
+<div class="p-4 bg-surface-container-low hover:bg-surface-container-high rounded-xl cursor-pointer transition-colors">
+<p class="text-sm font-bold text-on-surface mb-1">计算机基础</p>
+<p class="text-[10px] text-on-surface-variant">2,100 道题目可用</p>
+</div>
+<div class="p-4 bg-surface-container-low hover:bg-surface-container-high rounded-xl cursor-pointer transition-colors">
+<p class="text-sm font-bold text-on-surface mb-1">专业课综合</p>
+<p class="text-[10px] text-on-surface-variant">320 道题目可用</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Stats Module -->
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<div class="bg-primary text-on-primary rounded-xl p-6 relative overflow-hidden bento-card">
+<div class="relative z-10">
+<p class="text-primary-fixed/80 text-xs font-bold uppercase tracking-widest mb-1">今日进度</p>
+<h4 class="text-4xl font-black font-headline mb-4">42 / 100</h4>
+<div class="w-full bg-on-primary/10 h-2 rounded-full mb-2">
+<div class="bg-tertiary-fixed w-[42%] h-full rounded-full"></div>
+</div>
+<p class="text-xs font-medium text-primary-fixed/70">还需 58 道题目即可达成今日目标</p>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-9xl" data-icon="task_alt">task_alt</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm bento-card">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-secondary-container/30 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+</div>
+<div>
+<p class="text-xs text-on-surface-variant font-bold">知识点覆盖率</p>
+<p class="text-xl font-black font-headline text-on-surface">78.4%</p>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm bento-card">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-tertiary/10 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined" data-icon="timer">timer</span>
+</div>
+<div>
+<p class="text-xs text-on-surface-variant font-bold">平均答题速度</p>
+<p class="text-xl font-black font-headline text-on-surface">45s <span class="text-xs font-normal text-on-surface-variant">/ 题</span></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Interactive Question List -->
+<section class="bg-surface-container-lowest rounded-2xl shadow-sm overflow-hidden mb-12">
+<div class="p-6 border-b border-surface-container-high flex justify-between items-center bg-surface-container-low/30">
+<h3 class="font-headline font-bold text-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="list_alt">list_alt</span>
+                    精选练习题目
+                </h3>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]" data-icon="search">search</span>
+<input class="pl-10 pr-4 py-2 bg-white border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/20 w-64 shadow-sm" placeholder="搜索题目关键词..." type="text"/>
+</div>
+<select class="bg-white border-none rounded-lg text-sm py-2 px-4 shadow-sm focus:ring-2 focus:ring-primary/20">
+<option>按难度排序</option>
+<option>按通过率排序</option>
+<option>最近更新</option>
+</select>
+</div>
+</div>
+<div class="divide-y divide-surface-container-high">
+<!-- Question Item 1 -->
+<div class="p-6 hover:bg-surface-bright transition-colors group">
+<div class="flex items-start gap-6">
+<div class="shrink-0">
+<div class="w-10 h-10 rounded-lg bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold font-headline">01</div>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-0.5 bg-surface-container-high rounded text-[10px] font-bold text-on-surface-variant">高等数学</span>
+<span class="px-2 py-0.5 bg-tertiary/10 text-tertiary rounded text-[10px] font-bold">难度: 易</span>
+<span class="text-xs text-outline ml-auto">通过率: 92%</span>
+</div>
+<h4 class="text-on-surface font-semibold mb-3 group-hover:text-primary transition-colors">若函数 f(x) 在区间 [a, b] 上连续，则 f(x) 在该区间上一定存在最大值和最小值。该命题是否正确？</h4>
+<div class="flex gap-4">
+<button class="text-xs font-bold text-primary flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-[16px]" data-icon="visibility">visibility</span> 查看解析
+                                </button>
+<button class="text-xs font-bold text-outline flex items-center gap-1 hover:text-error transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="bookmark">bookmark</span> 收藏题目
+                                </button>
+</div>
+</div>
+<div class="shrink-0 flex items-center">
+<button class="bg-primary/10 text-primary hover:bg-primary hover:text-on-primary p-3 rounded-full transition-all">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Question Item 2 -->
+<div class="p-6 hover:bg-surface-bright transition-colors group">
+<div class="flex items-start gap-6">
+<div class="shrink-0">
+<div class="w-10 h-10 rounded-lg bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold font-headline">02</div>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-0.5 bg-surface-container-high rounded text-[10px] font-bold text-on-surface-variant">高等数学</span>
+<span class="px-2 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-bold">难度: 中</span>
+<span class="text-xs text-outline ml-auto">通过率: 64%</span>
+</div>
+<h4 class="text-on-surface font-semibold mb-3 group-hover:text-primary transition-colors">求解极限：lim (x→0) (sin x / x) 的结果是多少？</h4>
+<div class="flex gap-4">
+<button class="text-xs font-bold text-primary flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-[16px]" data-icon="visibility">visibility</span> 查看解析
+                                </button>
+<button class="text-xs font-bold text-outline flex items-center gap-1 hover:text-error transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="bookmark">bookmark</span> 收藏题目
+                                </button>
+</div>
+</div>
+<div class="shrink-0 flex items-center">
+<button class="bg-primary/10 text-primary hover:bg-primary hover:text-on-primary p-3 rounded-full transition-all">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Question Item 3 -->
+<div class="p-6 hover:bg-surface-bright transition-colors group">
+<div class="flex items-start gap-6">
+<div class="shrink-0">
+<div class="w-10 h-10 rounded-lg bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold font-headline">03</div>
+</div>
+<div class="flex-grow">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-0.5 bg-surface-container-high rounded text-[10px] font-bold text-on-surface-variant">高等数学</span>
+<span class="px-2 py-0.5 bg-error-container text-error rounded text-[10px] font-bold">难度: 难</span>
+<span class="text-xs text-outline ml-auto">通过率: 31%</span>
+</div>
+<h4 class="text-on-surface font-semibold mb-3 group-hover:text-primary transition-colors">计算不定积分 ∫ (1 / (1 + x²)) dx。</h4>
+<div class="flex gap-4">
+<button class="text-xs font-bold text-primary flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-[16px]" data-icon="visibility">visibility</span> 查看解析
+                                </button>
+<button class="text-xs font-bold text-outline flex items-center gap-1 hover:text-error transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="bookmark">bookmark</span> 收藏题目
+                                </button>
+</div>
+</div>
+<div class="shrink-0 flex items-center">
+<button class="bg-primary/10 text-primary hover:bg-primary hover:text-on-primary p-3 rounded-full transition-all">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Pagination -->
+<div class="p-6 flex items-center justify-center gap-2 bg-surface-container-low/30 border-t border-surface-container-high">
+<button class="w-10 h-10 rounded-lg flex items-center justify-center text-outline hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-lg flex items-center justify-center bg-primary text-on-primary font-bold">1</button>
+<button class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors font-medium">2</button>
+<button class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors font-medium">3</button>
+<span class="px-2 text-outline">...</span>
+<button class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors font-medium">12</button>
+<button class="w-10 h-10 rounded-lg flex items-center justify-center text-outline hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</section>
+</main>
+<!-- Contextual FAB (Suppressed on this desktop task-focused view according to rules but added as an example of Academic Sanctuary's interactive help if needed) -->
+<div class="fixed bottom-8 right-8 z-50">
+<button class="w-14 h-14 rounded-full bg-primary text-on-primary shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[28px]" data-icon="smart_toy">smart_toy</span>
+</button>
+</div>
+</body></html>

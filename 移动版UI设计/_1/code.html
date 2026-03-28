@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "inverse-surface": "#2d3133",
+              "on-secondary-container": "#005b78",
+              "secondary-container": "#7ed4fd",
+              "on-tertiary": "#ffffff",
+              "on-secondary-fixed": "#001e2b",
+              "surface-tint": "#1353d8",
+              "outline-variant": "#c3c5d7",
+              "on-tertiary-fixed-variant": "#005236",
+              "on-primary-fixed-variant": "#003dab",
+              "surface-container-highest": "#e0e3e5",
+              "error-container": "#ffdad6",
+              "tertiary-fixed-dim": "#4edea3",
+              "error": "#ba1a1a",
+              "surface-container": "#eceef0",
+              "surface-container-high": "#e6e8ea",
+              "on-error": "#ffffff",
+              "on-tertiary-fixed": "#002113",
+              "on-error-container": "#93000a",
+              "tertiary-container": "#006f4b",
+              "on-surface-variant": "#434654",
+              "surface": "#f7f9fb",
+              "inverse-primary": "#b5c4ff",
+              "tertiary": "#005438",
+              "on-tertiary-container": "#68f5b8",
+              "tertiary-fixed": "#6ffbbe",
+              "primary": "#003fb1",
+              "on-secondary-fixed-variant": "#004d66",
+              "secondary-fixed": "#c0e8ff",
+              "secondary-fixed-dim": "#7bd1fa",
+              "surface-container-lowest": "#ffffff",
+              "inverse-on-surface": "#eff1f3",
+              "background": "#f7f9fb",
+              "on-secondary": "#ffffff",
+              "primary-container": "#1a56db",
+              "on-background": "#191c1e",
+              "on-primary-container": "#d4dcff",
+              "outline": "#737686",
+              "on-primary-fixed": "#00174d",
+              "surface-dim": "#d8dadc",
+              "secondary": "#006686",
+              "on-surface": "#191c1e",
+              "primary-fixed": "#dbe1ff",
+              "surface-container-low": "#f2f4f6",
+              "surface-bright": "#f7f9fb",
+              "primary-fixed-dim": "#b5c4ff",
+              "surface-variant": "#e0e3e5",
+              "on-primary": "#ffffff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Top AppBar -->
+<header class="sticky top-0 w-full z-50 bg-white/70 backdrop-blur-xl shadow-[0_12px_40px_rgba(25,28,30,0.06)] flex items-center justify-between px-6 h-16">
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100/50 active:scale-95 duration-200">
+<span class="material-symbols-outlined text-[#003fb1]">arrow_back</span>
+</button>
+<h1 class="font-headline font-bold text-lg text-[#003fb1]">专升本题库</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100/50 active:scale-95 duration-200">
+<span class="material-symbols-outlined text-slate-500">more_vert</span>
+</button>
+</div>
+</header>
+<main class="pb-24 pt-4 px-4 space-y-8 max-w-md mx-auto">
+<!-- Search Bar -->
+<section class="sticky top-20 z-40">
+<div class="relative group">
+<div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">search</span>
+</div>
+<input class="w-full h-14 pl-12 pr-4 bg-surface-container-high border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all text-sm font-medium" placeholder="搜索题目、知识点、科目..." type="text"/>
+</div>
+</section>
+<!-- Metrics Overview (Horizontal Scroll) -->
+<section>
+<div class="flex items-center justify-between mb-4 px-2">
+<h2 class="font-headline font-bold text-lg tracking-tight">学习概览</h2>
+<span class="text-xs font-semibold text-primary px-3 py-1 bg-primary/10 rounded-full">实时更新</span>
+</div>
+<div class="flex overflow-x-auto gap-4 hide-scrollbar pb-2 snap-x">
+<div class="snap-start flex-shrink-0 w-[75%] p-5 rounded-xl bg-gradient-to-br from-primary to-primary-container text-white shadow-lg">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined opacity-80" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="text-[10px] uppercase font-bold tracking-widest opacity-60">Accuracy</span>
+</div>
+<div class="font-headline text-3xl font-extrabold mb-1">84.5%</div>
+<div class="text-xs opacity-80">当前综合正确率</div>
+</div>
+<div class="snap-start flex-shrink-0 w-[75%] p-5 rounded-xl bg-surface-container-lowest shadow-sm border-b-2 border-secondary">
+<div class="flex justify-between items-start mb-4 text-secondary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">timer</span>
+<span class="text-[10px] uppercase font-bold tracking-widest opacity-60">Focus Time</span>
+</div>
+<div class="font-headline text-3xl font-extrabold mb-1 text-on-surface">12.5h</div>
+<div class="text-xs text-outline">本周累计刷题时长</div>
+</div>
+<div class="snap-start flex-shrink-0 w-[75%] p-5 rounded-xl bg-surface-container-lowest shadow-sm border-b-2 border-tertiary">
+<div class="flex justify-between items-start mb-4 text-tertiary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">task_alt</span>
+<span class="text-[10px] uppercase font-bold tracking-widest opacity-60">Completion</span>
+</div>
+<div class="font-headline text-3xl font-extrabold mb-1 text-on-surface">2,480</div>
+<div class="text-xs text-outline">已完成题目总量</div>
+</div>
+</div>
+</section>
+<!-- Quick Actions (Review Plan) -->
+<section>
+<div class="grid grid-cols-3 gap-3">
+<button class="flex flex-col items-center justify-center p-4 bg-surface-container-low rounded-xl hover:bg-white hover:shadow-md transition-all group">
+<div class="w-12 h-12 flex items-center justify-center rounded-full bg-primary/10 text-primary mb-3 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">history</span>
+</div>
+<span class="text-xs font-bold text-on-surface">错题重练</span>
+</button>
+<button class="flex flex-col items-center justify-center p-4 bg-surface-container-low rounded-xl hover:bg-white hover:shadow-md transition-all group">
+<div class="w-12 h-12 flex items-center justify-center rounded-full bg-secondary/10 text-secondary mb-3 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">auto_stories</span>
+</div>
+<span class="text-xs font-bold text-on-surface">今日计划</span>
+</button>
+<button class="flex flex-col items-center justify-center p-4 bg-surface-container-low rounded-xl hover:bg-white hover:shadow-md transition-all group">
+<div class="w-12 h-12 flex items-center justify-center rounded-full bg-tertiary/10 text-tertiary mb-3 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">emoji_events</span>
+</div>
+<span class="text-xs font-bold text-on-surface">考点模拟</span>
+</button>
+</div>
+</section>
+<!-- Subjects List -->
+<section class="space-y-4">
+<h2 class="font-headline font-bold text-lg tracking-tight px-2">学科列表</h2>
+<div class="space-y-3">
+<!-- Subject Card 1 -->
+<div class="group flex items-center p-5 bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer">
+<div class="w-14 h-14 rounded-xl bg-blue-50 flex items-center justify-center mr-5">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">calculate</span>
+</div>
+<div class="flex-1">
+<h3 class="font-headline font-bold text-on-surface">高等数学</h3>
+<div class="flex items-center gap-3 mt-1">
+<span class="text-xs text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">format_list_bulleted</span>
+                                12 章节
+                            </span>
+<span class="text-xs text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">question_mark</span>
+                                1,420 题
+                            </span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary group-hover:translate-x-1 transition-all">chevron_right</span>
+</div>
+<!-- Subject Card 2 -->
+<div class="group flex items-center p-5 bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer">
+<div class="w-14 h-14 rounded-xl bg-cyan-50 flex items-center justify-center mr-5">
+<span class="material-symbols-outlined text-secondary text-3xl" style="font-variation-settings: 'FILL' 1;">translate</span>
+</div>
+<div class="flex-1">
+<h3 class="font-headline font-bold text-on-surface">公共英语</h3>
+<div class="flex items-center gap-3 mt-1">
+<span class="text-xs text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">format_list_bulleted</span>
+                                18 章节
+                            </span>
+<span class="text-xs text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">question_mark</span>
+                                2,850 题
+                            </span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-secondary group-hover:translate-x-1 transition-all">chevron_right</span>
+</div>
+<!-- Subject Card 3 -->
+<div class="group flex items-center p-5 bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer">
+<div class="w-14 h-14 rounded-xl bg-emerald-50 flex items-center justify-center mr-5">
+<span class="material-symbols-outlined text-tertiary text-3xl" style="font-variation-settings: 'FILL' 1;">terminal</span>
+</div>
+<div class="flex-1">
+<h3 class="font-headline font-bold text-on-surface">计算机基础</h3>
+<div class="flex items-center gap-3 mt-1">
+<span class="text-xs text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">format_list_bulleted</span>
+                                8 章节
+                            </span>
+<span class="text-xs text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">question_mark</span>
+                                980 题
+                            </span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-tertiary group-hover:translate-x-1 transition-all">chevron_right</span>
+</div>
+<!-- Subject Card 4 -->
+<div class="group flex items-center p-5 bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer">
+<div class="w-14 h-14 rounded-xl bg-slate-100 flex items-center justify-center mr-5">
+<span class="material-symbols-outlined text-slate-600 text-3xl" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+</div>
+<div class="flex-1">
+<h3 class="font-headline font-bold text-on-surface">大学语文</h3>
+<div class="flex items-center gap-3 mt-1">
+<span class="text-xs text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">format_list_bulleted</span>
+                                15 章节
+                            </span>
+<span class="text-xs text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">question_mark</span>
+                                1,200 题
+                            </span>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-slate-600 group-hover:translate-x-1 transition-all">chevron_right</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 pb-safe bg-white/70 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.03)] flex justify-around items-center h-20 px-4">
+<button class="flex flex-col items-center justify-center text-slate-400">
+<span class="material-symbols-outlined mb-1">trending_up</span>
+<span class="font-body text-[11px] font-medium">进度</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#003fb1] bg-blue-50/50 rounded-2xl px-3 py-1">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+<span class="font-body text-[11px] font-medium">题库</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-400">
+<span class="material-symbols-outlined mb-1">ink_eraser</span>
+<span class="font-body text-[11px] font-medium">错题</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-400">
+<span class="material-symbols-outlined mb-1">quiz</span>
+<span class="font-body text-[11px] font-medium">练习</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-400">
+<span class="material-symbols-outlined mb-1">notifications</span>
+<span class="font-body text-[11px] font-medium">消息</span>
+</button>
+</nav>
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-gradient-to-tr from-primary to-primary-container text-white shadow-xl flex items-center justify-center active:scale-90 transition-transform z-40">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</body></html>

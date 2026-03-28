@@ -1,0 +1,6 @@
+interface:
+  display_name: "开发中全端总入口"
+  short_description: "开发实施阶段的单一入口，负责把方案、热状态拆表、单入口收口和五类高风险控制点真正做实"
+  default_prompt: "使用 $fullstack-unified-development-standards 处理本次开发中全端需求：先确定契约模式（global 或 questionBank），再按统一守卫流程执行 start/batch/final；如果命中高并发、数据一致性、性能容量、部署稳定性或安全权限问题，按共享三阶段控制点模板把对应控制点落地到代码、配置、测试和文档；如果命中 extJson 热状态拆表、正式表切读切写、backfill 审计、去双入口或去 fallback，按“建表/索引 -> 双写 -> 正式表优先读 -> 删除 legacy 写入/旧入口 -> 文档与测试收口”的顺序推进。"
+policy:
+  allow_implicit_invocation: true

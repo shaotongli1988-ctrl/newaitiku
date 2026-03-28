@@ -1,0 +1,92 @@
+{
+  "executedAt": "2026-03-26T15:00:35.756",
+  "startedAt": "2026-03-26T14:58:51.512",
+  "endedAt": "2026-03-26T15:00:35.756",
+  "mode": "python-playwright-true-click-replay",
+  "role": "student",
+  "baseUrl": "http://127.0.0.1:8017",
+  "timeoutSec": 20,
+  "headless": true,
+  "dbPath": "/tmp/question-bank-click-replay.db",
+  "steps": [
+    {
+      "name": "1-学生登录并进入刷题页",
+      "status": "PASS",
+      "startedAt": "2026-03-26T14:58:51.549",
+      "endedAt": "2026-03-26T14:58:58.549",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "2-学生真点击进入知识诊断今日任务",
+      "status": "PASS",
+      "startedAt": "2026-03-26T14:58:58.549",
+      "endedAt": "2026-03-26T14:59:01.140",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "3-学生端可见教师发布题目",
+      "status": "PASS",
+      "startedAt": "2026-03-26T14:59:01.140",
+      "endedAt": "2026-03-26T14:59:12.447",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "4-学生真点击提交题目",
+      "status": "PASS",
+      "startedAt": "2026-03-26T14:59:12.447",
+      "endedAt": "2026-03-26T14:59:13.864",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "5-学生交卷前检查弹窗触发与返回作答",
+      "status": "PASS",
+      "startedAt": "2026-03-26T14:59:13.864",
+      "endedAt": "2026-03-26T14:59:25.449",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "6-学生模拟考试暂停与恢复",
+      "status": "PASS",
+      "startedAt": "2026-03-26T14:59:25.449",
+      "endedAt": "2026-03-26T14:59:56.378",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "7-学生模拟答题草稿刷新后恢复",
+      "status": "PASS",
+      "startedAt": "2026-03-26T14:59:56.378",
+      "endedAt": "2026-03-26T15:00:32.718",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "8-学生倒计时归零自动交卷",
+      "status": "PASS",
+      "startedAt": "2026-03-26T15:00:32.718",
+      "endedAt": "2026-03-26T15:00:35.591",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "9-教师侧可查询学生提交痕迹",
+      "status": "PASS",
+      "startedAt": "2026-03-26T15:00:35.591",
+      "endedAt": "2026-03-26T15:00:35.754",
+      "artifacts": [],
+      "error": null
+    }
+  ],
+  "issues": [],
+  "totalIssues": 0,
+  "linkageMatrix": {
+    "superAdminToTeacher": "NOT_RUN",
+    "teacherToStudent": "NOT_RUN",
+    "studentToTeacher": "PASS"
+  }
+}

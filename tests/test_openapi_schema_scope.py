@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from app.main import create_app
-from scripts.export_openapi import compact_openapi_schema
+from scripts.export_openapi import compact_openapi_schema, export_openapi
 from tests.support import make_client
 
 
@@ -60,6 +60,11 @@ def test_openapi_excludes_page_bootstrap_routes_but_keeps_spa_api_endpoints(tmp_
     assert "/api/question-bank/admin/learning-methods" in paths
     assert "/api/question-bank/admin/learning-methods/{methodCode}" in paths
     assert "/api/question-bank/admin/learning-methods/sort" in paths
+    assert "/api/question-bank/admin/learning-methods/{methodCode}/profile/auto-generate" in paths
+    assert "/api/question-bank/admin/questions/match-features/auto-batch" in paths
+    assert "/api/question-bank/learning-methods/{methodCode}/question-pack/recommend" in paths
+    assert "/api/question-bank/learning-methods/{methodCode}/question-pack/feedback" in paths
+    assert "/api/question-bank/learning-methods/{methodCode}/question-pack/recommendations" in paths
 
 
 def test_compacted_openapi_stays_within_guard_parse_budget(tmp_path: Path):
@@ -75,3 +80,27 @@ def test_openapi_invalid_route_returns_404_error(tmp_path: Path):
 
     invalid_response = client.get("/openapi-invalid-route")
     assert invalid_response.status_code == 404
+
+
+
+def _count_operation_ids(openapi_document: dict) -> int:
+    total = 0
+    for path_item in openapi_document.get("paths", {}).values():
+        for method, operation in path_item.items():
+            if method.lower() in {"get", "post", "put", "patch", "delete", "options", "head", "trace"} and isinstance(operation, dict):
+                if operation.get("operationId"):
+                    total += 1
+    return total
+
+
+def test_export_openapi_writes_full_schema_with_operation_ids(tmp_path: Path):
+    compact_output = tmp_path / "openapi.compact.json"
+    full_output = tmp_path / "openapi.full.json"
+
+    export_openapi(compact_output, full_output_path=full_output)
+
+    compact_doc = json.loads(compact_output.read_text(encoding="utf-8"))
+    full_doc = json.loads(full_output.read_text(encoding="utf-8"))
+
+    assert _count_operation_ids(full_doc) > 0
+    assert _count_operation_ids(compact_doc) == 0

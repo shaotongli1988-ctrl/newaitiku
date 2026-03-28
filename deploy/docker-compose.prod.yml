@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  backend:
+    image: python:3.11-slim
+    working_dir: /srv/app
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+      uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8000"
+    environment:
+      QB_ENV: production
+      QB_CORS_ORIGINS: http://localhost
+      QB_COOKIE_SECURE: "false"
+    volumes:
+      - ../:/srv/app
+    expose:
+      - "8000"
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"

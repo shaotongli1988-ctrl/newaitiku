@@ -106,7 +106,13 @@
 - 回滚触发条件：核心接口不可用、订阅状态错误、大面积分流异常。
 - 回滚后必须复核：订阅状态查询、快诊提交、首页权益态展示。
 
-## 10. 术语表
+## 10. 配套手册
+
+- 客服手册：`docs/release/student-conversion-customer-support-manual-2026-03-26.md`
+- 运营手册：`docs/release/student-conversion-operations-manual-2026-03-26.md`
+- 发布复盘：`docs/release/student-conversion-mvp-retrospective-2026-03-26.md`
+
+## 11. 术语表
 
 - 快诊：首登 3-5 题的快速评估流程。
 - 兑换码：运营发放的权益开通码，受规则限制。

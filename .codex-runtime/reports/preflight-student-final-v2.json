@@ -1,0 +1,28 @@
+{
+  "guard": "release-preflight-guard",
+  "phase": "final",
+  "cwd": "/Users/shaotongli/Code/newaitiku",
+  "failThreshold": "high",
+  "changedFiles": [
+    "/Users/shaotongli/Code/newaitiku/tests/test_question_bank.py",
+    "/Users/shaotongli/Code/newaitiku/tests/integration/test_question_bank_core_api_pytest_suite.py",
+    "/Users/shaotongli/Code/newaitiku/app/service_modules/student_monetization.py",
+    "/Users/shaotongli/Code/newaitiku/frontend/src/views/Student/OnboardingDiagnosis.vue",
+    "/Users/shaotongli/Code/newaitiku/scripts/export_openapi.py",
+    "/Users/shaotongli/Code/newaitiku/docs/release/student-conversion-config-checklist-2026-03-26.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/student-conversion-mvp-checklist-2026-03-26.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/student-conversion-mvp-retrospective-2026-03-26.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/student-conversion-operations-manual-2026-03-26.md",
+    "/Users/shaotongli/Code/newaitiku/docs/release/student-conversion-customer-support-manual-2026-03-26.md",
+    "/Users/shaotongli/Code/newaitiku/docs/contracts/current/openapi.json",
+    "/Users/shaotongli/Code/newaitiku/docs/system-function-manual-2026-03-26.md",
+    "/Users/shaotongli/Code/newaitiku/docs/question-bank-contract.md"
+  ],
+  "summary": {
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "total": 0
+  },
+  "warnings": []
+}

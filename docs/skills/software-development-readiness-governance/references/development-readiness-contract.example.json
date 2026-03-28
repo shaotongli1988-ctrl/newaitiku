@@ -1,0 +1,83 @@
+{
+  "contractVersion": "v1",
+  "contractId": "dr-2026-03-21-001",
+  "generatedAt": "2026-03-21T10:00:00+08:00",
+  "generatedBy": "software-development-readiness-governance",
+  "phase": "development-readiness",
+  "mode": "questionBank",
+  "projectProfile": {
+    "name": "newaitiku",
+    "repoRoot": "/Users/shaotongli/Documents/newaitiku",
+    "backendStack": "python-fastapi",
+    "frontendStack": "vue-vite",
+    "database": "sqlite",
+    "primaryGuard": "fullstack-unified-development-standards"
+  },
+  "scope": {
+    "businessGoal": "题库模块在开发中保持前后端零漂移",
+    "inScopeModules": ["question", "knowledge"],
+    "outOfScopeModules": ["messages", "system"],
+    "affectedLayers": ["database", "backend", "api", "frontend", "docs", "tests"],
+    "actors": ["teacher", "student"]
+  },
+  "contracts": {
+    "fieldDictionary": [
+      {
+        "module": "question",
+        "field": "knowledgeId",
+        "type": "string",
+        "required": true,
+        "description": "题目关联知识点 ID"
+      }
+    ],
+    "database": {
+      "tables": ["question", "knowledge"],
+      "extJsonPolicy": "contract-outside-fields-go-to-extJson"
+    },
+    "api": {
+      "responseEnvelope": ["code", "message", "data"],
+      "paginationEnvelope": ["items", "page", "size", "total"]
+    },
+    "permissions": {
+      "roles": ["super_admin", "teacher", "student"],
+      "permissionKeys": ["question:manage", "analytics:view"]
+    },
+    "stateMachines": {
+      "question": {
+        "states": ["DRAFT", "QA_IN_PROGRESS", "REVIEW_PENDING", "PUBLISHED", "REJECTED"]
+      }
+    },
+    "validation": {
+      "rules": ["optionsJson must be JSON array", "extJson must be JSON object"]
+    },
+    "errorSemantics": {
+      "codes": ["QUESTION_NOT_FOUND", "QUESTION_FORBIDDEN", "QUESTION_VALIDATION_FAILED"]
+    },
+    "uiStandards": {
+      "feedback": ["Toast", "message-box"],
+      "containers": ["Drawer", "modal"],
+      "filterRule": "Advanced Filter after 3 fields"
+    }
+  },
+  "governance": {
+    "adrRefs": ["docs/architecture/adr-001.md"],
+    "techStackPolicy": {
+      "allowNewDependency": false,
+      "allowNewFramework": false
+    },
+    "gitPolicy": {
+      "branchPrefix": "codex/",
+      "requiredChecks": ["unified_delivery_guard", "tests"]
+    }
+  },
+  "testPlan": {
+    "categories": ["normal", "exception", "boundary", "permission", "state", "api", "frontend"],
+    "automationTargets": ["pytest-unit", "pytest-integration", "pytest-regression", "playwright-e2e"]
+  },
+  "releaseReadiness": {
+    "rollbackRequired": true,
+    "monitoringRequired": true,
+    "uatRequired": true
+  },
+  "waivers": []
+}

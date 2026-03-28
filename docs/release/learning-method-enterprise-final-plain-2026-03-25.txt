@@ -1,0 +1,46 @@
+【学习方法模块发布通知（最终版）】
+日期：2026-03-25
+模块：学习方法（learning_method）
+批次：2026-03-25
+
+结论：可提测，可上线。
+
+请以下角色确认：
+@产品：确认提测范围与验收口径
+@测试：确认提测执行窗口与回归排期
+@研发：确认值班响应人与变更冻结
+@运维：确认发布窗口与回滚执行人
+
+本次已完成：
+1) API schema drift 修复并归零
+2) 学习进度状态流守卫补强（start/complete）
+3) 发布证据、配置核对、回滚方案齐备
+
+验证结果：
+- schema drift：none
+- openapi 范围测试：2 passed
+- integration：46 passed
+- acceptance：120/120 passed
+- delivery guard：可上线（ACCEPTABLE_TO_RELEASE）
+
+重点接口：
+学生端：
+- GET /api/question-bank/learning-methods
+- GET /api/question-bank/learning-methods/{method_code}
+- POST /api/question-bank/learning-methods/{method_code}/start
+- POST /api/question-bank/learning-methods/{method_code}/complete
+管理端：
+- GET /api/question-bank/admin/learning-methods
+- POST /api/question-bank/admin/learning-methods
+- PUT /api/question-bank/admin/learning-methods/{method_code}
+- POST /api/question-bank/admin/learning-methods/sort
+
+回滚入口：
+- docs/release/learning-method-rollback-switch-2026-03-25.md
+- 触发条件：学习方法核心接口持续 5xx 或状态异常
+
+相关文档：
+- docs/release/learning-method-final-release-notice-onepage-2026-03-25.md
+- docs/release/learning-method-test-handoff-2026-03-25.md
+- docs/release/learning-method-ops-release-brief-2026-03-25.md
+- docs/release/delivery-guard-2026-03-25-final.md

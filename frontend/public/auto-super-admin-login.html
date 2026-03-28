@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>超管自动登录</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #f5f7fb;
+        color: #1f2a37;
+      }
+
+      .card {
+        width: min(560px, 92vw);
+        background: #fff;
+        border: 1px solid #dce3ef;
+        border-radius: 12px;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+
+      .status {
+        font-size: 14px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+      }
+
+      code {
+        background: #f2f6ff;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="card">
+      <h3>超管登录入口</h3>
+      <p class="status" id="status">该页面不再内置超管账号密码。请通过正式登录页手动登录，避免在静态资源中暴露凭据。</p>
+      <p><a href="/login">前往登录页</a></p>
+    </section>
+
+    <script>
+      const statusEl = document.getElementById("status");
+      function updateStatus(message) {
+        statusEl.textContent = message;
+      }
+      updateStatus("请通过 /login 手动输入超管账号密码登录。生产环境禁止通过公开静态页面暴露默认凭据。");
+    </script>
+  </body>
+</html>

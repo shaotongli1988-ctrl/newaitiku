@@ -431,6 +431,12 @@ knowledge 模块补充接口：
 - 快诊会话状态固定：
   - `STARTED`
   - `COMPLETED`
+- `start` 接口固定返回题目预览 `questions`：
+  - `questionId`
+  - `type`
+  - `stem`
+  - `options`（`[{ key, content }]`）
+  - 不返回标准答案，避免前端泄露判题依据。
 - `submit` 接口重复提交按幂等返回，不重复写事件日志与积分侧状态。
 
 订阅与兑换口径：

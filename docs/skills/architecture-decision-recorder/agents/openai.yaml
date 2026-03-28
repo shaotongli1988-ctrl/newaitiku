@@ -1,0 +1,6 @@
+interface:
+  display_name: "架构决策记录"
+  short_description: "沉淀技术选型、替代方案与影响范围，生成可追溯 ADR"
+  default_prompt: "使用 $architecture-decision-recorder 为当前技术方案生成 ADR，输出选型理由、替代方案和风险。"
+policy:
+  allow_implicit_invocation: true

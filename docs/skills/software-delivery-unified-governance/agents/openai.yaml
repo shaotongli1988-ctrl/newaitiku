@@ -1,0 +1,6 @@
+interface:
+  display_name: "开发后终检总技能"
+  short_description: "开发完成后的总检查入口，负责验收五类高风险控制点是否兑现"
+  default_prompt: "使用 $software-delivery-unified-governance 对当前项目执行开发后终检：先收口全端实现一致性，再检查设计阶段和实施阶段对高并发、数据一致性、性能容量、部署稳定性与安全权限的承诺是否兑现，最后输出提测或上线前的阻断项、推荐子技能和补齐顺序。"
+policy:
+  allow_implicit_invocation: true

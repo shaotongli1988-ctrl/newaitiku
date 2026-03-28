@@ -1,0 +1,20 @@
+{
+  "checks": [
+    {
+      "name": "documentation:docs:self-check-no-stale-pass-count",
+      "reason": "文档冻结窗口内暂缓修复",
+      "owner": "shaotongli",
+      "expiresAt": "2026-04-15",
+      "scope": "docs only"
+    }
+  ],
+  "domains": [
+    {
+      "name": "test",
+      "reason": "紧急热修阶段临时接受测试矩阵缺口",
+      "owner": "release-owner",
+      "expiresAt": "2026-03-31",
+      "scope": "hotfix branch only"
+    }
+  ]
+}

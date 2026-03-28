@@ -389,6 +389,53 @@ CREATE TABLE IF NOT EXISTS student_learning_method_progress (
   UNIQUE (studentUserId, methodCode)
 );
 
+CREATE TABLE IF NOT EXISTS learning_method_profile (
+  id TEXT PRIMARY KEY,
+  methodCode TEXT NOT NULL UNIQUE,
+  profileVersion TEXT NOT NULL DEFAULT 'v1',
+  strategyType TEXT NOT NULL DEFAULT 'RULE_BASED',
+  profileJson TEXT NOT NULL DEFAULT '{}',
+  confidence REAL NOT NULL DEFAULT 0,
+  extJson TEXT NOT NULL DEFAULT '{}',
+  createTime TEXT NOT NULL,
+  updateTime TEXT NOT NULL,
+  FOREIGN KEY (methodCode) REFERENCES learning_method(methodCode) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS question_match_feature (
+  id TEXT PRIMARY KEY,
+  questionId TEXT NOT NULL UNIQUE,
+  methodTagsJson TEXT NOT NULL DEFAULT '[]',
+  featureJson TEXT NOT NULL DEFAULT '{}',
+  qualityScore REAL NOT NULL DEFAULT 0,
+  sourceType TEXT NOT NULL DEFAULT 'AUTO_RULE',
+  extJson TEXT NOT NULL DEFAULT '{}',
+  createTime TEXT NOT NULL,
+  updateTime TEXT NOT NULL,
+  FOREIGN KEY (questionId) REFERENCES question(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS learning_method_recommendation_log (
+  id TEXT PRIMARY KEY,
+  studentUserId TEXT NOT NULL,
+  methodCode TEXT NOT NULL,
+  recommendationId TEXT NOT NULL,
+  sessionId TEXT NOT NULL DEFAULT '',
+  questionIdsJson TEXT NOT NULL DEFAULT '[]',
+  scoreJson TEXT NOT NULL DEFAULT '{}',
+  reasonTagsJson TEXT NOT NULL DEFAULT '[]',
+  feedbackStatus TEXT NOT NULL DEFAULT 'PENDING',
+  feedbackJson TEXT NOT NULL DEFAULT '{}',
+  recommendedAt TEXT NOT NULL,
+  feedbackAt TEXT NOT NULL DEFAULT '',
+  extJson TEXT NOT NULL DEFAULT '{}',
+  createTime TEXT NOT NULL,
+  updateTime TEXT NOT NULL,
+  FOREIGN KEY (studentUserId) REFERENCES "user"(id) ON DELETE CASCADE,
+  FOREIGN KEY (methodCode) REFERENCES learning_method(methodCode) ON DELETE CASCADE,
+  UNIQUE (studentUserId, recommendationId)
+);
+
 CREATE TABLE IF NOT EXISTS subscription_plan (
   id TEXT PRIMARY KEY,
   planCode TEXT NOT NULL UNIQUE,
@@ -629,6 +676,24 @@ ON student_learning_method_progress(studentUserId, status, updateTime);
 
 CREATE INDEX IF NOT EXISTS idx_student_learning_method_progress_method_update
 ON student_learning_method_progress(methodCode, updateTime);
+
+CREATE INDEX IF NOT EXISTS idx_learning_method_profile_method_update
+ON learning_method_profile(methodCode, updateTime);
+
+CREATE INDEX IF NOT EXISTS idx_question_match_feature_source_update
+ON question_match_feature(sourceType, updateTime);
+
+CREATE INDEX IF NOT EXISTS idx_question_match_feature_question_update
+ON question_match_feature(questionId, updateTime);
+
+CREATE INDEX IF NOT EXISTS idx_learning_method_recommendation_student_method_time
+ON learning_method_recommendation_log(studentUserId, methodCode, recommendedAt DESC);
+
+CREATE INDEX IF NOT EXISTS idx_learning_method_recommendation_feedback_status
+ON learning_method_recommendation_log(feedbackStatus, updateTime);
+
+CREATE INDEX IF NOT EXISTS idx_learning_method_recommendation_session_time
+ON learning_method_recommendation_log(sessionId, recommendedAt DESC);
 
 CREATE INDEX IF NOT EXISTS idx_subscription_plan_status_sort
 ON subscription_plan(status, sort, planCode);

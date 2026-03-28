@@ -1,0 +1,9 @@
+{
+  "producer_to_consumer": {
+    "UserDTO": "UserItem",
+    "TaskResponse": "TaskView"
+  },
+  "consumer_to_producer": {
+    "KnowledgeListRow": "KnowledgeDTO"
+  }
+}

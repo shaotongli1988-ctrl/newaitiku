@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://newaitiku.local/schemas/click-replay-result.json",
+  "title": "Click Replay Result",
+  "type": "object",
+  "required": [
+    "executedAt",
+    "startedAt",
+    "endedAt",
+    "mode",
+    "role",
+    "baseUrl",
+    "timeoutSec",
+    "headless",
+    "dbPath",
+    "steps",
+    "issues",
+    "totalIssues",
+    "linkageMatrix"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "executedAt": { "type": "string", "format": "date-time" },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "endedAt": { "type": "string", "format": "date-time" },
+    "mode": { "type": "string", "const": "python-playwright-true-click-replay" },
+    "role": { "type": "string", "enum": ["student", "teacher", "super_admin"] },
+    "baseUrl": { "type": "string", "format": "uri" },
+    "timeoutSec": { "type": "integer", "minimum": 1 },
+    "headless": { "type": "boolean" },
+    "dbPath": { "type": "string" },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "status", "startedAt", "endedAt", "artifacts", "error"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["PASS", "FAIL"] },
+          "startedAt": { "type": "string", "format": "date-time" },
+          "endedAt": { "type": "string", "format": "date-time" },
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["type", "path"],
+              "additionalProperties": false,
+              "properties": {
+                "type": { "type": "string" },
+                "path": { "type": "string" }
+              }
+            }
+          },
+          "error": {
+            "type": ["object", "null"],
+            "required": ["type", "message", "traceback"],
+            "additionalProperties": false,
+            "properties": {
+              "type": { "type": "string" },
+              "message": { "type": "string" },
+              "traceback": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role", "step", "message"],
+        "additionalProperties": false,
+        "properties": {
+          "role": { "type": "string" },
+          "step": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    },
+    "totalIssues": { "type": "integer", "minimum": 0 },
+    "linkageMatrix": {
+      "type": "object",
+      "required": ["superAdminToTeacher", "teacherToStudent", "studentToTeacher"],
+      "additionalProperties": false,
+      "properties": {
+        "superAdminToTeacher": { "type": "string", "enum": ["PASS", "FAIL", "NOT_RUN"] },
+        "teacherToStudent": { "type": "string", "enum": ["PASS", "FAIL", "NOT_RUN"] },
+        "studentToTeacher": { "type": "string", "enum": ["PASS", "FAIL", "NOT_RUN"] }
+      }
+    }
+  }
+}

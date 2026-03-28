@@ -1,0 +1,205 @@
+:root {
+  /* --- 基础品牌色 (Brand Colors) --- */
+  --qb-primary-student: #2f54eb; /* 极客蓝：冷静、学术 */
+  --qb-primary-teacher: #08979c; /* 明快青：高效、组织 */
+  --qb-primary-admin: #1d39c4;   /* 深蓝：权威、稳定 */
+  --qb-primary-soft-bg: color-mix(in srgb, var(--el-color-primary) 8%, var(--qb-bg-card) 92%);
+  --qb-primary-soft-border: color-mix(in srgb, var(--el-color-primary) 18%, var(--qb-bg-card) 82%);
+
+  /* --- 功能色 (Functional Colors) --- */
+  --qb-success: #52c41a;
+  --qb-warning: #faad14;
+  --qb-danger: #ff4d4f;
+  --qb-info: #1890ff;
+  --qb-danger-strong: #ef4444;
+  --qb-danger-accent: #d03050;
+  --qb-danger-soft-bg: #fff1f2;
+  --qb-danger-soft-border: #fecaca;
+  --qb-warning-soft-bg: #fff9eb;
+  --qb-success-soft-bg: #ecfdf3;
+  --qb-branch-color-1: #f59e0b;
+  --qb-branch-color-2: #14b8a6;
+  --qb-branch-color-3: #3b82f6;
+  --qb-branch-color-4: #f97316;
+  --qb-branch-color-5: #10b981;
+  --qb-branch-color-6: #8b5cf6;
+
+  /* --- 背景与中性色 (Neutral Colors) --- */
+  --qb-bg-body: #f7f9fb;       /* 全局底色 */
+  --qb-bg-card: #ffffff;       /* 卡片底色 */
+  --qb-text-main: #262626;     /* 主文字 */
+  --qb-text-regular: #595959;  /* 次要文字 */
+  --qb-border-color: #f0f0f0;  /* 边框色 */
+  --qb-text-heading: #0f172a;
+  --qb-primary-50: #eff6ff;
+  --qb-primary-100: #dbeafe;
+  --qb-primary-25: #f8fbff;
+  --qb-primary-200: #bfdbfe;
+  --qb-primary-400: #60a5fa;
+  --qb-primary-600: #2563eb;
+  --qb-success-600: #0f9f6e;
+  --qb-success-500: #22c55e;
+  --qb-warning-600: #d97706;
+  --qb-danger-600: #dc2626;
+  --qb-danger-400: #f87171;
+  --qb-text-emphasis: #1e293b;
+  --qb-text-strong: #1f2937;
+  --qb-text-secondary-strong: #334155;
+  --qb-text-secondary: #475569;
+  --qb-text-subtle-1: #4b5563;
+  --qb-text-subtle-2: #4b5d74;
+  --qb-text-subtle-3: #556176;
+  --qb-text-subtle-4: #5a6981;
+  --qb-text-subtle-5: #5b6472;
+  --qb-text-subtle-6: #5c6372;
+  --qb-text-subtle-7: #5d6d84;
+  --qb-text-subtle-8: #5f6f86;
+  --qb-text-subtle-9: #64748b;
+  --qb-bg-muted: #f2f4f6;
+  --qb-bg-subtle: #eceef0;
+  --qb-border-muted: #e0e3e5;
+  --qb-border-subtle: #e6e8ea;
+
+  /* --- 学生端设计 Token (Academic Sanctuary) --- */
+  --qb-space-0: 0;
+  --qb-space-1: 4px;
+  --qb-space-2: 8px;
+  --qb-space-2-5: 10px;
+  --qb-space-3: 12px;
+  --qb-space-3-5: 14px;
+  --qb-space-4: 16px;
+  --qb-space-4-5: 18px;
+  --qb-space-5: 20px;
+  --qb-space-5-5: 22px;
+  --qb-space-6: 24px;
+  --qb-space-7: 28px;
+  --qb-space-8: 32px;
+  --qb-space-9: 36px;
+  --qb-space-10: 40px;
+
+  --qb-radius-sm: 12px;
+  --qb-radius-md: 16px;
+  --qb-radius-lg: 18px;
+  --qb-radius-xl: 20px;
+  --qb-radius-2xl: 24px;
+  --qb-radius-3xl: 28px;
+  --qb-radius-pill: 999px;
+  --qb-radius-round: 50%;
+
+  --qb-surface-strong: rgba(255, 255, 255, 0.98);
+  --qb-surface-solid: rgba(255, 255, 255, 0.96);
+  --qb-surface-raised: rgba(255, 255, 255, 0.92);
+  --qb-surface-glass: rgba(255, 255, 255, 0.88);
+  --qb-surface-glass-soft: rgba(255, 255, 255, 0.82);
+  --qb-surface-frosted: rgba(255, 255, 255, 0.78);
+  --qb-surface-shell: rgba(247, 249, 251, 0.92);
+  --qb-surface-spotlight: rgba(255, 255, 255, 0.84);
+  --qb-surface-soft-primary: color-mix(in srgb, var(--qb-primary-student) 8%, white 92%);
+  --qb-surface-soft-info: color-mix(in srgb, var(--qb-info) 10%, white 90%);
+  --qb-surface-soft-success: color-mix(in srgb, var(--qb-success) 10%, white 90%);
+  --qb-surface-soft-warning: color-mix(in srgb, var(--qb-warning) 12%, white 88%);
+  --qb-surface-soft-danger: color-mix(in srgb, var(--qb-danger) 10%, white 90%);
+  --qb-surface-soft-neutral: rgba(245, 247, 250, 0.96);
+
+  --qb-border-ghost: rgba(148, 163, 184, 0.14);
+  --qb-border-soft: rgba(148, 163, 184, 0.16);
+  --qb-border-glass: rgba(148, 163, 184, 0.18);
+  --qb-border-strong: rgba(148, 163, 184, 0.22);
+  --qb-border-primary-soft: color-mix(in srgb, var(--qb-primary-student) 12%, white 88%);
+  --qb-border-primary-strong: color-mix(in srgb, var(--qb-primary-student) 22%, white 78%);
+  --qb-border-success-soft: color-mix(in srgb, var(--qb-success) 18%, white 82%);
+  --qb-border-warning-soft: color-mix(in srgb, var(--qb-warning) 22%, white 78%);
+  --qb-border-danger-soft: color-mix(in srgb, var(--qb-danger) 20%, white 80%);
+
+  --qb-track-soft: rgba(148, 163, 184, 0.18);
+  --qb-track-neutral: rgba(203, 213, 225, 0.32);
+  --qb-track-strong: rgba(148, 163, 184, 0.35);
+
+  --qb-shadow-soft: 0 8px 20px rgba(15, 23, 42, 0.04);
+  --qb-shadow-panel: 0 12px 28px rgba(15, 23, 42, 0.06);
+  --qb-shadow-float: 0 16px 34px rgba(15, 23, 42, 0.05);
+  --qb-shadow-accent: 0 12px 28px rgba(47, 84, 235, 0.1);
+  --qb-shadow-accent-strong: 0 18px 34px rgba(17, 53, 112, 0.14);
+  --qb-shadow-danger: 0 12px 24px rgba(239, 68, 68, 0.12);
+  --qb-shadow-danger-strong: 0 18px 30px rgba(220, 38, 38, 0.24);
+  --qb-shadow-brand: 0 8px 20px rgba(47, 84, 235, 0.28);
+  --qb-shadow-modal: 0 12px 30px rgba(15, 23, 42, 0.16);
+
+  --qb-text-copy: #526075;
+  --qb-text-meta: #64748b;
+  --qb-text-muted: #8c8c8c;
+  --qb-text-inverse: #ffffff;
+  --qb-text-brand-soft: rgba(228, 235, 255, 0.7);
+  --qb-text-brand-nav: rgba(230, 236, 255, 0.78);
+  --qb-text-neutral-ink: #6b7280;
+  --qb-text-info-ink: #1d4ed8;
+  --qb-text-warning-ink: #b45309;
+  --qb-text-warning-strong: #8f6410;
+  --qb-text-success-ink: #15803d;
+  --qb-text-success-strong: #1c6a43;
+  --qb-text-danger-strong: #8f3128;
+
+  --qb-chart-neutral: #c8d0db;
+  --qb-chart-risk: #c86454;
+  --qb-chart-mid: #d7a63c;
+  --qb-chart-good: #4a9d67;
+  --qb-chart-mid-soft: color-mix(in srgb, var(--qb-chart-mid) 16%, white 84%);
+  --qb-chart-mid-shadow: rgba(245, 158, 11, 0.18);
+
+  --qb-gradient-sidebar: linear-gradient(180deg, rgba(18, 33, 67, 0.98), rgba(25, 48, 95, 0.96));
+  --qb-gradient-brand: linear-gradient(135deg, rgba(47, 84, 235, 1), rgba(89, 126, 247, 0.92));
+  --qb-gradient-nav-active: linear-gradient(90deg, rgba(47, 84, 235, 0.96), rgba(88, 121, 225, 0.72));
+  --qb-gradient-primary-hero: linear-gradient(135deg, var(--qb-primary-50) 0%, var(--qb-primary-100) 52%, var(--qb-primary-25) 100%);
+  --qb-gradient-primary-panel: linear-gradient(145deg, rgba(239, 246, 255, 0.92), rgba(248, 250, 252, 0.98));
+  --qb-gradient-primary-card: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 248, 252, 0.98));
+  --qb-gradient-primary-card-strong: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(234, 242, 255, 0.92));
+  --qb-gradient-info-card: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(240, 249, 255, 0.96));
+  --qb-gradient-success-card: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(240, 253, 250, 0.92));
+  --qb-gradient-warning-card: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 251, 235, 0.96));
+  --qb-gradient-danger-card: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(254, 242, 242, 0.96));
+  --qb-gradient-primary-fill: linear-gradient(90deg, var(--qb-primary-400), var(--qb-primary-600));
+  --qb-gradient-subject-fill: linear-gradient(90deg, var(--qb-primary-student), color-mix(in srgb, var(--qb-primary-student) 62%, white 38%));
+  --qb-gradient-success-fill: linear-gradient(135deg, var(--qb-success-600), var(--qb-success-500));
+  --qb-gradient-warning-fill: linear-gradient(135deg, var(--qb-warning-600), var(--qb-branch-color-1));
+  --qb-gradient-danger-fill: linear-gradient(135deg, var(--qb-danger-600), var(--qb-danger-strong));
+
+  --qb-subject-politics: var(--qb-branch-color-1);
+  --qb-subject-english: var(--qb-branch-color-5);
+  --qb-subject-math: var(--qb-branch-color-3);
+  --qb-subject-chinese: var(--qb-danger-strong);
+  --qb-subject-computer: var(--qb-branch-color-6);
+  --qb-subject-fallback-1: var(--qb-primary-600);
+  --qb-subject-fallback-2: #0f766e;
+  --qb-subject-fallback-3: var(--qb-danger-600);
+  --qb-subject-fallback-4: #9333ea;
+  --qb-subject-fallback-5: #ea580c;
+  --qb-subject-fallback-6: #0891b2;
+
+  --qb-tooltip-bg: rgba(10, 18, 40, 0.88);
+  --qb-overlay-scrim: rgba(15, 23, 42, 0.2);
+  --qb-surface-overlay-card: rgba(255, 255, 255, 0.95);
+  --qb-surface-brand-hover: rgba(255, 255, 255, 0.08);
+  --qb-surface-ink-soft: rgba(15, 23, 42, 0.06);
+  --qb-border-inverse-soft: rgba(255, 255, 255, 0.1);
+  --qb-link-prerequisite: rgba(59, 130, 246, 0.46);
+  --qb-link-default: rgba(148, 163, 184, 0.24);
+  --qb-focus-outline: rgba(245, 158, 11, 0.55);
+  --qb-focus-ring: rgba(245, 158, 11, 0.38);
+  --qb-focus-ring-fade: rgba(245, 158, 11, 0);
+
+  /* --- 间距与圆角 (Layout Tokens) --- */
+  --qb-radius-base: 8px;       /* 统一圆角 */
+  --qb-spacing-unit: 4px;      /* 基础间距步进 */
+  --qb-header-height: 64px;    /* 统一顶栏高度 */
+  --qb-sidebar-width: 240px;   /* 统一侧边栏宽度 */
+  
+  /* --- 阴影 (Shadows) --- */
+  --qb-shadow-card: 0 1px 4px rgba(0, 21, 41, 0.08);
+  --qb-student-card-radius: 24px;
+  --qb-student-card-radius-strong: 28px;
+  --qb-student-card-border: 1px solid rgba(224, 227, 229, 0.92);
+  --qb-student-card-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+  --qb-student-card-shadow-strong: 0 22px 54px rgba(15, 23, 42, 0.08);
+  --qb-student-kicker-bg: var(--qb-surface-soft-primary);
+  --qb-student-kicker-text: var(--qb-primary-student);
+}

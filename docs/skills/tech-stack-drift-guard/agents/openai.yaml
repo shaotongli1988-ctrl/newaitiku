@@ -1,0 +1,6 @@
+interface:
+  display_name: "技术栈漂移检查"
+  short_description: "检查新依赖、新框架、新基础设施是否破坏统一技术栈"
+  default_prompt: "使用 $tech-stack-drift-guard 检查当前项目是否存在技术栈漂移，输出风险与引入建议。"
+policy:
+  allow_implicit_invocation: true

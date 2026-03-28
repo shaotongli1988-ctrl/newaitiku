@@ -1,0 +1,109 @@
+{
+  "executedAt": "2026-03-19T14:55:06.109",
+  "startedAt": "2026-03-19T14:54:25.864",
+  "endedAt": "2026-03-19T14:55:06.109",
+  "mode": "python-playwright-true-click-replay",
+  "role": "teacher",
+  "baseUrl": "http://127.0.0.1:8000",
+  "timeoutSec": 20,
+  "headless": true,
+  "dbPath": "",
+  "steps": [
+    {
+      "name": "1-教师登录并进入题库页",
+      "status": "FAIL",
+      "startedAt": "2026-03-19T14:54:25.989",
+      "endedAt": "2026-03-19T14:54:46.042",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/screenshots/teacher-preview-2026-03-19/teacher-step-fail-1-1773932086.png"
+        }
+      ],
+      "error": {
+        "type": "TimeoutError",
+        "message": "Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\"#password-login-form input[name='phone']\")\n",
+        "traceback": "playwright._impl._errors.TimeoutError: Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\"#password-login-form input[name='phone']\")"
+      }
+    },
+    {
+      "name": "2-教师真点击创建题目",
+      "status": "FAIL",
+      "startedAt": "2026-03-19T14:54:46.042",
+      "endedAt": "2026-03-19T14:55:06.071",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/screenshots/teacher-preview-2026-03-19/teacher-step-fail-2-1773932106.png"
+        }
+      ],
+      "error": {
+        "type": "TimeoutError",
+        "message": "Locator.click: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\"#open-create-modal\")\n",
+        "traceback": "playwright._impl._errors.TimeoutError: Locator.click: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\"#open-create-modal\")"
+      }
+    },
+    {
+      "name": "3-教师真点击发布题目",
+      "status": "FAIL",
+      "startedAt": "2026-03-19T14:55:06.071",
+      "endedAt": "2026-03-19T14:55:06.086",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/screenshots/teacher-preview-2026-03-19/teacher-step-fail-3-1773932106.png"
+        }
+      ],
+      "error": {
+        "type": "AssertionError",
+        "message": "缺少新建题目ID，无法发布。",
+        "traceback": "AssertionError: 缺少新建题目ID，无法发布。"
+      }
+    },
+    {
+      "name": "4-教师发布题目在学生端可见",
+      "status": "FAIL",
+      "startedAt": "2026-03-19T14:55:06.086",
+      "endedAt": "2026-03-19T14:55:06.103",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/screenshots/teacher-preview-2026-03-19/teacher-step-fail-4-1773932106.png"
+        }
+      ],
+      "error": {
+        "type": "AssertionError",
+        "message": "缺少教师发布题目 ID。",
+        "traceback": "AssertionError: 缺少教师发布题目 ID。"
+      }
+    }
+  ],
+  "issues": [
+    {
+      "role": "teacher",
+      "step": "1-教师登录并进入题库页",
+      "message": "Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\"#password-login-form input[name='phone']\")\n"
+    },
+    {
+      "role": "teacher",
+      "step": "2-教师真点击创建题目",
+      "message": "Locator.click: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\"#open-create-modal\")\n"
+    },
+    {
+      "role": "teacher",
+      "step": "3-教师真点击发布题目",
+      "message": "缺少新建题目ID，无法发布。"
+    },
+    {
+      "role": "teacher",
+      "step": "4-教师发布题目在学生端可见",
+      "message": "缺少教师发布题目 ID。"
+    }
+  ],
+  "totalIssues": 4,
+  "linkageMatrix": {
+    "superAdminToTeacher": "NOT_RUN",
+    "teacherToStudent": "NOT_RUN",
+    "studentToTeacher": "NOT_RUN"
+  }
+}

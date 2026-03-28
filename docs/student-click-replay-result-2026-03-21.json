@@ -1,0 +1,183 @@
+{
+  "executedAt": "2026-03-21T02:54:30.443",
+  "startedAt": "2026-03-21T02:52:54.405",
+  "endedAt": "2026-03-21T02:54:30.443",
+  "mode": "python-playwright-true-click-replay",
+  "role": "student",
+  "baseUrl": "http://127.0.0.1:8017",
+  "timeoutSec": 25,
+  "headless": true,
+  "dbPath": "/tmp/question-bank-click-replay-2026-03-21-student.db",
+  "steps": [
+    {
+      "name": "1-学生登录并进入刷题页",
+      "status": "FAIL",
+      "startedAt": "2026-03-21T02:52:54.513",
+      "endedAt": "2026-03-21T02:53:19.556",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/student-step-fail-1-1774061599.png"
+        }
+      ],
+      "error": {
+        "type": "TimeoutError",
+        "message": "Locator.fill: Timeout 25000ms exceeded.\nCall log:\n  - waiting for locator(\"#password-login-form input[name='phone']\")\n",
+        "traceback": "playwright._impl._errors.TimeoutError: Locator.fill: Timeout 25000ms exceeded.\nCall log:\n  - waiting for locator(\"#password-login-form input[name='phone']\")"
+      }
+    },
+    {
+      "name": "2-学生端可见教师发布题目",
+      "status": "FAIL",
+      "startedAt": "2026-03-21T02:53:19.556",
+      "endedAt": "2026-03-21T02:53:44.927",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/student-step-fail-2-1774061624.png"
+        }
+      ],
+      "error": {
+        "type": "AssertionError",
+        "message": "Locator expected to be visible\nActual value: None\nError: element(s) not found \nCall log:\n  - Expect \"to_be_visible\" with timeout 25000ms\n  - waiting for locator(\"#practice-question-list\")\n",
+        "traceback": "AssertionError: Locator expected to be visible\nActual value: None\nError: element(s) not found \nCall log:\n  - Expect \"to_be_visible\" with timeout 25000ms\n  - waiting for locator(\"#practice-question-list\")"
+      }
+    },
+    {
+      "name": "3-学生真点击提交题目",
+      "status": "FAIL",
+      "startedAt": "2026-03-21T02:53:44.927",
+      "endedAt": "2026-03-21T02:54:09.946",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/student-step-fail-3-1774061649.png"
+        }
+      ],
+      "error": {
+        "type": "AssertionError",
+        "message": "Locator expected to be visible\nActual value: None\nError: element(s) not found \nCall log:\n  - Expect \"to_be_visible\" with timeout 25000ms\n  - waiting for locator(\"[data-practice-question-id='question-seed-007']\")\n",
+        "traceback": "AssertionError: Locator expected to be visible\nActual value: None\nError: element(s) not found \nCall log:\n  - Expect \"to_be_visible\" with timeout 25000ms\n  - waiting for locator(\"[data-practice-question-id='question-seed-007']\")"
+      }
+    },
+    {
+      "name": "4-学生交卷前检查弹窗触发与返回作答",
+      "status": "FAIL",
+      "startedAt": "2026-03-21T02:54:09.946",
+      "endedAt": "2026-03-21T02:54:10.124",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/student-step-fail-4-1774061650.png"
+        }
+      ],
+      "error": {
+        "type": "AssertionError",
+        "message": "创建学生体验回放题目: 期望 HTTP 200，实际 422。响应: {\"detail\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"exam_category_code\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}},{\"type\":\"string_too_short\",\"loc\":[\"body\",\"joint_exam_group_code\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}}]}",
+        "traceback": "AssertionError: 创建学生体验回放题目: 期望 HTTP 200，实际 422。响应: {\"detail\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"exam_category_code\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}},{\"type\":\"string_too_short\",\"loc\":[\"body\",\"joint_exam_group_code\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}}]}"
+      }
+    },
+    {
+      "name": "5-学生模拟考试暂停与恢复",
+      "status": "FAIL",
+      "startedAt": "2026-03-21T02:54:10.124",
+      "endedAt": "2026-03-21T02:54:10.306",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/student-step-fail-5-1774061650.png"
+        }
+      ],
+      "error": {
+        "type": "AssertionError",
+        "message": "创建学生体验回放题目: 期望 HTTP 200，实际 422。响应: {\"detail\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"exam_category_code\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}},{\"type\":\"string_too_short\",\"loc\":[\"body\",\"joint_exam_group_code\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}}]}",
+        "traceback": "AssertionError: 创建学生体验回放题目: 期望 HTTP 200，实际 422。响应: {\"detail\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"exam_category_code\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}},{\"type\":\"string_too_short\",\"loc\":[\"body\",\"joint_exam_group_code\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}}]}"
+      }
+    },
+    {
+      "name": "6-学生模拟答题草稿刷新后恢复",
+      "status": "FAIL",
+      "startedAt": "2026-03-21T02:54:10.306",
+      "endedAt": "2026-03-21T02:54:20.323",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/student-step-fail-6-1774061660.png"
+        }
+      ],
+      "error": {
+        "type": "TimeoutError",
+        "message": "Page.wait_for_function: Timeout 10000ms exceeded.",
+        "traceback": "playwright._impl._errors.TimeoutError: Page.wait_for_function: Timeout 10000ms exceeded."
+      }
+    },
+    {
+      "name": "7-学生倒计时归零自动交卷",
+      "status": "FAIL",
+      "startedAt": "2026-03-21T02:54:20.323",
+      "endedAt": "2026-03-21T02:54:30.351",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/student-step-fail-7-1774061670.png"
+        }
+      ],
+      "error": {
+        "type": "TimeoutError",
+        "message": "Page.wait_for_function: Timeout 10000ms exceeded.",
+        "traceback": "playwright._impl._errors.TimeoutError: Page.wait_for_function: Timeout 10000ms exceeded."
+      }
+    },
+    {
+      "name": "8-教师侧可查询学生提交痕迹",
+      "status": "PASS",
+      "startedAt": "2026-03-21T02:54:30.351",
+      "endedAt": "2026-03-21T02:54:30.439",
+      "artifacts": [],
+      "error": null
+    }
+  ],
+  "issues": [
+    {
+      "role": "student",
+      "step": "1-学生登录并进入刷题页",
+      "message": "Locator.fill: Timeout 25000ms exceeded.\nCall log:\n  - waiting for locator(\"#password-login-form input[name='phone']\")\n"
+    },
+    {
+      "role": "student",
+      "step": "2-学生端可见教师发布题目",
+      "message": "Locator expected to be visible\nActual value: None\nError: element(s) not found \nCall log:\n  - Expect \"to_be_visible\" with timeout 25000ms\n  - waiting for locator(\"#practice-question-list\")\n"
+    },
+    {
+      "role": "student",
+      "step": "3-学生真点击提交题目",
+      "message": "Locator expected to be visible\nActual value: None\nError: element(s) not found \nCall log:\n  - Expect \"to_be_visible\" with timeout 25000ms\n  - waiting for locator(\"[data-practice-question-id='question-seed-007']\")\n"
+    },
+    {
+      "role": "student",
+      "step": "4-学生交卷前检查弹窗触发与返回作答",
+      "message": "创建学生体验回放题目: 期望 HTTP 200，实际 422。响应: {\"detail\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"exam_category_code\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}},{\"type\":\"string_too_short\",\"loc\":[\"body\",\"joint_exam_group_code\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}}]}"
+    },
+    {
+      "role": "student",
+      "step": "5-学生模拟考试暂停与恢复",
+      "message": "创建学生体验回放题目: 期望 HTTP 200，实际 422。响应: {\"detail\":[{\"type\":\"string_too_short\",\"loc\":[\"body\",\"exam_category_code\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}},{\"type\":\"string_too_short\",\"loc\":[\"body\",\"joint_exam_group_code\"],\"msg\":\"String should have at least 1 character\",\"input\":\"\",\"ctx\":{\"min_length\":1}}]}"
+    },
+    {
+      "role": "student",
+      "step": "6-学生模拟答题草稿刷新后恢复",
+      "message": "Page.wait_for_function: Timeout 10000ms exceeded."
+    },
+    {
+      "role": "student",
+      "step": "7-学生倒计时归零自动交卷",
+      "message": "Page.wait_for_function: Timeout 10000ms exceeded."
+    }
+  ],
+  "totalIssues": 7,
+  "linkageMatrix": {
+    "superAdminToTeacher": "NOT_RUN",
+    "teacherToStudent": "NOT_RUN",
+    "studentToTeacher": "PASS"
+  }
+}

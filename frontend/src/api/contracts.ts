@@ -203,8 +203,6 @@ export interface ValidationError {
   loc: Array<string | number>
   msg: string
   type: string
-  input?: unknown
-  ctx?: Record<string, unknown>
 }
 
 export interface HTTPValidationError {
@@ -224,19 +222,19 @@ export interface Body_preview_template_import_api_question_bank_imports_template
 
 export interface Body_batch_parse_questions_api_question_bank_batch_parse_post {
   file: unknown
-  examCategoryCode?: string
-  jointExamGroupCode?: string
-  subjectCode?: string
-  policyVersion?: string
+  exam_category_code?: string
+  joint_exam_group_code?: string
+  subject_code?: string
+  policy_version?: string
 }
 
 export interface Body_parse_knowledge_graph_from_word_api_knowledge_graph_parse_from_word_post {
   file: unknown
-  examCategoryCode?: string
-  jointExamGroupCode?: string
-  subjectCode?: string
-  parseMode?: string
-  policyVersion?: string
+  exam_category_code?: string
+  joint_exam_group_code?: string
+  subject_code?: string
+  parse_mode?: string
+  policy_version?: string
 }
 
 export interface Body_ai_parse_admin_syllabus_api_question_bank_admin_syllabus__versionId__ai_parse_post {
@@ -244,10 +242,43 @@ export interface Body_ai_parse_admin_syllabus_api_question_bank_admin_syllabus__
 }
 
 export interface Body_create_teacher_qa_thread_api_question_bank_messages_teacher_qa_threads_post {
-  subjectCode: string
+  subject_code: string
   title: string
   content?: string
   attachments?: File[] | null
+}
+
+export interface LearningMethodProfileAutoGenerateRequest {
+  profileVersion?: string
+  strategyType?: string
+  forceRegenerate?: boolean
+}
+
+export interface LearningMethodQuestionFeatureAutoBatchRequest {
+  questionIds?: string[]
+  limit?: number
+  sourceType?: string
+  forceRefresh?: boolean
+}
+
+export interface LearningMethodQuestionPackRecommendRequest {
+  questionCount?: number
+  sessionId?: string
+  sourceType?: string
+  subjectCode?: string
+  difficultyPreference?: string
+  practiceStrategy?: string
+  strategySource?: string
+}
+
+export interface LearningMethodQuestionPackFeedbackRequest {
+  recommendationId: string
+  sessionId?: string
+  feedbackStatus?: string
+  isHelpful?: boolean
+  completedQuestionIds?: string[]
+  skippedQuestionIds?: string[]
+  note?: string
 }
 
 export interface Body_reply_teacher_qa_thread_api_question_bank_messages_teacher_qa_threads__threadId__reply_post {

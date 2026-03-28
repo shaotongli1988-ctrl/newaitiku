@@ -1,0 +1,178 @@
+{
+  "executedAt": "2026-03-26T13:24:37.292",
+  "startedAt": "2026-03-26T13:22:09.728",
+  "endedAt": "2026-03-26T13:24:37.292",
+  "mode": "python-playwright-true-click-replay",
+  "role": "super_admin",
+  "baseUrl": "http://127.0.0.1:8017",
+  "timeoutSec": 20,
+  "headless": true,
+  "dbPath": "/tmp/question-bank-click-replay.db",
+  "steps": [
+    {
+      "name": "1-超管入口未登录强制跳转登录页",
+      "status": "FAIL",
+      "startedAt": "2026-03-26T13:22:09.840",
+      "endedAt": "2026-03-26T13:22:10.781",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/super_admin-step-fail-1-1774531330.png"
+        }
+      ],
+      "error": {
+        "type": "AssertionError",
+        "message": "未登录访问超管控制台时不应停留在 /admin/control-center。",
+        "traceback": "AssertionError: 未登录访问超管控制台时不应停留在 /admin/control-center。"
+      }
+    },
+    {
+      "name": "2-超管登录并进入控制台",
+      "status": "FAIL",
+      "startedAt": "2026-03-26T13:22:10.781",
+      "endedAt": "2026-03-26T13:22:50.896",
+      "artifacts": [],
+      "error": {
+        "type": "TimeoutError",
+        "message": "Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for get_by_placeholder(\"请输入密码\")\n    - locator resolved to <input value=\"\" type=\"password\" data-v-4078f3ec=\"\" placeholder=\"请输入密码\" class=\"el-input__inner\"/>\n    - fill(\"seed-password-admin-001\")\n  - attempting fill action\n    - waiting for element to be visible, enabled and editable\n",
+        "traceback": "playwright._impl._errors.TimeoutError: Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for get_by_placeholder(\"请输入密码\")\n    - locator resolved to <input value=\"\" type=\"password\" data-v-4078f3ec=\"\" placeholder=\"请输入密码\" class=\"el-input__inner\"/>\n    - fill(\"seed-password-admin-001\")\n  - attempting fill action\n    - waiting for element to be visible, enabled and editable"
+      }
+    },
+    {
+      "name": "3-超管保存系统设置",
+      "status": "FAIL",
+      "startedAt": "2026-03-26T13:22:50.896",
+      "endedAt": "2026-03-26T13:23:17.143",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/super_admin-step-fail-3-1774531390.png"
+        }
+      ],
+      "error": {
+        "type": "TimeoutError",
+        "message": "Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\".content-grid > .el-card\").first.locator(\".el-form-item:has-text('平台名称') input\")\n",
+        "traceback": "playwright._impl._errors.TimeoutError: Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\".content-grid > .el-card\").first.locator(\".el-form-item:has-text('平台名称') input\")"
+      }
+    },
+    {
+      "name": "4-超管创建更新教师并验证教师端可用",
+      "status": "FAIL",
+      "startedAt": "2026-03-26T13:23:17.143",
+      "endedAt": "2026-03-26T13:23:37.164",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/super_admin-step-fail-4-1774531417.png"
+        }
+      ],
+      "error": {
+        "type": "TimeoutError",
+        "message": "Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\".content-grid > .el-card\").nth(1).locator(\".el-form-item:has-text('用户ID') input\")\n",
+        "traceback": "playwright._impl._errors.TimeoutError: Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\".content-grid > .el-card\").nth(1).locator(\".el-form-item:has-text('用户ID') input\")"
+      }
+    },
+    {
+      "name": "5-超管执行考生导入与导出",
+      "status": "FAIL",
+      "startedAt": "2026-03-26T13:23:37.164",
+      "endedAt": "2026-03-26T13:23:57.201",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/super_admin-step-fail-5-1774531437.png"
+        }
+      ],
+      "error": {
+        "type": "TimeoutError",
+        "message": "Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\".secondary-grid > .el-card\").first.locator(\"textarea\").first\n",
+        "traceback": "playwright._impl._errors.TimeoutError: Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\".secondary-grid > .el-card\").first.locator(\"textarea\").first"
+      }
+    },
+    {
+      "name": "6-超管校验无权限与停用边界",
+      "status": "FAIL",
+      "startedAt": "2026-03-26T13:23:57.201",
+      "endedAt": "2026-03-26T13:24:17.224",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/super_admin-step-fail-6-1774531457.png"
+        }
+      ],
+      "error": {
+        "type": "TimeoutError",
+        "message": "Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\".content-grid > .el-card\").nth(1).locator(\".el-form-item:has-text('用户ID') input\")\n",
+        "traceback": "playwright._impl._errors.TimeoutError: Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\".content-grid > .el-card\").nth(1).locator(\".el-form-item:has-text('用户ID') input\")"
+      }
+    },
+    {
+      "name": "7-超管校验 CSRF 失败拦截",
+      "status": "PASS",
+      "startedAt": "2026-03-26T13:24:17.224",
+      "endedAt": "2026-03-26T13:24:17.249",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "8-超管退出后不可继续写操作",
+      "status": "FAIL",
+      "startedAt": "2026-03-26T13:24:17.249",
+      "endedAt": "2026-03-26T13:24:37.280",
+      "artifacts": [
+        {
+          "type": "screenshot",
+          "path": "/Users/shaotongli/Code/newaitiku/docs/super_admin-step-fail-8-1774531477.png"
+        }
+      ],
+      "error": {
+        "type": "TimeoutError",
+        "message": "Locator.click: Timeout 20000ms exceeded.\nCall log:\n  - waiting for get_by_role(\"button\", name=\"退出登录\").first\n",
+        "traceback": "playwright._impl._errors.TimeoutError: Locator.click: Timeout 20000ms exceeded.\nCall log:\n  - waiting for get_by_role(\"button\", name=\"退出登录\").first"
+      }
+    }
+  ],
+  "issues": [
+    {
+      "role": "super_admin",
+      "step": "1-超管入口未登录强制跳转登录页",
+      "message": "未登录访问超管控制台时不应停留在 /admin/control-center。"
+    },
+    {
+      "role": "super_admin",
+      "step": "2-超管登录并进入控制台",
+      "message": "Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for get_by_placeholder(\"请输入密码\")\n    - locator resolved to <input value=\"\" type=\"password\" data-v-4078f3ec=\"\" placeholder=\"请输入密码\" class=\"el-input__inner\"/>\n    - fill(\"seed-password-admin-001\")\n  - attempting fill action\n    - waiting for element to be visible, enabled and editable\n"
+    },
+    {
+      "role": "super_admin",
+      "step": "3-超管保存系统设置",
+      "message": "Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\".content-grid > .el-card\").first.locator(\".el-form-item:has-text('平台名称') input\")\n"
+    },
+    {
+      "role": "super_admin",
+      "step": "4-超管创建更新教师并验证教师端可用",
+      "message": "Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\".content-grid > .el-card\").nth(1).locator(\".el-form-item:has-text('用户ID') input\")\n"
+    },
+    {
+      "role": "super_admin",
+      "step": "5-超管执行考生导入与导出",
+      "message": "Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\".secondary-grid > .el-card\").first.locator(\"textarea\").first\n"
+    },
+    {
+      "role": "super_admin",
+      "step": "6-超管校验无权限与停用边界",
+      "message": "Locator.fill: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\".content-grid > .el-card\").nth(1).locator(\".el-form-item:has-text('用户ID') input\")\n"
+    },
+    {
+      "role": "super_admin",
+      "step": "8-超管退出后不可继续写操作",
+      "message": "Locator.click: Timeout 20000ms exceeded.\nCall log:\n  - waiting for get_by_role(\"button\", name=\"退出登录\").first\n"
+    }
+  ],
+  "totalIssues": 7,
+  "linkageMatrix": {
+    "superAdminToTeacher": "NOT_RUN",
+    "teacherToStudent": "NOT_RUN",
+    "studentToTeacher": "NOT_RUN"
+  }
+}

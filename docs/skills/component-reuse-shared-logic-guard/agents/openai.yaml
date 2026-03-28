@@ -1,0 +1,6 @@
+interface:
+  display_name: "组件复用与公共逻辑"
+  short_description: "收敛重复实现与公共层抽取，统一 request、分页和基础实体规则"
+  default_prompt: "使用 $component-reuse-shared-logic-guard 检查当前改动的实现层收敛情况，识别重复代码、公共层缺失、页面直写请求和结构不统一问题，并给出最小可落地修复方案。"
+policy:
+  allow_implicit_invocation: true

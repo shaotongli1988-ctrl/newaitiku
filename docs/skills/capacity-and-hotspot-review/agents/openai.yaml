@@ -1,0 +1,6 @@
+interface:
+  display_name: "容量与热点评审"
+  short_description: "评估高峰流量、热点接口、热点 SQL 与外部依赖容量风险"
+  default_prompt: "使用 $capacity-and-hotspot-review 评估当前上线版本的容量与热点风险，输出预估与防护建议。"
+policy:
+  allow_implicit_invocation: true

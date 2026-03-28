@@ -1,5 +1,4 @@
 const STUDENT_ONBOARDING_STORAGE_PREFIX = 'qbStudentOnboardingCompleted'
-const STUDENT_ONBOARDING_ENTRY_PATH = '/student/onboarding/diagnosis'
 
 function normalizePath(path = '') {
   return String(path || '').trim()
@@ -11,16 +10,6 @@ function normalizeRole(role = '') {
 
 function normalizeUserId(userId = '') {
   return String(userId || '').trim()
-}
-
-function normalizeCompleted(value) {
-  if (value === true) {
-    return true
-  }
-  if (value === false) {
-    return false
-  }
-  return null
 }
 
 function resolveStorageKey(userId = '') {
@@ -67,7 +56,8 @@ export function clearStudentOnboardingCompleted(userId = '') {
 export function resolveStudentOnboardingRedirect({ role = '', path = '', userId = '', completed = null } = {}) {
   const normalizedRole = normalizeRole(role)
   const normalizedPath = normalizePath(path)
-  const normalizedCompleted = normalizeCompleted(completed)
+  void userId
+  void completed
 
   if (normalizedRole !== 'student') {
     return ''
@@ -75,17 +65,6 @@ export function resolveStudentOnboardingRedirect({ role = '', path = '', userId 
   if (!normalizedPath.startsWith('/student/')) {
     return ''
   }
-  if (isStudentOnboardingFlowPath(normalizedPath)) {
-    return ''
-  }
-  if (normalizedCompleted === true) {
-    return ''
-  }
-  if (normalizedCompleted === false) {
-    return STUDENT_ONBOARDING_ENTRY_PATH
-  }
-  if (hasStudentOnboardingCompleted(userId)) {
-    return ''
-  }
-  return STUDENT_ONBOARDING_ENTRY_PATH
+  // 引导流程改为非阻断策略：允许学生在引导期间访问其他学生页面。
+  return ''
 }

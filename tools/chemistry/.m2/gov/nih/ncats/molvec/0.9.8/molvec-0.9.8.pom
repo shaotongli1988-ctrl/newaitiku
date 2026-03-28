@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>gov.nih.ncats</groupId>
+  <artifactId>molvec</artifactId>
+  <packaging>jar</packaging>
+  <version>0.9.8</version>
+  <name>MolVec</name>
+
+
+    <url>https://github.com/ncats/molvec</url>
+    <description>NCATS (chemical) ocr
+        engine that can a way to vectorize
+        chemical images into Chemical objects preserving the 2D layout as much as
+        possible. </description>
+    <organization>
+        <name>NIH/NCATS</name>
+        <url>https://ncats.nih.gov</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+
+        <developer>
+            <id>peryeata</id>
+            <name>Tyler Peryea</name>
+            <email>tyler.peryea@fda.hhs.gov</email>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>America/New_York</timezone>
+        </developer>
+        <developer>
+            <id>nguyenda</id>
+            <name>Dac-Trung Nguyen</name>
+            <email>dactrung.nguyen@nih.gov</email>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>America/New_York</timezone>
+        </developer>
+        <developer>
+            <id>katzelda</id>
+            <name>Daniel Katzel</name>
+            <email>daniel.katzel@nih.gov</email>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>America/New_York</timezone>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://spotlite.nih.gov/ncats/ncats-common</url>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+    <properties>
+    <java.version>1.8</java.version>
+    <maven.compiler.plugin.version>2.3.2</maven.compiler.plugin.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <commonsFileuploadVersion>1.2.1</commonsFileuploadVersion>
+    <commonsIoVersion>2.3</commonsIoVersion>
+    <log4jVersion>1.2.16</log4jVersion>
+    <commonsLang3Version>3.1</commonsLang3Version>
+    <downloadLabel>Beta</downloadLabel>
+    <gae.version>1.6.5</gae.version>
+    <deploy.dir>binaries</deploy.dir>
+  </properties>
+  
+<dependencies>
+    <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.13.1</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>com.twelvemonkeys.imageio</groupId>
+        <artifactId>imageio-tiff</artifactId>
+        <version>3.6</version>
+    </dependency>
+    <dependency>
+        <groupId>gov.nih.ncats</groupId>
+        <artifactId>ncats-common</artifactId>
+        <version>0.3.4</version>
+    </dependency>
+    <dependency>
+        <groupId>gov.nih.ncats</groupId>
+        <artifactId>ncats-common-cli</artifactId>
+        <version>0.9.2</version>
+    </dependency>
+
+    <dependency>
+        <groupId>gov.nih.ncats</groupId>
+        <artifactId>molwitch-cdk</artifactId>
+        <version>1.0.1</version>
+        <scope>test</scope>
+</dependency>
+<dependency>
+        <groupId>gov.nih.ncats</groupId>
+        <artifactId>molwitch-renderer</artifactId>
+        <version>1.0</version>
+        <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>com.mortennobel</groupId>
+    <artifactId>java-image-scaling</artifactId>
+    <version>0.8.6</version>
+<scope>test</scope>
+</dependency>
+
+</dependencies>
+
+  <build>
+      <resources>
+          <resource>
+              <directory>src/main/java</directory>
+              <includes>
+                  <include>**/*.html</include>
+                  <include>**/*.js</include>
+                  <include>**/*.css</include>
+                  <include>**/*.png</include>
+              </includes>
+          </resource>
+      </resources>
+  	<finalName>${project.artifactId}-${project.version}</finalName>
+    <outputDirectory>${deploy.dir}</outputDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven.compiler.plugin.version}</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <compilerArgument>-proc:none</compilerArgument>
+        </configuration>
+      </plugin>
+<plugin>
+    <artifactId>maven-assembly-plugin</artifactId>
+    <executions>
+      <execution>
+        <phase>package</phase>
+        <goals>
+          <goal>single</goal>
+        </goals>
+      </execution>
+    </executions>
+
+   <configuration>
+               <archive>
+                  <manifest>
+                     <mainClass>gov.nih.ncats.molvec.Main</mainClass>
+                  </manifest>
+               </archive>
+               <descriptorRefs>
+                  <descriptorRef>jar-with-dependencies</descriptorRef>
+               </descriptorRefs>
+            </configuration>
+  </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+	    <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.1.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <use>false</use>
+                            <use>false</use>
+                            <source>1.8</source>
+                                <links><link>http://docs.oracle.com/javase/7/docs/api/</link>		                             <link>http://docs.oracle.com/javase/7/docs/api/</link></links>
+                            <doclint>none</doclint>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+<profiles>
+    <profile>
+        <id>ossrh</id>
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.6.7</version>
+                    <extensions>true</extensions>
+                    <configuration>
+                        <serverId>ossrh</serverId>
+                        <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                        <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.5</version>
+                    <executions>
+                        <execution>
+                            <id>sign-artifacts</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>sign</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.2.1</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.1.1</version>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </build>
+    </profile>
+</profiles>
+
+</project>

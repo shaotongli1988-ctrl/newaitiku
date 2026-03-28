@@ -1,0 +1,84 @@
+{
+  "executedAt": "2026-03-18T06:23:54.775Z",
+  "startedAt": "2026-03-18T06:23:49.555Z",
+  "endedAt": "2026-03-18T06:23:54.775Z",
+  "mode": "python-playwright-true-click-replay",
+  "role": "student",
+  "baseUrl": "http://127.0.0.1:8017",
+  "timeoutSec": 20,
+  "headless": true,
+  "dbPath": "/tmp/question-bank-click-replay.db",
+  "steps": [
+    {
+      "name": "1-学生登录并进入刷题页",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:49.584Z",
+      "endedAt": "2026-03-18T06:23:49.762Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "2-学生端可见教师发布题目",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:49.762Z",
+      "endedAt": "2026-03-18T06:23:49.957Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "3-学生真点击提交题目",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:49.957Z",
+      "endedAt": "2026-03-18T06:23:50.398Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "4-学生交卷前检查弹窗触发与返回作答",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:50.398Z",
+      "endedAt": "2026-03-18T06:23:50.777Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "5-学生模拟考试暂停与恢复",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:50.777Z",
+      "endedAt": "2026-03-18T06:23:51.422Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "6-学生模拟答题草稿刷新后恢复",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:51.422Z",
+      "endedAt": "2026-03-18T06:23:51.896Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "7-学生倒计时归零自动交卷",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:51.896Z",
+      "endedAt": "2026-03-18T06:23:54.765Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "8-教师侧可查询学生提交痕迹",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:54.765Z",
+      "endedAt": "2026-03-18T06:23:54.772Z",
+      "artifacts": [],
+      "error": null
+    }
+  ],
+  "issues": [],
+  "totalIssues": 0,
+  "linkageMatrix": {
+    "superAdminToTeacher": "PASS",
+    "teacherToStudent": "PASS",
+    "studentToTeacher": "PASS"
+  }
+}

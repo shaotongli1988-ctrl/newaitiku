@@ -1,0 +1,6 @@
+interface:
+  display_name: "Git流程规范"
+  short_description: "检查分支、提交、PR/MR 和发布分支流程是否合规"
+  default_prompt: "使用 $git-flow-enforcer 检查当前分支、提交与 PR 流程是否符合规范，输出违规项和整改建议。"
+policy:
+  allow_implicit_invocation: true

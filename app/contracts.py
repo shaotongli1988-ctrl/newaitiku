@@ -4,7 +4,7 @@ import json
 from enum import Enum
 from typing import Any, Optional
 
-from app.content_baseline import PUBLIC_SUBJECTS, get_joint_exam_group
+from app.content_baseline import PUBLIC_SUBJECTS, get_joint_exam_group, subject_id_from_subject_code
 from app.shared.codecs import dump_json, load_json_object as shared_load_json_object
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic.alias_generators import to_camel
@@ -1084,6 +1084,101 @@ class LearningMethodAdminSortRequest(BaseModel):
     )
 
 
+
+class LearningMethodProfileAutoGenerateRequest(BaseModel):
+    model_config = REQUEST_MODEL_CONFIG
+
+    profile_version: str = Field(
+        default="v1",
+        min_length=1,
+        max_length=32,
+    )
+    strategy_type: str = Field(
+        default="RULE_BASED",
+        min_length=1,
+        max_length=32,
+    )
+    force_regenerate: bool = False
+
+
+class LearningMethodQuestionFeatureAutoBatchRequest(BaseModel):
+    model_config = REQUEST_MODEL_CONFIG
+
+    question_ids: list[str] = Field(
+        default_factory=list,
+        max_length=500,
+    )
+    limit: int = Field(
+        default=200,
+        ge=1,
+        le=2000,
+    )
+    source_type: str = Field(
+        default="AUTO_RULE",
+        min_length=1,
+        max_length=32,
+    )
+    force_refresh: bool = False
+
+
+class LearningMethodQuestionPackRecommendRequest(BaseModel):
+    model_config = REQUEST_MODEL_CONFIG
+
+    question_count: int = Field(
+        default=12,
+        ge=5,
+        le=30,
+    )
+    session_id: str = Field(
+        default="",
+        max_length=64,
+    )
+    source_type: str = Field(
+        default="LEARNING_METHOD_PAGE",
+        max_length=64,
+    )
+    subject_code: str = Field(
+        default="",
+        max_length=64,
+    )
+    difficulty_preference: str = Field(
+        default="",
+        max_length=32,
+    )
+    practice_strategy: str = Field(
+        default="",
+        max_length=64,
+    )
+    strategy_source: str = Field(
+        default="DEFAULT",
+        max_length=32,
+    )
+
+
+class LearningMethodQuestionPackFeedbackRequest(BaseModel):
+    model_config = REQUEST_MODEL_CONFIG
+
+    recommendation_id: str = Field(
+        min_length=1,
+        max_length=128,
+    )
+    session_id: str = Field(
+        default="",
+        max_length=64,
+    )
+    feedback_status: str = Field(
+        default="ACCEPTED",
+        min_length=1,
+        max_length=32,
+    )
+    is_helpful: bool = True
+    completed_question_ids: list[str] = Field(default_factory=list, max_length=50)
+    skipped_question_ids: list[str] = Field(default_factory=list, max_length=50)
+    note: str = Field(
+        default="",
+        max_length=500,
+    )
+
 class StudentPaperAnswerRequest(BaseModel):
     model_config = REQUEST_MODEL_CONFIG
 
@@ -1442,7 +1537,7 @@ class StudentMockExamStartRequest(BaseModel):
         self.subject_id = str(self.subject_id or "").strip()
         self.subject_code = str(self.subject_code or "").strip()
         if not self.subject_id and self.subject_code:
-            self.subject_id = self.subject_code
+            self.subject_id = subject_id_from_subject_code(self.subject_code)
         normalized_exam_category_code, normalized_joint_exam_group_code, normalized_subject_code = _normalize_paper_scope_request(
             self.exam_category_code,
             self.joint_exam_group_code,

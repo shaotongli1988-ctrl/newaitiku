@@ -127,6 +127,7 @@ def init_db(db_path: Union[Path, str] = DEFAULT_DB_PATH) -> None:
         ensure_student_profile_state_columns(connection)
         ensure_student_review_plan_schema(connection)
         ensure_subscription_redeem_schema(connection)
+        ensure_learning_method_matching_schema(connection)
         ensure_policy_version_indexes(connection)
         migrate_legacy_challenge_award_names(connection)
         migrate_legacy_passwords(connection)
@@ -561,6 +562,89 @@ def ensure_subscription_redeem_schema(connection: sqlite3.Connection) -> None:
     connection.execute(
         "CREATE INDEX IF NOT EXISTS idx_conversion_event_date_type "
         "ON conversion_event_log(eventDate, eventType)"
+    )
+
+
+def ensure_learning_method_matching_schema(connection: sqlite3.Connection) -> None:
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS learning_method_profile (
+          id TEXT PRIMARY KEY,
+          methodCode TEXT NOT NULL UNIQUE,
+          profileVersion TEXT NOT NULL DEFAULT 'v1',
+          strategyType TEXT NOT NULL DEFAULT 'RULE_BASED',
+          profileJson TEXT NOT NULL DEFAULT '{}',
+          confidence REAL NOT NULL DEFAULT 0,
+          extJson TEXT NOT NULL DEFAULT '{}',
+          createTime TEXT NOT NULL,
+          updateTime TEXT NOT NULL,
+          FOREIGN KEY (methodCode) REFERENCES learning_method(methodCode) ON DELETE CASCADE
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS question_match_feature (
+          id TEXT PRIMARY KEY,
+          questionId TEXT NOT NULL UNIQUE,
+          methodTagsJson TEXT NOT NULL DEFAULT '[]',
+          featureJson TEXT NOT NULL DEFAULT '{}',
+          qualityScore REAL NOT NULL DEFAULT 0,
+          sourceType TEXT NOT NULL DEFAULT 'AUTO_RULE',
+          extJson TEXT NOT NULL DEFAULT '{}',
+          createTime TEXT NOT NULL,
+          updateTime TEXT NOT NULL,
+          FOREIGN KEY (questionId) REFERENCES question(id) ON DELETE CASCADE
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS learning_method_recommendation_log (
+          id TEXT PRIMARY KEY,
+          studentUserId TEXT NOT NULL,
+          methodCode TEXT NOT NULL,
+          recommendationId TEXT NOT NULL,
+          sessionId TEXT NOT NULL DEFAULT '',
+          questionIdsJson TEXT NOT NULL DEFAULT '[]',
+          scoreJson TEXT NOT NULL DEFAULT '{}',
+          reasonTagsJson TEXT NOT NULL DEFAULT '[]',
+          feedbackStatus TEXT NOT NULL DEFAULT 'PENDING',
+          feedbackJson TEXT NOT NULL DEFAULT '{}',
+          recommendedAt TEXT NOT NULL,
+          feedbackAt TEXT NOT NULL DEFAULT '',
+          extJson TEXT NOT NULL DEFAULT '{}',
+          createTime TEXT NOT NULL,
+          updateTime TEXT NOT NULL,
+          FOREIGN KEY (studentUserId) REFERENCES "user"(id) ON DELETE CASCADE,
+          FOREIGN KEY (methodCode) REFERENCES learning_method(methodCode) ON DELETE CASCADE,
+          UNIQUE (studentUserId, recommendationId)
+        )
+        """
+    )
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS idx_learning_method_profile_method_update "
+        "ON learning_method_profile(methodCode, updateTime)"
+    )
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS idx_question_match_feature_source_update "
+        "ON question_match_feature(sourceType, updateTime)"
+    )
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS idx_question_match_feature_question_update "
+        "ON question_match_feature(questionId, updateTime)"
+    )
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS idx_learning_method_recommendation_student_method_time "
+        "ON learning_method_recommendation_log(studentUserId, methodCode, recommendedAt DESC)"
+    )
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS idx_learning_method_recommendation_feedback_status "
+        "ON learning_method_recommendation_log(feedbackStatus, updateTime)"
+    )
+    connection.execute(
+        "CREATE INDEX IF NOT EXISTS idx_learning_method_recommendation_session_time "
+        "ON learning_method_recommendation_log(sessionId, recommendedAt DESC)"
     )
 
 

@@ -1,0 +1,6 @@
+interface:
+  display_name: "页面状态完整性"
+  short_description: "检查加载、空状态、错误、禁用、权限与确认态是否完整覆盖"
+  default_prompt: "使用 $ux-state-completeness-checker 盘点当前页面的状态覆盖情况，输出缺失状态和补齐建议。"
+policy:
+  allow_implicit_invocation: true

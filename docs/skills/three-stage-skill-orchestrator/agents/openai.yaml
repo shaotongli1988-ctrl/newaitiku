@@ -1,0 +1,6 @@
+interface:
+  display_name: "三阶段总技能"
+  short_description: "三阶段体系的统一入口，按设计、实施、交付路由，并统一五类高风险问题口径"
+  default_prompt: "使用 $three-stage-skill-orchestrator 处理当前需求，根据任务语义和上下文状态判断现在应该进入开发前、开发中还是开发后阶段；如果命中高并发、数据一致性、性能容量、部署稳定性或安全权限问题，按共享三阶段控制点模板路由并给出下一步动作。"
+policy:
+  allow_implicit_invocation: true

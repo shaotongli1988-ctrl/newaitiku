@@ -40,12 +40,12 @@ describe('student onboarding helpers', () => {
     expect(isStudentOnboardingFlowPath('/student/home')).toBe(false)
   })
 
-  it('正常路径: redirects incomplete student to onboarding entry', () => {
+  it('正常路径: does not block incomplete student from other student pages', () => {
     expect(resolveStudentOnboardingRedirect({
       role: 'student',
       path: '/student/home',
       userId: 'student-001',
-    })).toBe('/student/onboarding/diagnosis')
+    })).toBe('')
   })
 
   it('skips redirect when student has completed onboarding', () => {
@@ -69,7 +69,7 @@ describe('student onboarding helpers', () => {
     expect(hasStudentOnboardingCompleted('student-001')).toBe(false)
   })
 
-  it('uses server completion state before local fallback', () => {
+  it('uses non-blocking navigation regardless of completion state', () => {
     expect(resolveStudentOnboardingRedirect({
       role: 'student',
       path: '/student/home',
@@ -82,7 +82,7 @@ describe('student onboarding helpers', () => {
       path: '/student/home',
       userId: 'student-001',
       completed: false,
-    })).toBe('/student/onboarding/diagnosis')
+    })).toBe('')
   })
 
   it('异常路径: never redirects non-student roles', () => {
@@ -98,7 +98,7 @@ describe('student onboarding helpers', () => {
       role: 'STUDENT',
       path: '/student/home',
       userId: 'student-001',
-    })).toBe('/student/onboarding/diagnosis')
+    })).toBe('')
   })
 
   it('边界路径: skips redirect for non-student route path', () => {

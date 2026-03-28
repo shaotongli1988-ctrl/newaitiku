@@ -273,6 +273,45 @@ STUDENT_LEARNING_METHOD_PROGRESS_FIELDS = (
     "createTime",
     "updateTime",
 )
+LEARNING_METHOD_PROFILE_FIELDS = (
+    "id",
+    "methodCode",
+    "profileVersion",
+    "strategyType",
+    "profileJson",
+    "confidence",
+    "extJson",
+    "createTime",
+    "updateTime",
+)
+QUESTION_MATCH_FEATURE_FIELDS = (
+    "id",
+    "questionId",
+    "methodTagsJson",
+    "featureJson",
+    "qualityScore",
+    "sourceType",
+    "extJson",
+    "createTime",
+    "updateTime",
+)
+LEARNING_METHOD_RECOMMENDATION_LOG_FIELDS = (
+    "id",
+    "studentUserId",
+    "methodCode",
+    "recommendationId",
+    "sessionId",
+    "questionIdsJson",
+    "scoreJson",
+    "reasonTagsJson",
+    "feedbackStatus",
+    "feedbackJson",
+    "recommendedAt",
+    "feedbackAt",
+    "extJson",
+    "createTime",
+    "updateTime",
+)
 SUBSCRIPTION_PLAN_FIELDS = (
     "id",
     "planCode",
@@ -417,6 +456,9 @@ CHALLENGE_POINT_AWARD_SELECT_SQL = ", ".join(CHALLENGE_POINT_AWARD_FIELDS)
 MESSAGE_SEND_HISTORY_SELECT_SQL = ", ".join(MESSAGE_SEND_HISTORY_FIELDS)
 LEARNING_METHOD_SELECT_SQL = ", ".join(LEARNING_METHOD_FIELDS)
 STUDENT_LEARNING_METHOD_PROGRESS_SELECT_SQL = ", ".join(STUDENT_LEARNING_METHOD_PROGRESS_FIELDS)
+LEARNING_METHOD_PROFILE_SELECT_SQL = ", ".join(LEARNING_METHOD_PROFILE_FIELDS)
+QUESTION_MATCH_FEATURE_SELECT_SQL = ", ".join(QUESTION_MATCH_FEATURE_FIELDS)
+LEARNING_METHOD_RECOMMENDATION_LOG_SELECT_SQL = ", ".join(LEARNING_METHOD_RECOMMENDATION_LOG_FIELDS)
 SUBSCRIPTION_PLAN_SELECT_SQL = ", ".join(SUBSCRIPTION_PLAN_FIELDS)
 STUDENT_SUBSCRIPTION_SELECT_SQL = ", ".join(STUDENT_SUBSCRIPTION_FIELDS)
 REDEEM_CODE_BATCH_SELECT_SQL = ", ".join(REDEEM_CODE_BATCH_FIELDS)
@@ -3726,6 +3768,394 @@ class QuestionRepository:
             self.get_student_learning_method_progress(
                 str(normalized["studentUserId"]),
                 str(normalized["methodCode"]),
+            )
+            or dict(payload)
+        )
+
+    def _decode_learning_method_profile_row(self, row: sqlite3.Row) -> Dict[str, object]:
+        profile_payload = load_json_object(str(row["profileJson"]))
+        if not isinstance(profile_payload, dict):
+            profile_payload = {}
+        ext_payload = load_json_object(str(row["extJson"]))
+        if not isinstance(ext_payload, dict):
+            ext_payload = {}
+        return {
+            "id": str(row["id"]),
+            "methodCode": str(row["methodCode"]),
+            "profileVersion": str(row["profileVersion"]),
+            "strategyType": str(row["strategyType"]),
+            "profile": profile_payload,
+            "confidence": max(0.0, min(1.0, self._safe_float(row["confidence"], 0.0))),
+            "extJson": ext_payload,
+            "createTime": str(row["createTime"]),
+            "updateTime": str(row["updateTime"]),
+        }
+
+    def _normalize_learning_method_profile_row(self, payload: object) -> Optional[Dict[str, object]]:
+        if not isinstance(payload, dict):
+            return None
+        method_code = str(payload.get("methodCode", "")).strip().upper()
+        if not method_code:
+            return None
+        profile_id = str(payload.get("id", "")).strip()
+        if not profile_id:
+            slug = "".join(character.lower() if character.isalnum() else "-" for character in method_code).strip("-")
+            profile_id = f"learning-method-profile-{slug or method_code.lower()}"
+        profile_payload = payload.get("profile", payload.get("profileJson", {}))
+        if not isinstance(profile_payload, dict):
+            profile_payload = load_json_object(profile_payload)
+            if not isinstance(profile_payload, dict):
+                profile_payload = {}
+        ext_payload = payload.get("extJson", {})
+        if not isinstance(ext_payload, dict):
+            ext_payload = load_json_object(ext_payload)
+            if not isinstance(ext_payload, dict):
+                ext_payload = {}
+        create_time = str(payload.get("createTime", "")).strip()
+        update_time = str(payload.get("updateTime", "")).strip() or create_time
+        confidence = self._safe_float(payload.get("confidence", 0.0), 0.0)
+        return {
+            "id": profile_id,
+            "methodCode": method_code,
+            "profileVersion": str(payload.get("profileVersion", "v1")).strip() or "v1",
+            "strategyType": str(payload.get("strategyType", "RULE_BASED")).strip() or "RULE_BASED",
+            "profileJson": dump_json(profile_payload),
+            "confidence": max(0.0, min(1.0, confidence)),
+            "extJson": dump_json(ext_payload),
+            "createTime": create_time,
+            "updateTime": update_time,
+        }
+
+    def get_learning_method_profile(self, method_code: str) -> Optional[Dict[str, object]]:
+        with get_connection(self.db_path) as connection:
+            row = connection.execute(
+                f"""
+                SELECT {LEARNING_METHOD_PROFILE_SELECT_SQL}
+                FROM learning_method_profile
+                WHERE UPPER(methodCode) = UPPER(?)
+                LIMIT 1
+                """,
+                (str(method_code or "").strip(),),
+            ).fetchone()
+        return self._decode_learning_method_profile_row(row) if row else None
+
+    def upsert_learning_method_profile(self, payload: Dict[str, object]) -> Dict[str, object]:
+        normalized = self._normalize_learning_method_profile_row(payload)
+        if not normalized:
+            raise ValueError("learning method profile payload is invalid")
+        with get_connection(self.db_path) as connection:
+            connection.execute(
+                """
+                INSERT INTO learning_method_profile (
+                  id, methodCode, profileVersion, strategyType, profileJson, confidence,
+                  extJson, createTime, updateTime
+                ) VALUES (
+                  :id, :methodCode, :profileVersion, :strategyType, :profileJson, :confidence,
+                  :extJson, :createTime, :updateTime
+                )
+                ON CONFLICT(methodCode) DO UPDATE SET
+                  id = excluded.id,
+                  profileVersion = excluded.profileVersion,
+                  strategyType = excluded.strategyType,
+                  profileJson = excluded.profileJson,
+                  confidence = excluded.confidence,
+                  extJson = excluded.extJson,
+                  createTime = excluded.createTime,
+                  updateTime = excluded.updateTime
+                """,
+                normalized,
+            )
+            connection.commit()
+        return self.get_learning_method_profile(str(normalized["methodCode"])) or dict(payload)
+
+    def _decode_question_match_feature_row(self, row: sqlite3.Row) -> Dict[str, object]:
+        feature_payload = load_json_object(str(row["featureJson"]))
+        if not isinstance(feature_payload, dict):
+            feature_payload = {}
+        ext_payload = load_json_object(str(row["extJson"]))
+        if not isinstance(ext_payload, dict):
+            ext_payload = {}
+        return {
+            "id": str(row["id"]),
+            "questionId": str(row["questionId"]),
+            "methodTags": self._normalize_text_list(row["methodTagsJson"]),
+            "feature": feature_payload,
+            "qualityScore": max(0.0, min(1.0, self._safe_float(row["qualityScore"], 0.0))),
+            "sourceType": str(row["sourceType"]),
+            "extJson": ext_payload,
+            "createTime": str(row["createTime"]),
+            "updateTime": str(row["updateTime"]),
+        }
+
+    def _normalize_question_match_feature_row(self, payload: object) -> Optional[Dict[str, object]]:
+        if not isinstance(payload, dict):
+            return None
+        question_id = str(payload.get("questionId", "")).strip()
+        if not question_id:
+            return None
+        feature_id = str(payload.get("id", "")).strip()
+        if not feature_id:
+            slug = "".join(character.lower() if character.isalnum() else "-" for character in question_id).strip("-")
+            feature_id = f"question-match-feature-{slug or question_id}"
+        method_tags = self._normalize_text_list(payload.get("methodTags", payload.get("methodTagsJson", [])))
+        feature_payload = payload.get("feature", payload.get("featureJson", {}))
+        if not isinstance(feature_payload, dict):
+            feature_payload = load_json_object(feature_payload)
+            if not isinstance(feature_payload, dict):
+                feature_payload = {}
+        ext_payload = payload.get("extJson", {})
+        if not isinstance(ext_payload, dict):
+            ext_payload = load_json_object(ext_payload)
+            if not isinstance(ext_payload, dict):
+                ext_payload = {}
+        create_time = str(payload.get("createTime", "")).strip()
+        update_time = str(payload.get("updateTime", "")).strip() or create_time
+        quality_score = self._safe_float(payload.get("qualityScore", 0.0), 0.0)
+        return {
+            "id": feature_id,
+            "questionId": question_id,
+            "methodTagsJson": dump_json(method_tags),
+            "featureJson": dump_json(feature_payload),
+            "qualityScore": max(0.0, min(1.0, quality_score)),
+            "sourceType": str(payload.get("sourceType", "AUTO_RULE")).strip() or "AUTO_RULE",
+            "extJson": dump_json(ext_payload),
+            "createTime": create_time,
+            "updateTime": update_time,
+        }
+
+    def get_question_match_feature(self, question_id: str) -> Optional[Dict[str, object]]:
+        with get_connection(self.db_path) as connection:
+            row = connection.execute(
+                f"""
+                SELECT {QUESTION_MATCH_FEATURE_SELECT_SQL}
+                FROM question_match_feature
+                WHERE questionId = ?
+                LIMIT 1
+                """,
+                (str(question_id or "").strip(),),
+            ).fetchone()
+        return self._decode_question_match_feature_row(row) if row else None
+
+    def list_question_match_features_by_question_ids(self, question_ids: List[str]) -> List[Dict[str, object]]:
+        normalized_ids = [str(item).strip() for item in question_ids if str(item).strip()]
+        if not normalized_ids:
+            return []
+        placeholders = ",".join("?" for _ in normalized_ids)
+        with get_connection(self.db_path) as connection:
+            rows = connection.execute(
+                (
+                    f"SELECT {QUESTION_MATCH_FEATURE_SELECT_SQL} "
+                    "FROM question_match_feature "
+                    f"WHERE questionId IN ({placeholders})"
+                ),
+                tuple(normalized_ids),
+            ).fetchall()
+        return [self._decode_question_match_feature_row(row) for row in rows]
+
+    def list_question_match_features(self, limit: int = 200) -> List[Dict[str, object]]:
+        with get_connection(self.db_path) as connection:
+            rows = connection.execute(
+                f"""
+                SELECT {QUESTION_MATCH_FEATURE_SELECT_SQL}
+                FROM question_match_feature
+                ORDER BY updateTime DESC, questionId ASC
+                LIMIT ?
+                """,
+                (max(1, min(2000, int(limit or 200))),),
+            ).fetchall()
+        return [self._decode_question_match_feature_row(row) for row in rows]
+
+    def upsert_question_match_feature(self, payload: Dict[str, object]) -> Dict[str, object]:
+        normalized = self._normalize_question_match_feature_row(payload)
+        if not normalized:
+            raise ValueError("question match feature payload is invalid")
+        with get_connection(self.db_path) as connection:
+            connection.execute(
+                """
+                INSERT INTO question_match_feature (
+                  id, questionId, methodTagsJson, featureJson, qualityScore, sourceType,
+                  extJson, createTime, updateTime
+                ) VALUES (
+                  :id, :questionId, :methodTagsJson, :featureJson, :qualityScore, :sourceType,
+                  :extJson, :createTime, :updateTime
+                )
+                ON CONFLICT(questionId) DO UPDATE SET
+                  id = excluded.id,
+                  methodTagsJson = excluded.methodTagsJson,
+                  featureJson = excluded.featureJson,
+                  qualityScore = excluded.qualityScore,
+                  sourceType = excluded.sourceType,
+                  extJson = excluded.extJson,
+                  createTime = excluded.createTime,
+                  updateTime = excluded.updateTime
+                """,
+                normalized,
+            )
+            connection.commit()
+        return self.get_question_match_feature(str(normalized["questionId"])) or dict(payload)
+
+    def _decode_learning_method_recommendation_log_row(self, row: sqlite3.Row) -> Dict[str, object]:
+        score_payload = load_json_object(str(row["scoreJson"]))
+        if not isinstance(score_payload, dict):
+            score_payload = {}
+        feedback_payload = load_json_object(str(row["feedbackJson"]))
+        if not isinstance(feedback_payload, dict):
+            feedback_payload = {}
+        ext_payload = load_json_object(str(row["extJson"]))
+        if not isinstance(ext_payload, dict):
+            ext_payload = {}
+        return {
+            "id": str(row["id"]),
+            "studentUserId": str(row["studentUserId"]),
+            "methodCode": str(row["methodCode"]),
+            "recommendationId": str(row["recommendationId"]),
+            "sessionId": str(row["sessionId"]),
+            "questionIds": self._normalize_text_list(row["questionIdsJson"]),
+            "score": score_payload,
+            "reasonTags": self._normalize_text_list(row["reasonTagsJson"]),
+            "feedbackStatus": str(row["feedbackStatus"]),
+            "feedback": feedback_payload,
+            "recommendedAt": str(row["recommendedAt"]),
+            "feedbackAt": str(row["feedbackAt"]),
+            "extJson": ext_payload,
+            "createTime": str(row["createTime"]),
+            "updateTime": str(row["updateTime"]),
+        }
+
+    def _normalize_learning_method_recommendation_log_row(self, payload: object) -> Optional[Dict[str, object]]:
+        if not isinstance(payload, dict):
+            return None
+        student_user_id = str(payload.get("studentUserId", "")).strip()
+        method_code = str(payload.get("methodCode", "")).strip().upper()
+        recommendation_id = str(payload.get("recommendationId", "")).strip()
+        if not student_user_id or not method_code or not recommendation_id:
+            return None
+        row_id = str(payload.get("id", "")).strip()
+        if not row_id:
+            recommendation_slug = "".join(
+                character.lower() if character.isalnum() else "-"
+                for character in recommendation_id
+            ).strip("-")
+            row_id = f"learning-method-recommendation-{student_user_id}-{recommendation_slug or recommendation_id}"
+        score_payload = payload.get("score", payload.get("scoreJson", {}))
+        if not isinstance(score_payload, dict):
+            score_payload = load_json_object(score_payload)
+            if not isinstance(score_payload, dict):
+                score_payload = {}
+        feedback_payload = payload.get("feedback", payload.get("feedbackJson", {}))
+        if not isinstance(feedback_payload, dict):
+            feedback_payload = load_json_object(feedback_payload)
+            if not isinstance(feedback_payload, dict):
+                feedback_payload = {}
+        ext_payload = payload.get("extJson", {})
+        if not isinstance(ext_payload, dict):
+            ext_payload = load_json_object(ext_payload)
+            if not isinstance(ext_payload, dict):
+                ext_payload = {}
+        create_time = str(payload.get("createTime", "")).strip()
+        update_time = str(payload.get("updateTime", "")).strip() or create_time
+        recommended_at = str(payload.get("recommendedAt", "")).strip() or update_time or create_time
+        return {
+            "id": row_id,
+            "studentUserId": student_user_id,
+            "methodCode": method_code,
+            "recommendationId": recommendation_id,
+            "sessionId": str(payload.get("sessionId", "")).strip(),
+            "questionIdsJson": dump_json(self._normalize_text_list(payload.get("questionIds", payload.get("questionIdsJson", [])))),
+            "scoreJson": dump_json(score_payload),
+            "reasonTagsJson": dump_json(self._normalize_text_list(payload.get("reasonTags", payload.get("reasonTagsJson", [])))),
+            "feedbackStatus": str(payload.get("feedbackStatus", "PENDING")).strip() or "PENDING",
+            "feedbackJson": dump_json(feedback_payload),
+            "recommendedAt": recommended_at,
+            "feedbackAt": str(payload.get("feedbackAt", "")).strip(),
+            "extJson": dump_json(ext_payload),
+            "createTime": create_time,
+            "updateTime": update_time,
+        }
+
+    def get_learning_method_recommendation_log(
+        self,
+        student_user_id: str,
+        recommendation_id: str,
+    ) -> Optional[Dict[str, object]]:
+        with get_connection(self.db_path) as connection:
+            row = connection.execute(
+                f"""
+                SELECT {LEARNING_METHOD_RECOMMENDATION_LOG_SELECT_SQL}
+                FROM learning_method_recommendation_log
+                WHERE studentUserId = ? AND recommendationId = ?
+                LIMIT 1
+                """,
+                (str(student_user_id or "").strip(), str(recommendation_id or "").strip()),
+            ).fetchone()
+        return self._decode_learning_method_recommendation_log_row(row) if row else None
+
+    def list_learning_method_recommendation_logs(
+        self,
+        student_user_id: str,
+        method_code: str = "",
+        limit: int = 20,
+    ) -> List[Dict[str, object]]:
+        clauses = ["studentUserId = :student_user_id"]
+        params: Dict[str, object] = {
+            "student_user_id": str(student_user_id or "").strip(),
+            "limit": max(1, min(200, int(limit or 20))),
+        }
+        normalized_method_code = str(method_code or "").strip().upper()
+        if normalized_method_code:
+            clauses.append("methodCode = :method_code")
+            params["method_code"] = normalized_method_code
+        with get_connection(self.db_path) as connection:
+            rows = connection.execute(
+                f"""
+                SELECT {LEARNING_METHOD_RECOMMENDATION_LOG_SELECT_SQL}
+                FROM learning_method_recommendation_log
+                WHERE {' AND '.join(clauses)}
+                ORDER BY recommendedAt DESC, updateTime DESC, id DESC
+                LIMIT :limit
+                """,
+                params,
+            ).fetchall()
+        return [self._decode_learning_method_recommendation_log_row(row) for row in rows]
+
+    def upsert_learning_method_recommendation_log(self, payload: Dict[str, object]) -> Dict[str, object]:
+        normalized = self._normalize_learning_method_recommendation_log_row(payload)
+        if not normalized:
+            raise ValueError("learning method recommendation payload is invalid")
+        with get_connection(self.db_path) as connection:
+            connection.execute(
+                """
+                INSERT INTO learning_method_recommendation_log (
+                  id, studentUserId, methodCode, recommendationId, sessionId, questionIdsJson,
+                  scoreJson, reasonTagsJson, feedbackStatus, feedbackJson,
+                  recommendedAt, feedbackAt, extJson, createTime, updateTime
+                ) VALUES (
+                  :id, :studentUserId, :methodCode, :recommendationId, :sessionId, :questionIdsJson,
+                  :scoreJson, :reasonTagsJson, :feedbackStatus, :feedbackJson,
+                  :recommendedAt, :feedbackAt, :extJson, :createTime, :updateTime
+                )
+                ON CONFLICT(studentUserId, recommendationId) DO UPDATE SET
+                  id = excluded.id,
+                  methodCode = excluded.methodCode,
+                  sessionId = excluded.sessionId,
+                  questionIdsJson = excluded.questionIdsJson,
+                  scoreJson = excluded.scoreJson,
+                  reasonTagsJson = excluded.reasonTagsJson,
+                  feedbackStatus = excluded.feedbackStatus,
+                  feedbackJson = excluded.feedbackJson,
+                  recommendedAt = excluded.recommendedAt,
+                  feedbackAt = excluded.feedbackAt,
+                  extJson = excluded.extJson,
+                  createTime = excluded.createTime,
+                  updateTime = excluded.updateTime
+                """,
+                normalized,
+            )
+            connection.commit()
+        return (
+            self.get_learning_method_recommendation_log(
+                str(normalized["studentUserId"]),
+                str(normalized["recommendationId"]),
             )
             or dict(payload)
         )

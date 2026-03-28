@@ -1,0 +1,84 @@
+{
+  "executedAt": "2026-03-18T06:23:45.776Z",
+  "startedAt": "2026-03-18T06:23:44.346Z",
+  "endedAt": "2026-03-18T06:23:45.776Z",
+  "mode": "python-playwright-true-click-replay",
+  "role": "super_admin",
+  "baseUrl": "http://127.0.0.1:8017",
+  "timeoutSec": 20,
+  "headless": true,
+  "dbPath": "/tmp/question-bank-click-replay.db",
+  "steps": [
+    {
+      "name": "1-超管入口未登录强制跳转登录页",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:44.379Z",
+      "endedAt": "2026-03-18T06:23:44.464Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "2-超管登录并进入控制台",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:44.464Z",
+      "endedAt": "2026-03-18T06:23:44.640Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "3-超管保存系统设置",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:44.640Z",
+      "endedAt": "2026-03-18T06:23:44.765Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "4-超管创建更新教师并验证教师端可用",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:44.765Z",
+      "endedAt": "2026-03-18T06:23:45.078Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "5-超管执行考生导入与导出",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:45.078Z",
+      "endedAt": "2026-03-18T06:23:45.329Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "6-超管校验无权限与停用边界",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:45.329Z",
+      "endedAt": "2026-03-18T06:23:45.631Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "7-超管校验 CSRF 失败拦截",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:45.631Z",
+      "endedAt": "2026-03-18T06:23:45.634Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "8-超管退出后不可继续写操作",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:45.634Z",
+      "endedAt": "2026-03-18T06:23:45.773Z",
+      "artifacts": [],
+      "error": null
+    }
+  ],
+  "issues": [],
+  "totalIssues": 0,
+  "linkageMatrix": {
+    "superAdminToTeacher": "PASS",
+    "teacherToStudent": "NOT_RUN",
+    "studentToTeacher": "NOT_RUN"
+  }
+}

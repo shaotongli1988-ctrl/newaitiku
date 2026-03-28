@@ -1,0 +1,6 @@
+interface:
+  display_name: "性能回归检查"
+  short_description: "检查关键接口、慢 SQL、渲染热点与缓存缺失导致的性能退化"
+  default_prompt: "使用 $performance-regression-guard 检查当前改动的性能回归风险，输出热点、慢路径和优化建议。"
+policy:
+  allow_implicit_invocation: true

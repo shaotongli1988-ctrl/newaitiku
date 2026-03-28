@@ -1,0 +1,140 @@
+{
+  "phase": "final",
+  "task": "静态守卫复验：唯一标准",
+  "mode": "questionBank",
+  "summary": {
+    "totalChecks": 120,
+    "failedChecks": 0,
+    "waivedChecks": 0,
+    "missingDomains": [],
+    "status": "PASS"
+  },
+  "failedChecks": [],
+  "waivedChecks": [],
+  "domainSummary": [
+    {
+      "domain": "field",
+      "label": "Field Standards",
+      "configuredChecks": 9,
+      "failedChecks": 0,
+      "waivedChecks": 0,
+      "status": "PASS"
+    },
+    {
+      "domain": "api",
+      "label": "API Standards",
+      "configuredChecks": 13,
+      "failedChecks": 0,
+      "waivedChecks": 0,
+      "status": "PASS"
+    },
+    {
+      "domain": "page",
+      "label": "Page Standards",
+      "configuredChecks": 21,
+      "failedChecks": 0,
+      "waivedChecks": 0,
+      "status": "PASS"
+    },
+    {
+      "domain": "status",
+      "label": "Status Standards",
+      "configuredChecks": 8,
+      "failedChecks": 0,
+      "waivedChecks": 0,
+      "status": "PASS"
+    },
+    {
+      "domain": "permission",
+      "label": "Permission Standards",
+      "configuredChecks": 11,
+      "failedChecks": 0,
+      "waivedChecks": 0,
+      "status": "PASS"
+    },
+    {
+      "domain": "validation",
+      "label": "Validation Standards",
+      "configuredChecks": 7,
+      "failedChecks": 0,
+      "waivedChecks": 0,
+      "status": "PASS"
+    },
+    {
+      "domain": "error",
+      "label": "Error Standards",
+      "configuredChecks": 9,
+      "failedChecks": 0,
+      "waivedChecks": 0,
+      "status": "PASS"
+    },
+    {
+      "domain": "extension",
+      "label": "Extension Standards",
+      "configuredChecks": 11,
+      "failedChecks": 0,
+      "waivedChecks": 0,
+      "status": "PASS"
+    },
+    {
+      "domain": "documentation",
+      "label": "Documentation Standards",
+      "configuredChecks": 13,
+      "failedChecks": 0,
+      "waivedChecks": 0,
+      "status": "PASS"
+    },
+    {
+      "domain": "test",
+      "label": "Test Standards",
+      "configuredChecks": 18,
+      "failedChecks": 0,
+      "waivedChecks": 0,
+      "status": "PASS"
+    }
+  ],
+  "questionBankModules": [
+    {
+      "module": "user",
+      "schemaOk": true,
+      "contractDocOk": true,
+      "extJsonOk": true,
+      "status": "PASS"
+    },
+    {
+      "module": "userAuth",
+      "schemaOk": true,
+      "contractDocOk": true,
+      "extJsonOk": true,
+      "status": "PASS"
+    },
+    {
+      "module": "knowledge",
+      "schemaOk": true,
+      "contractDocOk": true,
+      "extJsonOk": true,
+      "status": "PASS"
+    },
+    {
+      "module": "question",
+      "schemaOk": true,
+      "contractDocOk": true,
+      "extJsonOk": true,
+      "status": "PASS"
+    },
+    {
+      "module": "task",
+      "schemaOk": true,
+      "contractDocOk": true,
+      "extJsonOk": true,
+      "status": "PASS"
+    }
+  ],
+  "contractPackage": {
+    "path": "/Users/shaotongli/Code/newaitiku/docs/contracts/current/contract.json",
+    "available": true,
+    "invalid": false,
+    "mode": "questionBank",
+    "contractId": "dr-2026-03-25-185719"
+  }
+}

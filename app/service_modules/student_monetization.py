@@ -35,9 +35,43 @@ CONVERSION_OVERVIEW_EVENT_KEYS = {
     "MOCK_PAYMENT_SUCCESS": "mockPaymentSuccessCount",
     "SUBSCRIPTION_ACTIVATED": "subscriptionActivatedCount",
 }
+# Question-bank API contract keeps envelope shape as {"code": 0, "message": "ok", "data": {...}}.
 
 
 class StudentMonetizationServiceMixin:
+    def _build_quick_diagnosis_question_preview(self, row: Dict[str, object]) -> Dict[str, object]:
+        question_id = str(row.get("id", "")).strip()
+        question_type = str(row.get("type", "")).strip()
+        stem = str(row.get("stem", "")).strip()
+
+        raw_options = row.get("optionsJson", [])
+        parsed_options: List[Dict[str, str]] = []
+        try:
+            loaded_options = json.loads(raw_options) if isinstance(raw_options, str) else raw_options
+        except (TypeError, ValueError):
+            loaded_options = []
+        if isinstance(loaded_options, list):
+            for item in loaded_options:
+                if not isinstance(item, dict):
+                    continue
+                option_key = str(item.get("key", "")).strip().upper()
+                option_content = str(item.get("content", "")).strip()
+                if not option_key:
+                    continue
+                parsed_options.append(
+                    {
+                        "key": option_key,
+                        "content": option_content,
+                    }
+                )
+
+        return {
+            "questionId": question_id,
+            "type": question_type,
+            "stem": stem,
+            "options": parsed_options,
+        }
+
     def _parse_iso_datetime_or_none(self, value: str) -> Optional[datetime]:
         normalized = str(value or "").strip()
         if not normalized:
@@ -348,6 +382,16 @@ class StudentMonetizationServiceMixin:
                 break
         if len(selected_question_ids) < question_count:
             raise failed_dependency("当前可用于快诊的题目不足，请稍后重试。")
+        question_row_map = {
+            str(row.get("id", "")).strip(): row
+            for row in objective_rows
+            if str(row.get("id", "")).strip()
+        }
+        selected_questions = [
+            self._build_quick_diagnosis_question_preview(question_row_map[question_id])
+            for question_id in selected_question_ids
+            if question_id in question_row_map
+        ]
 
         session_id = f"quick-diag-{uuid.uuid4().hex[:12]}"
         expires_at = self._to_iso_z(now_dt + timedelta(minutes=30))
@@ -355,6 +399,7 @@ class StudentMonetizationServiceMixin:
             "sessionId": session_id,
             "status": QUICK_DIAGNOSIS_STATUS_STARTED,
             "questionIds": selected_question_ids,
+            "questions": selected_questions,
             "questionCount": question_count,
             "subjectCode": subject_code,
             "sourceType": source_type,
@@ -390,6 +435,7 @@ class StudentMonetizationServiceMixin:
             "sessionId": session_id,
             "status": QUICK_DIAGNOSIS_STATUS_STARTED,
             "questionIds": selected_question_ids,
+            "questions": selected_questions,
             "questionCount": question_count,
             "subjectCode": subject_code,
             "startedAt": now_iso,

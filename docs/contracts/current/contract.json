@@ -1,0 +1,349 @@
+{
+  "contractVersion": "v1",
+  "contractId": "dr-2026-03-26-074557",
+  "generatedAt": "2026-03-26T07:45:57+08:00",
+  "generatedBy": "software-development-readiness-governance",
+  "phase": "development-readiness",
+  "mode": "questionBank",
+  "projectProfile": {
+    "name": "newaitiku",
+    "repoRoot": "/Users/shaotongli/Code/newaitiku",
+    "backendStack": "python-fastapi",
+    "frontendStack": "vue-vite",
+    "database": "sqlite",
+    "primaryGuard": "fullstack-unified-development-standards",
+    "pythonDependencies": [
+      "fastapi",
+      "httpx",
+      "jinja2",
+      "playwright",
+      "pydantic",
+      "pytest",
+      "pytest-asyncio",
+      "python-docx",
+      "python-multipart",
+      "uvicorn"
+    ],
+    "frontendDependencies": [
+      "@vue-flow/background",
+      "@vue-flow/controls",
+      "@vue-flow/core",
+      "axios",
+      "echarts",
+      "nprogress",
+      "pinia",
+      "qrcode",
+      "vue",
+      "vue-router"
+    ]
+  },
+  "scope": {
+    "businessGoal": "skills platform release gate final guard (readiness)",
+    "inScopeModules": [
+      "user",
+      "knowledge",
+      "question",
+      "task"
+    ],
+    "outOfScopeModules": [
+      "userAuth"
+    ],
+    "affectedLayers": [
+      "database",
+      "backend",
+      "frontend",
+      "docs",
+      "tests",
+      "api"
+    ],
+    "actors": [
+      "super_admin",
+      "teacher",
+      "student"
+    ],
+    "changedFilesCount": 1688
+  },
+  "contracts": {
+    "fieldDictionary": {
+      "questionFields": [
+        "id",
+        "knowledgeId",
+        "userId",
+        "type",
+        "stem",
+        "optionsJson",
+        "answer",
+        "status",
+        "extJson",
+        "createTime",
+        "updateTime"
+      ],
+      "taskFields": [
+        "id",
+        "userId",
+        "type",
+        "status",
+        "progress",
+        "extJson",
+        "createTime",
+        "updateTime"
+      ]
+    },
+    "api": {
+      "responseEnvelope": [
+        "code",
+        "message",
+        "data"
+      ],
+      "paginationEnvelope": [
+        "items",
+        "page",
+        "size",
+        "total"
+      ]
+    },
+    "permissions": {
+      "roles": [
+        "super_admin",
+        "teacher",
+        "student"
+      ],
+      "permissionKeys": [
+        "question:manage",
+        "paper:manage",
+        "analytics:view",
+        "student:manage",
+        "settings:manage",
+        "message:send"
+      ]
+    },
+    "errorSemantics": {
+      "questionErrorCodes": [
+        "QUESTION_NOT_FOUND",
+        "QUESTION_FORBIDDEN",
+        "QUESTION_VALIDATION_FAILED",
+        "QUESTION_INVALID_STATUS",
+        "QUESTION_DATABASE_ERROR"
+      ]
+    },
+    "uiStandards": {
+      "feedback": [
+        "Toast",
+        "message-box"
+      ],
+      "containers": [
+        "Drawer",
+        "modal"
+      ],
+      "filterRule": "Advanced Filter after 3 fields",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "disabled",
+        "confirm"
+      ]
+    },
+    "questionBankModules": [
+      {
+        "module": "user",
+        "scope": "IN_SCOPE",
+        "responseEnvelope": [
+          "code",
+          "message",
+          "data"
+        ],
+        "extJsonPolicy": "contract-outside-fields-go-to-extJson",
+        "idOnlyRelations": true
+      },
+      {
+        "module": "userAuth",
+        "scope": "OUT_OF_SCOPE",
+        "responseEnvelope": [
+          "code",
+          "message",
+          "data"
+        ],
+        "extJsonPolicy": "contract-outside-fields-go-to-extJson",
+        "idOnlyRelations": true
+      },
+      {
+        "module": "knowledge",
+        "scope": "IN_SCOPE",
+        "responseEnvelope": [
+          "code",
+          "message",
+          "data"
+        ],
+        "extJsonPolicy": "contract-outside-fields-go-to-extJson",
+        "idOnlyRelations": true
+      },
+      {
+        "module": "question",
+        "scope": "IN_SCOPE",
+        "responseEnvelope": [
+          "code",
+          "message",
+          "data"
+        ],
+        "extJsonPolicy": "contract-outside-fields-go-to-extJson",
+        "idOnlyRelations": true
+      },
+      {
+        "module": "task",
+        "scope": "IN_SCOPE",
+        "responseEnvelope": [
+          "code",
+          "message",
+          "data"
+        ],
+        "extJsonPolicy": "contract-outside-fields-go-to-extJson",
+        "idOnlyRelations": true
+      }
+    ]
+  },
+  "governance": {
+    "readinessStatus": "不建议进入开发",
+    "action": "BLOCK_BEFORE_CODING",
+    "reason": "存在 P0 高风险缺口，当前不满足安全开工条件。",
+    "subguards": [
+      {
+        "name": "requirements-freeze-guard",
+        "level": "P0",
+        "implemented": true,
+        "status": "ran",
+        "returncode": 0,
+        "scriptPath": "/Users/shaotongli/.codex/skills/requirements-freeze-guard/scripts/requirements_freeze_guard.py"
+      },
+      {
+        "name": "acceptance-criteria-builder",
+        "level": "P0",
+        "implemented": true,
+        "status": "ran",
+        "returncode": 0,
+        "scriptPath": "/Users/shaotongli/.codex/skills/acceptance-criteria-builder/scripts/acceptance_criteria_builder_guard.py"
+      },
+      {
+        "name": "prd-ui-traceability-guard",
+        "level": "P0",
+        "implemented": true,
+        "status": "ran",
+        "returncode": 0,
+        "scriptPath": "/Users/shaotongli/.codex/skills/prd-ui-traceability-guard/scripts/prd_ui_traceability_guard.py"
+      },
+      {
+        "name": "api-schema-drift-checker",
+        "level": "P0",
+        "implemented": true,
+        "status": "ran",
+        "returncode": 0,
+        "scriptPath": "/Users/shaotongli/.codex/skills/api-schema-drift-checker/scripts/schema_drift_guard.py"
+      },
+      {
+        "name": "rbac-alignment-guard",
+        "level": "P0",
+        "implemented": true,
+        "status": "ran",
+        "returncode": 0,
+        "scriptPath": "/Users/shaotongli/.codex/skills/rbac-alignment-guard/scripts/rbac_alignment_guard.py"
+      },
+      {
+        "name": "state-machine-alignment",
+        "level": "P0",
+        "implemented": true,
+        "status": "ran",
+        "returncode": 1,
+        "scriptPath": "/Users/shaotongli/.codex/skills/state-machine-alignment/scripts/state_machine_guard.py"
+      },
+      {
+        "name": "error-code-governor",
+        "level": "P0",
+        "implemented": true,
+        "status": "ran",
+        "returncode": 0,
+        "scriptPath": "/Users/shaotongli/.codex/skills/error-code-governor/scripts/error_code_guard.py"
+      },
+      {
+        "name": "ux-state-completeness-checker",
+        "level": "P1",
+        "implemented": true,
+        "status": "ran",
+        "returncode": 0,
+        "scriptPath": "/Users/shaotongli/.codex/skills/ux-state-completeness-checker/scripts/ux_state_completeness_guard.py"
+      },
+      {
+        "name": "architecture-decision-recorder",
+        "level": "P1",
+        "implemented": true,
+        "status": "ran",
+        "returncode": 0,
+        "scriptPath": "/Users/shaotongli/.codex/skills/architecture-decision-recorder/scripts/architecture_decision_recorder_guard.py"
+      },
+      {
+        "name": "tech-stack-drift-guard",
+        "level": "P1",
+        "implemented": true,
+        "status": "ran",
+        "returncode": 0,
+        "scriptPath": "/Users/shaotongli/.codex/skills/tech-stack-drift-guard/scripts/tech_stack_drift_guard.py"
+      },
+      {
+        "name": "git-flow-enforcer",
+        "level": "P1",
+        "implemented": true,
+        "status": "ran",
+        "returncode": 0,
+        "scriptPath": "/Users/shaotongli/.codex/skills/git-flow-enforcer/scripts/git_flow_enforcer.py"
+      },
+      {
+        "name": "app-security-baseline-guard",
+        "level": "P1",
+        "implemented": true,
+        "status": "ran",
+        "returncode": 0,
+        "scriptPath": "/Users/shaotongli/.codex/skills/app-security-baseline-guard/scripts/app_security_baseline_guard.py"
+      },
+      {
+        "name": "question-bank-contract-enforcer",
+        "level": "P1",
+        "implemented": true,
+        "status": "ran",
+        "returncode": 1,
+        "scriptPath": "/Users/shaotongli/.codex/skills/question-bank-contract-enforcer/scripts/question_bank_contract_guard.py"
+      }
+    ],
+    "references": [
+      "docs/skills/software-development-readiness-governance/references/shared-contract-package.md",
+      "docs/skills/software-development-readiness-governance/references/stage-invocation-templates.md"
+    ]
+  },
+  "testPlan": {
+    "categories": [
+      "normal",
+      "exception",
+      "boundary",
+      "permission",
+      "state",
+      "api",
+      "frontend"
+    ],
+    "automationTargets": [
+      "pytest-unit",
+      "pytest-integration",
+      "pytest-regression",
+      "playwright-e2e"
+    ],
+    "mustCoverModules": [
+      "user",
+      "knowledge",
+      "question",
+      "task"
+    ]
+  },
+  "releaseReadiness": {
+    "rollbackRequired": true,
+    "monitoringRequired": true,
+    "uatRequired": true
+  },
+  "waivers": []
+}

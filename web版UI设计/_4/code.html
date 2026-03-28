@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>消息中心 - Azure Academix</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-bright": "#f7f9fb",
+                        "surface-container-high": "#e6e8ea",
+                        "surface-dim": "#d8dadc",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#b5c4ff",
+                        "on-secondary-container": "#005b78",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "background": "#f7f9fb",
+                        "on-tertiary-fixed": "#002113",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "on-tertiary-container": "#68f5b8",
+                        "surface-container-low": "#f2f4f6",
+                        "inverse-surface": "#2d3133",
+                        "on-primary-fixed": "#00174d",
+                        "surface-tint": "#1353d8",
+                        "surface-variant": "#e0e3e5",
+                        "secondary-container": "#7ed4fd",
+                        "on-primary-container": "#d4dcff",
+                        "on-surface-variant": "#434654",
+                        "surface": "#f7f9fb",
+                        "secondary-fixed-dim": "#7bd1fa",
+                        "secondary-fixed": "#c0e8ff",
+                        "on-error": "#ffffff",
+                        "error": "#ba1a1a",
+                        "primary-fixed": "#dbe1ff",
+                        "on-secondary-fixed": "#001e2b",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-secondary-fixed-variant": "#004d66",
+                        "on-error-container": "#93000a",
+                        "secondary": "#006686",
+                        "primary-container": "#1a56db",
+                        "outline-variant": "#c3c5d7",
+                        "primary": "#003fb1",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-primary-fixed-variant": "#003dab",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "tertiary-container": "#006f4b",
+                        "on-surface": "#191c1e",
+                        "tertiary": "#005438",
+                        "surface-container": "#eceef0",
+                        "on-tertiary": "#ffffff",
+                        "on-background": "#191c1e",
+                        "outline": "#737686"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f7f9fb;
+            color: #191c1e;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-surface">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-md border-b border-blue-100/20 shadow-sm flex justify-between items-center px-6 py-3 max-w-full">
+<div class="flex items-center gap-8">
+<h1 class="text-xl font-bold text-blue-800 tracking-tight font-headline">Azure Academix</h1>
+<nav class="hidden md:flex gap-6 items-center">
+<a class="font-headline font-semibold text-sm tracking-tight text-slate-500 hover:text-blue-600 transition-colors" href="#">AI 进度</a>
+<a class="font-headline font-semibold text-sm tracking-tight text-slate-500 hover:text-blue-600 transition-colors" href="#">个人题库</a>
+<a class="font-headline font-semibold text-sm tracking-tight text-slate-500 hover:text-blue-600 transition-colors" href="#">错题本</a>
+<a class="font-headline font-semibold text-sm tracking-tight text-slate-500 hover:text-blue-600 transition-colors" href="#">自由练习</a>
+<a class="font-headline font-semibold text-sm tracking-tight text-blue-700 border-b-2 border-blue-700 pb-1" href="#">消息中心</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-lg hover:bg-blue-50/50 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined text-slate-600" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 rounded-lg hover:bg-blue-50/50 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined text-slate-600" data-icon="settings">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border-2 border-primary-fixed shadow-sm">
+<img class="object-cover w-full h-full" data-alt="User profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgVtWuOHoJE1PYqjRXZT_zAzL1KWa4jXaSP93G6q2IvNcVjJi_3JeN8PwQ6RsMbJ5H_AKFIcCbGpBIOSmyGau0-dwHZfnTu5EF6xjmWT9h8xytepiuaTdAPJYiq8XCNWMA2RVa36tObHA_jeh_hKhi9jcBcP2sSHC8PcCM8lM8-84Bw8uNsj4255l-3mJ0-BjUYG9lAgVr-l-emgMlgJtGuh_SvSSETHTjTQQq9EzWYhrMq8CX8BywJmuwhJkb9f42n-WwNmFWm9VE"/>
+</div>
+</div>
+</header>
+<!-- Side Navigation Bar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 flex flex-col p-4 space-y-2 pt-20 hidden lg:flex">
+<div class="px-4 py-6 mb-4">
+<h2 class="text-lg font-black text-blue-900 font-headline">Academic Sanctuary</h2>
+<p class="text-xs text-slate-500 font-medium">Zhuan Sheng Ben Prep</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all duration-300 font-headline text-sm font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+                AI 进度
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all duration-300 font-headline text-sm font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+                个人题库
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all duration-300 font-headline text-sm font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+                错题本
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all duration-300 font-headline text-sm font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+                自由练习
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-blue-700 font-bold bg-blue-50/80 rounded-lg transition-all duration-300 font-headline text-sm" href="#">
+<span class="material-symbols-outlined" data-icon="mail" style="font-variation-settings: 'FILL' 1;">mail</span>
+                消息中心
+            </a>
+</nav>
+<div class="pt-4 border-t border-slate-200 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-lg transition-all duration-300 font-headline text-sm font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+                Help Center
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-error hover:bg-error-container/20 rounded-lg transition-all duration-300 font-headline text-sm font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Sign Out
+            </a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="lg:pl-64 pt-20 min-h-screen">
+<div class="max-w-6xl mx-auto px-8 py-10">
+<header class="mb-10">
+<h1 class="text-3xl font-extrabold text-on-surface font-headline tracking-tight mb-2">消息中心</h1>
+<p class="text-slate-500 font-body">在这里管理您的学术通知、AI 学习建议及系统更新。</p>
+</header>
+<div class="grid grid-cols-12 gap-8 items-start">
+<!-- Left Column: Message List & Filters -->
+<div class="col-span-12 lg:col-span-8 space-y-6">
+<!-- Filters Glassmorphism Bar -->
+<div class="flex items-center justify-between bg-white/40 backdrop-blur-md p-2 rounded-full border border-outline-variant/15">
+<div class="flex gap-1">
+<button class="px-6 py-2 rounded-full bg-primary text-on-primary text-sm font-bold tracking-wide transition-all active:scale-95">全部消息</button>
+<button class="px-6 py-2 rounded-full text-slate-600 hover:bg-surface-container-low text-sm font-semibold transition-all">学术提醒</button>
+<button class="px-6 py-2 rounded-full text-slate-600 hover:bg-surface-container-low text-sm font-semibold transition-all">AI 建议</button>
+<button class="px-6 py-2 rounded-full text-slate-600 hover:bg-surface-container-low text-sm font-semibold transition-all">系统通知</button>
+</div>
+<button class="pr-4 text-xs font-bold text-primary flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-sm" data-icon="done_all">done_all</span>
+                            全部标记为已读
+                        </button>
+</div>
+<!-- Messages Bento-ish List -->
+<div class="space-y-4">
+<!-- Unread Academic Message -->
+<div class="group relative bg-surface-container-lowest p-6 rounded-xl transition-all hover:shadow-[0_12px_40px_rgba(25,28,30,0.06)] flex gap-5">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-xl"></div>
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="school" style="font-variation-settings: 'FILL' 1;">school</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-headline font-bold text-on-surface">考试倒计时：计算机组成原理</h3>
+<span class="text-xs font-medium text-slate-400">10:24 AM</span>
+</div>
+<p class="text-sm text-slate-600 font-body leading-relaxed mb-3">距离您的模拟考试仅剩 48 小时。AI 检测到您在“指令系统”章节仍有薄弱项，建议在考前进行针对性强化练习。</p>
+<div class="flex gap-3">
+<button class="text-xs font-bold text-primary bg-primary-fixed/30 px-4 py-1.5 rounded-full hover:bg-primary-fixed/50 transition-colors">立即练习</button>
+<button class="text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">忽略</button>
+</div>
+</div>
+<div class="flex-shrink-0 self-center">
+<div class="w-2.5 h-2.5 bg-primary rounded-full"></div>
+</div>
+</div>
+<!-- Read AI Advice Message -->
+<div class="bg-surface-container-low/50 p-6 rounded-xl transition-all border border-transparent hover:border-outline-variant/20 flex gap-5">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-tertiary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" data-icon="psychology" style="font-variation-settings: 'FILL' 1;">psychology</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-headline font-bold text-slate-500">每周学习报告已生成</h3>
+<span class="text-xs font-medium text-slate-400">昨天 18:30</span>
+</div>
+<p class="text-sm text-slate-400 font-body leading-relaxed">您的上周学习总结已准备就绪。您在本周超越了 85% 的备考同学，错题纠正率提升了 12%。点击查看详细分析。</p>
+</div>
+</div>
+<!-- Unread System Message -->
+<div class="group relative bg-surface-container-lowest p-6 rounded-xl transition-all hover:shadow-[0_12px_40px_rgba(25,28,30,0.06)] flex gap-5">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary rounded-l-xl"></div>
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="info" style="font-variation-settings: 'FILL' 1;">info</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-headline font-bold text-on-surface">系统版本 2.4.0 更新日志</h3>
+<span class="text-xs font-medium text-slate-400">11月24日</span>
+</div>
+<p class="text-sm text-slate-600 font-body leading-relaxed">我们优化了错题本的分类逻辑，并新增了“深夜专注模式”。快去设置中心体验吧！</p>
+</div>
+<div class="flex-shrink-0 self-center">
+<div class="w-2.5 h-2.5 bg-secondary rounded-full"></div>
+</div>
+</div>
+<!-- Read Academic Alert -->
+<div class="bg-surface-container-low/50 p-6 rounded-xl transition-all border border-transparent hover:border-outline-variant/20 flex gap-5">
+<div class="flex-shrink-0 w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="event" style="font-variation-settings: 'FILL' 1;">event</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-headline font-bold text-slate-500">题库更新提示</h3>
+<span class="text-xs font-medium text-slate-400">11月22日</span>
+</div>
+<p class="text-sm text-slate-400 font-body leading-relaxed">2024 年专升本英语真题集已加入“个人题库”，请及时领取并开始练习。</p>
+</div>
+</div>
+</div>
+<button class="w-full py-4 text-sm font-bold text-slate-400 bg-surface-container-low/30 rounded-xl hover:bg-surface-container-low transition-colors font-headline">
+                        加载更多历史消息
+                    </button>
+</div>
+<!-- Right Column: Settings & Summary -->
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<!-- Notification Settings Card -->
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-[0_12px_40px_rgba(25,28,30,0.06)]">
+<h2 class="font-headline font-extrabold text-lg text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="notifications_active">notifications_active</span>
+                            推送设置
+                        </h2>
+<div class="space-y-6">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-bold font-headline text-on-surface">AI 实时提醒</p>
+<p class="text-xs text-slate-400">当 AI 检测到学习异常或瓶颈时通知我</p>
+</div>
+<div class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full bg-primary transition-colors duration-200">
+<span class="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out mt-0.5 ml-0.5"></span>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-bold font-headline text-on-surface">系统重要公告</p>
+<p class="text-xs text-slate-400">接收维护及重大功能更新通知</p>
+</div>
+<div class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full bg-primary transition-colors duration-200">
+<span class="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out mt-0.5 ml-0.5"></span>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-bold font-headline text-on-surface">每周学习周报</p>
+<p class="text-xs text-slate-400">每周日生成数据总结推送</p>
+</div>
+<div class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full bg-surface-container-highest transition-colors duration-200">
+<span class="translate-x-0 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out mt-0.5 ml-0.5"></span>
+</div>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t border-surface-container-high">
+<button class="w-full py-3 bg-primary-fixed-dim/20 text-primary font-bold text-sm rounded-lg hover:bg-primary-fixed-dim/40 transition-colors">
+                                管理更多设置
+                            </button>
+</div>
+</div>
+<!-- Academic Status Card -->
+<div class="bg-primary p-8 rounded-xl text-on-primary overflow-hidden relative">
+<div class="relative z-10">
+<h2 class="font-headline font-bold text-lg mb-4">学习状态</h2>
+<div class="flex items-baseline gap-2 mb-1">
+<span class="text-4xl font-black font-headline tracking-tighter">12</span>
+<span class="text-sm font-medium opacity-80">条未读消息</span>
+</div>
+<p class="text-xs opacity-70 font-body mb-6">保持关注，不错过任何学习建议。</p>
+<div class="w-full bg-on-primary/10 rounded-full h-1.5 mb-2">
+<div class="bg-tertiary-fixed h-full rounded-full" style="width: 65%;"></div>
+</div>
+<p class="text-[10px] uppercase font-bold tracking-widest">已处理消息 65%</p>
+</div>
+<!-- Abstract Gradient Decor -->
+<div class="absolute -right-8 -bottom-8 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+<div class="absolute -left-10 -top-10 w-32 h-32 bg-secondary/30 rounded-full blur-2xl"></div>
+</div>
+<!-- Quick Support -->
+<div class="bg-surface-container-high/40 p-6 rounded-xl border border-outline-variant/10">
+<p class="text-sm font-bold text-on-surface mb-2 font-headline">遇到问题了？</p>
+<p class="text-xs text-slate-500 mb-4 font-body leading-relaxed">如果您无法接收消息，请尝试检查浏览器通知权限或联系在线导师。</p>
+<button class="flex items-center gap-2 text-primary text-sm font-bold hover:gap-3 transition-all">
+                            联系客服 <span class="material-symbols-outlined text-base" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Success Message Toast (Visual Only) -->
+<div class="fixed bottom-8 right-8 z-[100] bg-inverse-surface text-inverse-on-surface px-6 py-4 rounded-xl shadow-2xl flex items-center gap-4 border border-white/10">
+<span class="material-symbols-outlined text-tertiary-fixed" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div class="pr-4 border-r border-white/10">
+<p class="text-sm font-bold font-headline">已完成同步</p>
+<p class="text-xs opacity-60">消息列表已实时更新</p>
+</div>
+<button class="text-xs font-bold uppercase tracking-widest text-primary-fixed-dim hover:text-white transition-colors">关闭</button>
+</div>
+</body></html>

@@ -1,0 +1,6 @@
+interface:
+  display_name: "回滚就绪检查"
+  short_description: "检查应用、数据库、配置与开关的回滚条件，避免上线后回不去"
+  default_prompt: "使用 $rollback-readiness-guard 评估当前发布的回滚就绪性，输出不可逆变更、回滚步骤和阻断项。"
+policy:
+  allow_implicit_invocation: true

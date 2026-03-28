@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>学生学习台 - Knowledge Galaxy</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-bright": "#f7f9fb",
+                        "surface-tint": "#1353d8",
+                        "tertiary": "#005438",
+                        "surface-dim": "#d8dadc",
+                        "on-secondary-container": "#005b78",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#003dab",
+                        "on-primary-container": "#d4dcff",
+                        "error": "#ba1a1a",
+                        "tertiary-container": "#006f4b",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e0e3e5",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#eff1f3",
+                        "background": "#f7f9fb",
+                        "outline-variant": "#c3c5d7",
+                        "primary-container": "#1a56db",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#dbe1ff",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "primary": "#003fb1",
+                        "on-tertiary-container": "#68f5b8",
+                        "error-container": "#ffdad6",
+                        "secondary": "#006686",
+                        "on-background": "#191c1e",
+                        "inverse-primary": "#b5c4ff",
+                        "surface-container-low": "#f2f4f6",
+                        "on-primary-fixed": "#00174d",
+                        "inverse-surface": "#2d3133",
+                        "on-secondary-fixed": "#001e2b",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-surface": "#191c1e",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-container": "#eceef0",
+                        "surface": "#f7f9fb",
+                        "secondary-fixed": "#c0e8ff",
+                        "secondary-container": "#7ed4fd",
+                        "on-secondary-fixed-variant": "#004d66",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-primary": "#ffffff",
+                        "outline": "#737686",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "surface-container-high": "#e6e8ea",
+                        "secondary-fixed-dim": "#7bd1fa",
+                        "on-surface-variant": "#434654"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .radar-grid {
+            background-image: radial-gradient(circle, #e0e3e5 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-sm dark:shadow-none font-['Manrope'] antialiased">
+<div class="flex items-center justify-between px-6 h-16 max-w-full mx-auto">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Knowledge Galaxy</span>
+<div class="hidden md:flex items-center space-x-6 h-16">
+<a class="text-blue-700 dark:text-blue-400 border-b-2 border-blue-700 font-semibold h-full flex items-center px-1" href="#">Study Desk</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-600 h-full flex items-center px-1 transition-colors" href="#">Knowledge Galaxy</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-600 h-full flex items-center px-1 transition-colors" href="#">Mock Exams</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors rounded-full active:scale-95 duration-200">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-300">notifications</span>
+</button>
+<button class="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors rounded-full active:scale-95 duration-200">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-300">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary-fixed overflow-hidden">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" data-alt="Minimalist geometric user avatar profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLgkg17n3w9ns33jMm5CTas339FukOwUs3ZuEYnAJPvstVNoN3gSphIwS97DH1WRSeK0PybSOpLlnEn5WKC1o5EM9lFrxSD8ZdLNWaeB4ZxkrV1-VCtWUnvmQLbg68aH67MaAM2erjYT3ptZvRDuKOHVBej5ajVGJOzi_aldltDIwrb7cgO9QiAtZPatzR3fYe1n_GMGv1dO1PJD29_AtQ24VNu6kXQvjwF4x3oQ_S_SzGAghprz2B_eAU3PM9smLsDFj6TXKnycaJ"/>
+</div>
+</div>
+</div>
+</nav>
+<div class="flex pt-16">
+<!-- SideNavBar -->
+<aside class="fixed left-0 h-[calc(100vh-64px)] w-64 bg-slate-50 dark:bg-slate-950 flex flex-col p-4 space-y-2 font-['Manrope'] text-sm font-medium hidden md:flex">
+<div class="pb-6 pt-2 px-2">
+<h2 class="text-lg font-extrabold text-blue-700 dark:text-blue-500">Zhuan Sheng Ben</h2>
+<p class="text-[10px] text-slate-500 tracking-wider">EXAM PREP PORTAL</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 rounded-lg shadow-sm font-bold hover:translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">auto_stories</span>
+<span>Knowledge</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">edit_note</span>
+<span>Practice</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">video_library</span>
+<span>Classes</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span>Community</span>
+</a>
+</nav>
+<div class="pt-4 border-t border-slate-200 dark:border-slate-800 space-y-1">
+<a class="flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span>Help</span>
+</a>
+<a class="flex items-center gap-3 p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-64 p-8 min-h-screen">
+<header class="mb-10 flex justify-between items-end">
+<div>
+<h1 class="text-3xl font-extrabold font-headline text-on-surface tracking-tight mb-2">学习工作台</h1>
+<p class="text-on-surface-variant font-body">欢迎回来，开启今日的学术探索之旅。</p>
+</div>
+<div class="flex items-center gap-3 bg-primary-container/10 px-4 py-2 rounded-full">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+<span class="text-sm font-semibold text-primary">2024年5月22日</span>
+</div>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Left Column: Prediction & AI -->
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<!-- Prediction Score Card -->
+<section class="bg-surface-container-lowest rounded-xl p-8 shadow-sm relative overflow-hidden flex flex-col items-center">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-6xl">analytics</span>
+</div>
+<h3 class="w-full text-sm font-bold text-on-surface-variant uppercase tracking-widest mb-8">当前预测分</h3>
+<div class="relative flex items-center justify-center w-48 h-48">
+<!-- SVG Circular Progress -->
+<svg class="w-full h-full -rotate-90">
+<circle class="text-surface-container-highest" cx="96" cy="96" fill="transparent" r="88" stroke="currentColor" stroke-width="12"></circle>
+<circle class="text-primary" cx="96" cy="96" fill="transparent" r="88" stroke="currentColor" stroke-dasharray="552.92" stroke-dashoffset="157.6" stroke-linecap="round" stroke-width="12"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-4xl font-extrabold font-headline text-on-surface">215</span>
+<span class="text-sm font-medium text-on-surface-variant">/ 300</span>
+</div>
+</div>
+<div class="mt-8 text-center">
+<span class="inline-flex items-center gap-1 text-tertiary font-bold">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+                                比上周提升 12%
+                            </span>
+</div>
+</section>
+<!-- AI Assistant Advice Card -->
+<section class="bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-xl p-6 shadow-lg relative">
+<div class="flex items-start gap-4 mb-4">
+<div class="bg-white/20 p-2 rounded-lg backdrop-blur-md">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+</div>
+<div>
+<h3 class="font-bold text-lg">AI 助教建议</h3>
+<p class="text-white/80 text-xs">基于您的近 3 天数据生成</p>
+</div>
+</div>
+<div class="bg-white/10 rounded-lg p-4 border border-white/5 backdrop-blur-sm">
+<p class="text-sm leading-relaxed mb-4">“你在‘高等数学’部分的正确率略有下降。**建议：先完成一轮专项强化练习**，再进入模拟考试模式。”</p>
+<button class="w-full py-2 bg-white text-primary font-bold rounded-lg text-sm transition-transform active:scale-95">立即开始</button>
+</div>
+</section>
+</div>
+<!-- Middle Column: Radar & Tasks -->
+<div class="col-span-12 lg:col-span-5 space-y-6">
+<!-- Mastery Radar Chart -->
+<section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm min-h-[320px]">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest">知识掌握度</h3>
+<button class="text-primary text-xs font-bold flex items-center gap-1">详细分析 <span class="material-symbols-outlined text-xs">arrow_forward</span></button>
+</div>
+<div class="relative h-64 flex items-center justify-center">
+<div class="absolute inset-0 radar-grid rounded-full opacity-40"></div>
+<!-- Mock Radar Graphic -->
+<div class="relative w-48 h-48 border-2 border-primary/20 rounded-full flex items-center justify-center">
+<div class="absolute w-full h-px bg-surface-variant rotate-0"></div>
+<div class="absolute w-full h-px bg-surface-variant rotate-45"></div>
+<div class="absolute w-full h-px bg-surface-variant rotate-90"></div>
+<div class="absolute w-full h-px bg-surface-variant rotate-135"></div>
+<!-- The Radar Shape -->
+<div class="absolute inset-0 flex items-center justify-center">
+<svg class="w-full h-full drop-shadow-sm" viewbox="0 0 100 100">
+<polygon fill="rgba(0, 63, 177, 0.2)" points="50,10 85,35 75,80 30,85 10,40" stroke="#003fb1" stroke-width="2"></polygon>
+</svg>
+</div>
+<span class="absolute -top-6 text-[10px] font-bold text-on-surface-variant">高数</span>
+<span class="absolute top-10 -right-8 text-[10px] font-bold text-on-surface-variant">英语</span>
+<span class="absolute -bottom-6 text-[10px] font-bold text-on-surface-variant">逻辑</span>
+<span class="absolute top-10 -left-8 text-[10px] font-bold text-on-surface-variant">综合</span>
+</div>
+</div>
+</section>
+<!-- Today's Task List -->
+<section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest">今日任务清单</h3>
+<span class="text-xs bg-surface-container-high px-2 py-1 rounded-full text-on-surface-variant">2/4 已完成</span>
+</div>
+<div class="space-y-4">
+<div class="flex items-center gap-4 p-3 bg-surface rounded-xl border border-transparent hover:border-primary/10 transition-all cursor-pointer group">
+<div class="w-6 h-6 rounded-md border-2 border-primary/30 flex items-center justify-center group-hover:border-primary">
+<span class="material-symbols-outlined text-primary text-sm opacity-0 group-hover:opacity-100">check</span>
+</div>
+<div class="flex-1">
+<h4 class="text-sm font-bold text-on-surface">复习《高数》微分方程重点</h4>
+<p class="text-[10px] text-on-surface-variant">核心知识点 · 15 mins</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40">drag_indicator</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary/5 rounded-xl border border-primary/20">
+<div class="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-sm">check</span>
+</div>
+<div class="flex-1 opacity-60">
+<h4 class="text-sm font-bold text-on-surface line-through">英语词汇 100 词打卡</h4>
+<p class="text-[10px] text-on-surface-variant">日常积累 · 20 mins</p>
+</div>
+<span class="text-[10px] font-bold text-primary">DONE</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-surface rounded-xl border border-transparent hover:border-primary/10 transition-all cursor-pointer group">
+<div class="w-6 h-6 rounded-md border-2 border-primary/30 flex items-center justify-center group-hover:border-primary">
+<span class="material-symbols-outlined text-primary text-sm opacity-0 group-hover:opacity-100">check</span>
+</div>
+<div class="flex-1">
+<h4 class="text-sm font-bold text-on-surface">错题本回顾：2023模拟卷</h4>
+<p class="text-[10px] text-on-surface-variant">巩固提升 · 30 mins</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40">drag_indicator</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary/5 rounded-xl border border-primary/20">
+<div class="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-sm">check</span>
+</div>
+<div class="flex-1 opacity-60">
+<h4 class="text-sm font-bold text-on-surface line-through">听 20 分钟考前资讯播客</h4>
+<p class="text-[10px] text-on-surface-variant">休闲学习 · 20 mins</p>
+</div>
+<span class="text-[10px] font-bold text-primary">DONE</span>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Recent Activity & Quick Links -->
+<div class="col-span-12 lg:col-span-3 space-y-6">
+<!-- Progress Card -->
+<section class="bg-surface-container-high rounded-xl p-6 relative overflow-hidden">
+<h3 class="text-xs font-bold text-on-surface-variant mb-4">学习连续达成</h3>
+<div class="flex items-end gap-2">
+<span class="text-4xl font-extrabold text-primary">15</span>
+<span class="text-sm font-bold text-on-surface pb-1">天</span>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-2">击败了全国 89% 的考生</p>
+<div class="mt-4 flex gap-1">
+<div class="flex-1 h-1 rounded-full bg-primary"></div>
+<div class="flex-1 h-1 rounded-full bg-primary"></div>
+<div class="flex-1 h-1 rounded-full bg-primary"></div>
+<div class="flex-1 h-1 rounded-full bg-primary"></div>
+<div class="flex-1 h-1 rounded-full bg-surface-variant"></div>
+<div class="flex-1 h-1 rounded-full bg-surface-variant"></div>
+<div class="flex-1 h-1 rounded-full bg-surface-variant"></div>
+</div>
+</section>
+<!-- Quick Navigation -->
+<section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
+<h3 class="text-sm font-bold text-on-surface-variant uppercase tracking-widest mb-4">快速入口</h3>
+<div class="grid grid-cols-2 gap-3">
+<button class="flex flex-col items-center justify-center p-4 bg-surface rounded-xl hover:bg-primary-fixed transition-colors gap-2">
+<span class="material-symbols-outlined text-primary">quiz</span>
+<span class="text-xs font-bold">刷题库</span>
+</button>
+<button class="flex flex-col items-center justify-center p-4 bg-surface rounded-xl hover:bg-primary-fixed transition-colors gap-2">
+<span class="material-symbols-outlined text-secondary">history_edu</span>
+<span class="text-xs font-bold">错题本</span>
+</button>
+<button class="flex flex-col items-center justify-center p-4 bg-surface rounded-xl hover:bg-primary-fixed transition-colors gap-2">
+<span class="material-symbols-outlined text-tertiary">workspace_premium</span>
+<span class="text-xs font-bold">成就</span>
+</button>
+<button class="flex flex-col items-center justify-center p-4 bg-surface rounded-xl hover:bg-primary-fixed transition-colors gap-2">
+<span class="material-symbols-outlined text-on-error-container">lightbulb</span>
+<span class="text-xs font-bold">知识图谱</span>
+</button>
+</div>
+</section>
+<!-- Exam Countdown -->
+<section class="bg-error-container/20 border border-error/10 rounded-xl p-6">
+<h3 class="text-xs font-bold text-error uppercase tracking-widest mb-3">距离考试还有</h3>
+<div class="flex items-center justify-between">
+<div class="text-center">
+<span class="text-2xl font-black text-error">42</span>
+<span class="text-[10px] block text-error font-bold">天</span>
+</div>
+<div class="text-center">
+<span class="text-2xl font-black text-error">15</span>
+<span class="text-[10px] block text-error font-bold">时</span>
+</div>
+<div class="text-center">
+<span class="text-2xl font-black text-error">08</span>
+<span class="text-[10px] block text-error font-bold">分</span>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-safe pt-2 h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-t border-slate-100 dark:border-slate-800 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50">
+<a class="flex flex-col items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-xl px-4 py-1" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">school</span>
+<span class="font-['Manrope'] text-[10px] font-bold">Study</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span class="font-['Manrope'] text-[10px] font-bold">Galaxy</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500" href="#">
+<span class="material-symbols-outlined">task_alt</span>
+<span class="font-['Manrope'] text-[10px] font-bold">Tasks</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Manrope'] text-[10px] font-bold">Profile</span>
+</a>
+</nav>
+</body></html>

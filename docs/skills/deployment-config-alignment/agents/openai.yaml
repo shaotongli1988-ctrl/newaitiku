@@ -1,0 +1,6 @@
+interface:
+  display_name: "环境配置对齐"
+  short_description: "核对 dev/test/prod 配置、域名、证书与回调地址，发现环境漂移"
+  default_prompt: "使用 $deployment-config-alignment 对比多环境配置差异，输出缺失项、危险项和修复建议。"
+policy:
+  allow_implicit_invocation: true

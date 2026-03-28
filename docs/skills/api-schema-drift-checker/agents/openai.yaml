@@ -1,0 +1,6 @@
+interface:
+  display_name: "API防漂移检查"
+  short_description: "扫描后端模型、OpenAPI与前端调用/类型差异，输出可修复清单"
+  default_prompt: "使用 $api-schema-drift-checker 对当前改动执行 schema drift 检查，输出高风险漂移并给出最小修复补丁建议。"
+policy:
+  allow_implicit_invocation: true

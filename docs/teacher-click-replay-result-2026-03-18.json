@@ -1,0 +1,52 @@
+{
+  "executedAt": "2026-03-18T06:23:49.555Z",
+  "startedAt": "2026-03-18T06:23:45.777Z",
+  "endedAt": "2026-03-18T06:23:49.555Z",
+  "mode": "python-playwright-true-click-replay",
+  "role": "teacher",
+  "baseUrl": "http://127.0.0.1:8017",
+  "timeoutSec": 20,
+  "headless": true,
+  "dbPath": "/tmp/question-bank-click-replay.db",
+  "steps": [
+    {
+      "name": "1-教师登录并进入题库页",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:45.805Z",
+      "endedAt": "2026-03-18T06:23:45.982Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "2-教师真点击创建题目",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:45.982Z",
+      "endedAt": "2026-03-18T06:23:46.153Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "3-教师真点击发布题目",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:46.153Z",
+      "endedAt": "2026-03-18T06:23:49.351Z",
+      "artifacts": [],
+      "error": null
+    },
+    {
+      "name": "4-教师发布题目在学生端可见",
+      "status": "PASS",
+      "startedAt": "2026-03-18T06:23:49.351Z",
+      "endedAt": "2026-03-18T06:23:49.552Z",
+      "artifacts": [],
+      "error": null
+    }
+  ],
+  "issues": [],
+  "totalIssues": 0,
+  "linkageMatrix": {
+    "superAdminToTeacher": "PASS",
+    "teacherToStudent": "PASS",
+    "studentToTeacher": "NOT_RUN"
+  }
+}

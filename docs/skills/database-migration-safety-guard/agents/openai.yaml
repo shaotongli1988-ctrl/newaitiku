@@ -1,0 +1,6 @@
+interface:
+  display_name: "数据库迁移安全"
+  short_description: "检查 DDL、索引、回填、兼容迁移与回滚脚本的上线安全性"
+  default_prompt: "使用 $database-migration-safety-guard 检查当前数据库变更的上线风险，输出迁移顺序、回滚顺序和高风险 DDL。"
+policy:
+  allow_implicit_invocation: true

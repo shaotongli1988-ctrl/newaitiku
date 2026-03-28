@@ -1,0 +1,6 @@
+interface:
+  display_name: "密钥泄漏检查"
+  short_description: "扫描代码、配置与日志中的密码、token、连接串等敏感信息"
+  default_prompt: "使用 $secret-config-leak-guard 检查当前代码与配置中是否存在敏感信息泄漏，输出风险与替换建议。"
+policy:
+  allow_implicit_invocation: true

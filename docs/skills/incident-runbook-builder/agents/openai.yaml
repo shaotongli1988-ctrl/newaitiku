@@ -1,0 +1,6 @@
+interface:
+  display_name: "故障处置手册"
+  short_description: "生成排查、止血、回滚和告警响应步骤，补齐 runbook"
+  default_prompt: "使用 $incident-runbook-builder 为当前模块生成故障处置手册，输出排查入口、止血动作和回滚步骤。"
+policy:
+  allow_implicit_invocation: true

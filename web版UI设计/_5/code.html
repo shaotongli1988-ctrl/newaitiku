@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#f7f9fb",
+              "surface-tint": "#1353d8",
+              "tertiary": "#005438",
+              "surface-dim": "#d8dadc",
+              "on-secondary-container": "#005b78",
+              "on-secondary": "#ffffff",
+              "on-primary-fixed-variant": "#003dab",
+              "on-primary-container": "#d4dcff",
+              "error": "#ba1a1a",
+              "tertiary-container": "#006f4b",
+              "on-tertiary": "#ffffff",
+              "surface-variant": "#e0e3e5",
+              "on-error": "#ffffff",
+              "inverse-on-surface": "#eff1f3",
+              "background": "#f7f9fb",
+              "outline-variant": "#c3c5d7",
+              "primary-container": "#1a56db",
+              "on-error-container": "#93000a",
+              "primary-fixed": "#dbe1ff",
+              "on-tertiary-fixed-variant": "#005236",
+              "primary": "#003fb1",
+              "on-tertiary-container": "#68f5b8",
+              "error-container": "#ffdad6",
+              "secondary": "#006686",
+              "on-background": "#191c1e",
+              "inverse-primary": "#b5c4ff",
+              "surface-container-low": "#f2f4f6",
+              "on-primary-fixed": "#00174d",
+              "inverse-surface": "#2d3133",
+              "on-secondary-fixed": "#001e2b",
+              "surface-container-highest": "#e0e3e5",
+              "on-surface": "#191c1e",
+              "surface-container-lowest": "#ffffff",
+              "tertiary-fixed": "#6ffbbe",
+              "on-tertiary-fixed": "#002113",
+              "surface-container": "#eceef0",
+              "surface": "#f7f9fb",
+              "secondary-fixed": "#c0e8ff",
+              "secondary-container": "#7ed4fd",
+              "on-secondary-fixed-variant": "#004d66",
+              "tertiary-fixed-dim": "#4edea3",
+              "on-primary": "#ffffff",
+              "outline": "#737686",
+              "primary-fixed-dim": "#b5c4ff",
+              "surface-container-high": "#e6e8ea",
+              "secondary-fixed-dim": "#7bd1fa",
+              "on-surface-variant": "#434654"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.7);
+        }
+        .galaxy-node {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .galaxy-node:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 12px rgba(0, 63, 177, 0.3));
+        }
+        /* Custom scrollbar for Academic Sanctuary feel */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e0e3e5; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c3c5d7; }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface overflow-hidden">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl shadow-sm h-16 flex items-center justify-between px-6 font-['Manrope'] antialiased">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tight text-slate-900">Knowledge Galaxy</span>
+<div class="hidden md:flex space-x-8 items-center h-16">
+<a class="text-slate-500 hover:text-blue-600 transition-colors h-full flex items-center border-b-2 border-transparent" href="#">Study Desk</a>
+<a class="text-blue-700 border-b-2 border-blue-700 font-semibold h-full flex items-center" href="#">Knowledge Galaxy</a>
+<a class="text-slate-500 hover:text-blue-600 transition-colors h-full flex items-center border-b-2 border-transparent" href="#">Mock Exams</a>
+</div>
+</div>
+<div class="flex items-center space-x-4">
+<button class="p-2 hover:bg-slate-50 transition-colors rounded-full active:scale-95 duration-200">
+<span class="material-symbols-outlined text-slate-600">notifications</span>
+</button>
+<button class="p-2 hover:bg-slate-50 transition-colors rounded-full active:scale-95 duration-200">
+<span class="material-symbols-outlined text-slate-600">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container ml-2">
+<img alt="User Profile Avatar" data-alt="User professional portrait avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSDQcsdGBz9Jx8CiPXeZZob6Td7YVw8wXtAZfNOScamzeDX2qKJgTgXplRynKwhV3UVDfBwWNwtxj03MYcM4OB4p7M-Tm1b1a6R6a8_WpfBFOgdkRNRDb14aUIyGFG60Q2o4E9V1q6SdGmTnRbG6BYBZ2lDLZxLH-EHKUWYoAjqUmWttR1ISdiUMDhJlN2HN2C0HHJz9Ttf0hIeLnbFn0Tm3uCBc1t0se0brHmSwVW7mEOUxL8W4g6kYTzGkB6D1CBkhLsIeYSXyBb"/>
+</div>
+</div>
+</nav>
+<div class="flex h-screen pt-16">
+<!-- SideNavBar -->
+<aside class="h-full w-64 bg-slate-50 flex flex-col p-4 space-y-2 border-r-0 font-['Manrope'] text-sm font-medium">
+<div class="py-4 px-2">
+<h1 class="text-lg font-extrabold text-blue-700">Zhuan Sheng Ben</h1>
+<p class="text-[10px] text-slate-400 uppercase tracking-widest">Exam Prep Portal</p>
+</div>
+<div class="flex flex-col space-y-1">
+<div class="flex items-center px-4 py-3 text-slate-600 hover:bg-slate-100 hover:translate-x-1 transition-transform duration-200 cursor-pointer rounded-lg">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span>Dashboard</span>
+</div>
+<div class="flex items-center px-4 py-3 bg-white text-blue-700 rounded-lg shadow-sm font-bold hover:translate-x-1 transition-transform duration-200 cursor-pointer">
+<span class="material-symbols-outlined mr-3">auto_stories</span>
+<span>Knowledge</span>
+</div>
+<div class="flex items-center px-4 py-3 text-slate-600 hover:bg-slate-100 hover:translate-x-1 transition-transform duration-200 cursor-pointer rounded-lg">
+<span class="material-symbols-outlined mr-3">edit_note</span>
+<span>Practice</span>
+</div>
+<div class="flex items-center px-4 py-3 text-slate-600 hover:bg-slate-100 hover:translate-x-1 transition-transform duration-200 cursor-pointer rounded-lg">
+<span class="material-symbols-outlined mr-3">video_library</span>
+<span>Classes</span>
+</div>
+<div class="flex items-center px-4 py-3 text-slate-600 hover:bg-slate-100 hover:translate-x-1 transition-transform duration-200 cursor-pointer rounded-lg">
+<span class="material-symbols-outlined mr-3">groups</span>
+<span>Community</span>
+</div>
+</div>
+<div class="mt-auto border-t border-slate-200 pt-4 flex flex-col space-y-1">
+<div class="flex items-center px-4 py-3 text-slate-600 hover:bg-slate-100 hover:translate-x-1 transition-transform duration-200 cursor-pointer rounded-lg">
+<span class="material-symbols-outlined mr-3">help_outline</span>
+<span>Help</span>
+</div>
+<div class="flex items-center px-4 py-3 text-slate-600 hover:bg-slate-100 hover:translate-x-1 transition-transform duration-200 cursor-pointer rounded-lg">
+<span class="material-symbols-outlined mr-3 text-error">logout</span>
+<span class="text-error">Logout</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 relative bg-surface-bright flex overflow-hidden">
+<!-- Knowledge Galaxy Map (The Force Directed Graph Visualization) -->
+<div class="flex-1 relative overflow-hidden flex items-center justify-center p-8">
+<!-- SVG Canvas for background lines (Simulation of connections) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none opacity-20" xmlns="http://www.w3.org/2000/svg">
+<line stroke="#003fb1" stroke-width="1.5" x1="50%" x2="40%" y1="50%" y2="30%"></line>
+<line stroke="#003fb1" stroke-width="1.5" x1="50%" x2="60%" y1="50%" y2="35%"></line>
+<line stroke="#003fb1" stroke-width="1.5" x1="50%" x2="65%" y1="50%" y2="65%"></line>
+<line stroke="#003fb1" stroke-width="1.5" x1="50%" x2="35%" y1="50%" y2="70%"></line>
+<line stroke="#006686" stroke-dasharray="4 4" stroke-width="1" x1="40%" x2="30%" y1="30%" y2="20%"></line>
+<line stroke="#006686" stroke-dasharray="4 4" stroke-width="1" x1="60%" x2="75%" y1="35%" y2="25%"></line>
+</svg>
+<!-- Galaxy Center -->
+<div class="relative z-10">
+<!-- Central Node -->
+<div class="galaxy-node w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center text-white shadow-xl cursor-pointer ring-8 ring-primary/10">
+<span class="font-headline font-bold text-lg">专升本</span>
+</div>
+<!-- Orbital Nodes -->
+<!-- Political (Top Left) -->
+<div class="galaxy-node absolute -top-40 -left-40 w-20 h-20 rounded-full bg-white shadow-lg flex flex-col items-center justify-center border-2 border-primary/20 cursor-pointer group">
+<span class="material-symbols-outlined text-primary mb-1">gavel</span>
+<span class="text-xs font-bold text-on-surface">政治理论</span>
+<div class="absolute -bottom-2 w-12 h-1 bg-tertiary rounded-full overflow-hidden">
+<div class="w-[85%] h-full bg-tertiary"></div>
+</div>
+</div>
+<!-- English (Top Right) -->
+<div class="galaxy-node absolute -top-32 left-44 w-18 h-18 rounded-full bg-white shadow-lg flex flex-col items-center justify-center border-2 border-primary/10 cursor-pointer">
+<span class="material-symbols-outlined text-secondary mb-1">language</span>
+<span class="text-xs font-bold text-on-surface">大学英语</span>
+<div class="absolute -bottom-2 w-10 h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="w-[40%] h-full bg-primary"></div>
+</div>
+</div>
+<!-- Math (Bottom Right) -->
+<div class="galaxy-node absolute top-32 left-40 w-22 h-22 rounded-full bg-white shadow-lg flex flex-col items-center justify-center border-2 border-primary/20 cursor-pointer ring-4 ring-tertiary/20">
+<span class="material-symbols-outlined text-tertiary mb-1">functions</span>
+<span class="text-xs font-bold text-on-surface">高等数学</span>
+<div class="absolute -bottom-2 w-14 h-1 bg-tertiary rounded-full"></div>
+</div>
+<!-- Professional (Bottom Left) -->
+<div class="galaxy-node absolute top-40 -left-36 w-16 h-16 rounded-full bg-white shadow-lg flex flex-col items-center justify-center border-2 border-primary/5 cursor-pointer">
+<span class="material-symbols-outlined text-outline mb-1">terminal</span>
+<span class="text-[10px] font-bold text-on-surface">专业课</span>
+</div>
+</div>
+<!-- Floating Interaction Tooltip -->
+<div class="absolute bottom-10 left-10 glass-panel p-4 rounded-xl border border-white/40 shadow-xl max-w-xs">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<span class="text-xs font-headline font-bold text-primary uppercase tracking-wider">实时洞察</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                        点击星系节点查看详细知识图谱，关联线条代表考点之间的逻辑依赖。
+                    </p>
+</div>
+</div>
+<!-- Detail Sidebar (Subject Info) -->
+<aside class="w-96 bg-surface-container-low p-8 overflow-y-auto flex flex-col gap-8 border-l border-outline-variant/10">
+<!-- Subject Header -->
+<section>
+<div class="flex justify-between items-start mb-2">
+<span class="px-3 py-1 bg-primary/10 text-primary text-[10px] font-bold rounded-full uppercase tracking-tighter">当前选中</span>
+<span class="material-symbols-outlined text-outline cursor-pointer hover:text-primary transition-colors">open_in_new</span>
+</div>
+<h2 class="text-3xl font-headline font-extrabold text-on-surface tracking-tight">政治理论</h2>
+<p class="text-sm text-on-surface-variant mt-2 leading-relaxed">
+                        涵盖马原、毛概、中特社及思修法基四大板块。历年分值占比最高的是中特部分。
+                    </p>
+</section>
+<!-- Key Statistics Grid (Bento Style) -->
+<section class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm">
+<p class="text-[10px] font-bold text-outline uppercase mb-1">已练题数</p>
+<div class="flex items-baseline gap-1">
+<span class="text-2xl font-headline font-bold text-on-surface">1,428</span>
+<span class="text-[10px] text-tertiary font-bold">+12%</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-xl shadow-sm">
+<p class="text-[10px] font-bold text-outline uppercase mb-1">平均正确率</p>
+<div class="flex items-baseline gap-1">
+<span class="text-2xl font-headline font-bold text-on-surface">86.4</span>
+<span class="text-sm font-bold text-on-surface">%</span>
+</div>
+</div>
+</section>
+<!-- Mastery Progress -->
+<section class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-white">
+<div class="flex justify-between items-end mb-4">
+<h3 class="font-headline font-bold text-on-surface">考点掌握度</h3>
+<span class="text-sm font-bold text-primary">LV. 14</span>
+</div>
+<div class="space-y-6">
+<!-- Progress Item -->
+<div>
+<div class="flex justify-between text-xs mb-2">
+<span class="text-on-surface-variant font-medium">马克思主义基本原理</span>
+<span class="font-bold">92%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-tertiary rounded-full w-[92%]"></div>
+</div>
+</div>
+<!-- Progress Item -->
+<div>
+<div class="flex justify-between text-xs mb-2">
+<span class="text-on-surface-variant font-medium">毛泽东思想概论</span>
+<span class="font-bold">75%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[75%]"></div>
+</div>
+</div>
+<!-- Progress Item -->
+<div>
+<div class="flex justify-between text-xs mb-2">
+<span class="text-on-surface-variant font-medium">法律基础与思想道德</span>
+<span class="font-bold">48%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary-container rounded-full w-[48%]"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Action -->
+<button class="w-full py-4 bg-gradient-to-r from-primary to-primary-container text-white rounded-xl font-headline font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group">
+<span>开始智能刷题</span>
+<span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+<!-- Upcoming Challenges -->
+<section class="mt-auto">
+<h4 class="text-xs font-bold text-outline uppercase tracking-widest mb-4">弱项强化建议</h4>
+<div class="space-y-3">
+<div class="flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-colors cursor-pointer group">
+<div class="w-10 h-10 rounded-lg bg-error-container/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-error text-xl">psychology</span>
+</div>
+<div class="flex-1">
+<p class="text-xs font-bold text-on-surface">哲学范畴辨析</p>
+<p class="text-[10px] text-on-surface-variant">错误率近期上升 15%</p>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary opacity-0 group-hover:opacity-100 transition-all">chevron_right</span>
+</div>
+</div>
+</section>
+</aside>
+</main>
+</div>
+<!-- Background Decorative Elements -->
+<div class="fixed top-0 right-0 -z-10 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none"></div>
+<div class="fixed bottom-0 left-0 -z-10 w-[400px] h-[400px] bg-tertiary/5 blur-[100px] rounded-full pointer-events-none"></div>
+</body></html>

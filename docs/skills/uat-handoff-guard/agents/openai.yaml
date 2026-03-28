@@ -1,0 +1,6 @@
+interface:
+  display_name: "UAT交接检查"
+  short_description: "检查验收场景、账号、环境和步骤是否齐全，保证 UAT 可顺利开展"
+  default_prompt: "使用 $uat-handoff-guard 检查当前 UAT 交接准备情况，输出缺口、阻塞项和交接包建议。"
+policy:
+  allow_implicit_invocation: true

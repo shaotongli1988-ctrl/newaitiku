@@ -28,14 +28,72 @@ function clampQuestionCount(value) {
 }
 
 const questionItems = computed(() => {
+  const questions = Array.isArray(sessionPayload.value?.questions) ? sessionPayload.value.questions : []
+  if (questions.length > 0) {
+    return questions.map((question, index) => {
+      const questionId = String(question?.questionId || question?.id || '').trim()
+      const options = Array.isArray(question?.options)
+        ? question.options.map((option) => ({
+          key: String(option?.key || '').trim().toUpperCase(),
+          content: String(option?.content || '').trim(),
+        })).filter((option) => option.key)
+        : []
+      return {
+        id: questionId,
+        index: index + 1,
+        stem: String(question?.stem || '').trim(),
+        type: String(question?.type || '').trim(),
+        options,
+      }
+    }).filter((item) => item.id)
+  }
   const ids = Array.isArray(sessionPayload.value?.questionIds) ? sessionPayload.value.questionIds : []
   return ids.map((questionId, index) => ({
     id: String(questionId || '').trim(),
     index: index + 1,
+    stem: '',
+    type: '',
+    options: [],
   })).filter((item) => item.id)
 })
 
 const isCompleted = computed(() => String(submitResult.value?.status || '').trim().toUpperCase() === 'COMPLETED')
+
+function normalizeAnswerKey(value) {
+  return String(value || '').trim().toUpperCase()
+}
+
+function optionSelected(question, optionKey) {
+  const answer = normalizeAnswerKey(answerMap.value[question.id])
+  const normalizedKey = normalizeAnswerKey(optionKey)
+  if (!answer || !normalizedKey) {
+    return false
+  }
+  if (String(question?.type || '').trim() === 'multiple_choice') {
+    return answer.includes(normalizedKey)
+  }
+  return answer === normalizedKey
+}
+
+function applyOptionAnswer(question, optionKey) {
+  const normalizedType = String(question?.type || '').trim()
+  const normalizedKey = normalizeAnswerKey(optionKey)
+  if (!normalizedKey) {
+    return
+  }
+  if (normalizedType === 'multiple_choice') {
+    const current = normalizeAnswerKey(answerMap.value[question.id])
+    const currentKeys = new Set(current.split('').filter((item) => /[A-Z]/.test(item)))
+    if (currentKeys.has(normalizedKey)) {
+      currentKeys.delete(normalizedKey)
+    } else {
+      currentKeys.add(normalizedKey)
+    }
+    answerMap.value[question.id] = Array.from(currentKeys).sort().join('')
+    return
+  }
+  answerMap.value[question.id] = normalizedKey
+}
 
 async function startDiagnosis() {
   loading.value = true
@@ -153,6 +211,20 @@ onMounted(() => {
           class="question-item"
         >
           <span>第 {{ item.index }} 题（ID: {{ item.id }}）</span>
+          <p v-if="item.stem" class="question-stem">{{ item.stem }}</p>
+          <div v-if="item.options.length" class="question-options">
+            <button
+              v-for="option in item.options"
+              :key="`${item.id}-${option.key}`"
+              class="option-chip"
+              :class="{ active: optionSelected(item, option.key) }"
+              type="button"
+              @click="applyOptionAnswer(item, option.key)"
+            >
+              <strong>{{ option.key }}</strong>
+              <span>{{ option.content || '-' }}</span>
+            </button>
+          </div>
           <el-input
             v-model="answerMap[item.id]"
             :placeholder="'请输入答案，例如 A 或 AC'"
@@ -236,6 +308,43 @@ onMounted(() => {
   gap: 8px;
   color: var(--qb-text-subtle);
   font-size: 13px;
+}
+
+.question-stem {
+  margin: 0;
+  color: var(--qb-text-heading);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.question-options {
+  display: grid;
+  gap: 8px;
+}
+
+.option-chip {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 10px;
+  background: var(--qb-bg-card);
+  color: var(--qb-text-copy);
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.option-chip strong {
+  color: var(--qb-text-heading);
+}
+
+.option-chip.active {
+  border-color: rgba(30, 115, 190, 0.56);
+  background: var(--qb-surface-soft-info);
+  color: var(--qb-text-info-ink);
 }
 
 .actions,

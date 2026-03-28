@@ -1,0 +1,6 @@
+interface:
+  display_name: "安全基线检查"
+  short_description: "检查鉴权、输入校验、注入、XSS/CSRF 与敏感信息泄漏的上线基线"
+  default_prompt: "使用 $app-security-baseline-guard 检查当前版本的安全基线，输出风险分级、阻断项和修复建议。"
+policy:
+  allow_implicit_invocation: true

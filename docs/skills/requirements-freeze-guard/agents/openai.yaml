@@ -1,0 +1,6 @@
+interface:
+  display_name: "需求冻结治理"
+  short_description: "检查需求是否明确、已评审、可验收并完成冻结，避免边做边改"
+  default_prompt: "使用 $requirements-freeze-guard 评估当前需求是否允许进入设计或开发，输出未冻结项和影响范围。"
+policy:
+  allow_implicit_invocation: true

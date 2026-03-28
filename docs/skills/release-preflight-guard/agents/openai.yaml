@@ -1,0 +1,6 @@
+interface:
+  display_name: "发布前检查"
+  short_description: "统一核对构建、配置、数据库、监控与回滚条件的上线前门禁"
+  default_prompt: "使用 $release-preflight-guard 对当前版本执行上线前检查，输出阻断项、风险分级和是否允许上线。"
+policy:
+  allow_implicit_invocation: true

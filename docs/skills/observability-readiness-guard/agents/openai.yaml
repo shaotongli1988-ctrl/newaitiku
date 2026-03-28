@@ -1,0 +1,6 @@
+interface:
+  display_name: "可观测性就绪"
+  short_description: "检查日志、trace、metrics、告警与埋点是否覆盖关键链路"
+  default_prompt: "使用 $observability-readiness-guard 检查当前版本的可观测性准备情况，输出缺失项和补齐建议。"
+policy:
+  allow_implicit_invocation: true

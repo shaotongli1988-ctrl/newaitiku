@@ -1,0 +1,6 @@
+interface:
+  display_name: "PRD页面追踪"
+  short_description: "检查 PRD、原型与页面实现是否一一对应，识别漏实现与错实现"
+  default_prompt: "使用 $prd-ui-traceability-guard 检查当前 PRD、原型和页面实现的追踪关系，输出漏项和风险点。"
+policy:
+  allow_implicit_invocation: true

@@ -2139,6 +2139,120 @@ export function generateAdaptivePractice(data = {}) {
   })
 }
 
+/**
+ * GET /api/question-bank/learning-methods
+ * 必填字段: 无
+ */
+export function listLearningMethods(params = {}) {
+  return request({
+    method: 'get',
+    url: '/api/question-bank/learning-methods',
+    params,
+  })
+}
+
+/**
+ * GET /api/question-bank/learning-methods/{methodCode}
+ * 必填字段: methodCode
+ */
+export function getLearningMethodDetail(methodCode) {
+  assert_required(methodCode, 'methodCode')
+  return request({
+    method: 'get',
+    url: '/api/question-bank/learning-methods/{methodCode}'.replace('{methodCode}', encode_path(methodCode)),
+  })
+}
+
+/**
+ * POST /api/question-bank/learning-methods/{methodCode}/start
+ * 必填字段: methodCode
+ */
+export function startLearningMethodPractice(methodCode, data = {}) {
+  assert_required(methodCode, 'methodCode')
+  return request({
+    method: 'post',
+    url: '/api/question-bank/learning-methods/{methodCode}/start'.replace('{methodCode}', encode_path(methodCode)),
+    data,
+  })
+}
+
+/**
+ * POST /api/question-bank/learning-methods/{methodCode}/complete
+ * 必填字段: methodCode
+ */
+export function completeLearningMethodPractice(methodCode, data = {}) {
+  assert_required(methodCode, 'methodCode')
+  return request({
+    method: 'post',
+    url: '/api/question-bank/learning-methods/{methodCode}/complete'.replace('{methodCode}', encode_path(methodCode)),
+    data,
+  })
+}
+
+
+/**
+ * POST /api/question-bank/admin/learning-methods/{methodCode}/profile/auto-generate
+ * 必填字段: methodCode
+ */
+export function autoGenerateLearningMethodProfile(methodCode, data = {}) {
+  assert_required(methodCode, 'methodCode')
+  return request({
+    method: 'post',
+    url: '/api/question-bank/admin/learning-methods/{methodCode}/profile/auto-generate'.replace('{methodCode}', encode_path(methodCode)),
+    data,
+  })
+}
+
+/**
+ * POST /api/question-bank/admin/questions/match-features/auto-batch
+ * 必填字段: 无
+ */
+export function autoBatchQuestionMatchFeatures(data = {}) {
+  return request({
+    method: 'post',
+    url: '/api/question-bank/admin/questions/match-features/auto-batch',
+    data,
+  })
+}
+
+/**
+ * POST /api/question-bank/learning-methods/{methodCode}/question-pack/recommend
+ * 必填字段: methodCode
+ */
+export function recommendLearningMethodQuestionPack(methodCode, data = {}) {
+  assert_required(methodCode, 'methodCode')
+  return request({
+    method: 'post',
+    url: '/api/question-bank/learning-methods/{methodCode}/question-pack/recommend'.replace('{methodCode}', encode_path(methodCode)),
+    data,
+  })
+}
+
+/**
+ * POST /api/question-bank/learning-methods/{methodCode}/question-pack/feedback
+ * 必填字段: methodCode
+ */
+export function feedbackLearningMethodQuestionPack(methodCode, data = {}) {
+  assert_required(methodCode, 'methodCode')
+  return request({
+    method: 'post',
+    url: '/api/question-bank/learning-methods/{methodCode}/question-pack/feedback'.replace('{methodCode}', encode_path(methodCode)),
+    data,
+  })
+}
+
+/**
+ * GET /api/question-bank/learning-methods/{methodCode}/question-pack/recommendations
+ * 必填字段: methodCode
+ */
+export function listLearningMethodQuestionPackRecommendations(methodCode, params = {}) {
+  assert_required(methodCode, 'methodCode')
+  return request({
+    method: 'get',
+    url: '/api/question-bank/learning-methods/{methodCode}/question-pack/recommendations'.replace('{methodCode}', encode_path(methodCode)),
+    params,
+  })
+}
 const KNOWLEDGE_SCOPE_POLICY_VERSION = 'HB_ZSB_2026'
 
 function normalize_knowledge_scope_payload(scope = {}, fallback_scope = {}) {
@@ -2782,6 +2896,87 @@ export async function fetchAdaptivePracticeList(payload = {}) {
   return unwrap_data(response) || {}
 }
 
+export async function fetchLearningMethodList(params = {}) {
+  const response = await listLearningMethods(params || {})
+  const data = unwrap_data(response)
+  if (Array.isArray(data)) {
+    return {
+      items: data,
+      total: data.length,
+    }
+  }
+  if (data && typeof data === 'object') {
+    const items = Array.isArray(data.items) ? data.items : []
+    return {
+      ...data,
+      items,
+      total: Number(data.total || items.length || 0),
+    }
+  }
+  return {
+    items: [],
+    total: 0,
+  }
+}
+
+export async function fetchLearningMethodDetail(methodCode) {
+  assert_required(methodCode, 'methodCode')
+  const response = await getLearningMethodDetail(methodCode)
+  return unwrap_data(response) || {}
+}
+
+export async function startLearningMethodSession(methodCode, payload = {}) {
+  assert_required(methodCode, 'methodCode')
+  const response = await startLearningMethodPractice(methodCode, payload || {})
+  return unwrap_data(response) || {}
+}
+
+export async function completeLearningMethodSession(methodCode, payload = {}) {
+  assert_required(methodCode, 'methodCode')
+  const response = await completeLearningMethodPractice(methodCode, payload || {})
+  return unwrap_data(response) || {}
+}
+
+
+export async function runAutoGenerateLearningMethodProfile(methodCode, payload = {}) {
+  assert_required(methodCode, 'methodCode')
+  const response = await autoGenerateLearningMethodProfile(methodCode, payload || {})
+  return unwrap_data(response) || {}
+}
+
+export async function runAutoBatchQuestionMatchFeatures(payload = {}) {
+  const response = await autoBatchQuestionMatchFeatures(payload || {})
+  return unwrap_data(response) || {}
+}
+
+export async function fetchLearningMethodQuestionPackRecommendation(methodCode, payload = {}) {
+  assert_required(methodCode, 'methodCode')
+  const response = await recommendLearningMethodQuestionPack(methodCode, payload || {})
+  return unwrap_data(response) || {}
+}
+
+export async function submitLearningMethodQuestionPackFeedback(methodCode, payload = {}) {
+  assert_required(methodCode, 'methodCode')
+  const response = await feedbackLearningMethodQuestionPack(methodCode, payload || {})
+  return unwrap_data(response) || {}
+}
+
+export async function fetchLearningMethodQuestionPackRecommendationHistory(methodCode, params = {}) {
+  assert_required(methodCode, 'methodCode')
+  const response = await listLearningMethodQuestionPackRecommendations(methodCode, params || {})
+  const data = unwrap_data(response)
+  if (Array.isArray(data)) {
+    return { items: data, total: data.length }
+  }
+  if (data && typeof data === 'object') {
+    return {
+      ...data,
+      items: Array.isArray(data.items) ? data.items : [],
+      total: Number(data.total || 0),
+    }
+  }
+  return { items: [], total: 0 }
+}
 export async function persistKnowledgeGraphLayout(nodes = []) {
   const normalized_nodes = Array.isArray(nodes)
     ? nodes

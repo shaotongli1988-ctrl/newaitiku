@@ -1,0 +1,46 @@
+name: Unified Alignment CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            tools/python/requirements.txt
+
+      - name: Bootstrap Python environment
+        run: ./tools/bin/bootstrap-python.sh
+
+      - name: Run unified alignment validation
+        run: |
+          ./tools/bin/check-alignment.sh \
+            --phase final \
+            --run-compile \
+            --run-pytest \
+            --report-md /tmp/unified-alignment-report.md \
+            --report-json /tmp/unified-alignment-report.json
+
+      - name: Upload unified alignment reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unified-alignment-report
+          path: |
+            /tmp/unified-alignment-report.md
+            /tmp/unified-alignment-report.json

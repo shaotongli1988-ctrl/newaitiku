@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Azure Academix - 错题本</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#f7f9fb",
+              "surface-container-high": "#e6e8ea",
+              "surface-dim": "#d8dadc",
+              "inverse-on-surface": "#eff1f3",
+              "on-secondary": "#ffffff",
+              "tertiary-fixed": "#6ffbbe",
+              "error-container": "#ffdad6",
+              "inverse-primary": "#b5c4ff",
+              "on-secondary-container": "#005b78",
+              "surface-container-lowest": "#ffffff",
+              "on-primary": "#ffffff",
+              "background": "#f7f9fb",
+              "on-tertiary-fixed": "#002113",
+              "primary-fixed-dim": "#b5c4ff",
+              "on-tertiary-container": "#68f5b8",
+              "surface-container-low": "#f2f4f6",
+              "inverse-surface": "#2d3133",
+              "on-primary-fixed": "#00174d",
+              "surface-tint": "#1353d8",
+              "surface-variant": "#e0e3e5",
+              "secondary-container": "#7ed4fd",
+              "on-primary-container": "#d4dcff",
+              "on-surface-variant": "#434654",
+              "surface": "#f7f9fb",
+              "secondary-fixed-dim": "#7bd1fa",
+              "secondary-fixed": "#c0e8ff",
+              "on-error": "#ffffff",
+              "error": "#ba1a1a",
+              "primary-fixed": "#dbe1ff",
+              "on-secondary-fixed": "#001e2b",
+              "surface-container-highest": "#e0e3e5",
+              "on-secondary-fixed-variant": "#004d66",
+              "on-error-container": "#93000a",
+              "secondary": "#006686",
+              "primary-container": "#1a56db",
+              "outline-variant": "#c3c5d7",
+              "primary": "#003fb1",
+              "on-tertiary-fixed-variant": "#005236",
+              "on-primary-fixed-variant": "#003dab",
+              "tertiary-fixed-dim": "#4edea3",
+              "tertiary-container": "#006f4b",
+              "on-surface": "#191c1e",
+              "tertiary": "#005438",
+              "surface-container": "#eceef0",
+              "on-tertiary": "#ffffff",
+              "on-background": "#191c1e",
+              "outline": "#737686"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; color: #191c1e; }
+      .font-headline { font-family: 'Manrope', sans-serif; }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-effect {
+        backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.7);
+      }
+    </style>
+</head>
+<body class="bg-surface">
+<!-- SideNavBar (Shared Component) -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-950 flex flex-col p-4 space-y-2 z-40 hidden md:flex">
+<div class="mb-8 px-2 py-4">
+<h1 class="text-lg font-black text-blue-900 dark:text-blue-100 font-headline tracking-tight">Academic Sanctuary</h1>
+<p class="text-xs text-slate-500 font-medium">Zhuan Sheng Ben Prep</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center space-x-3 px-3 py-2 text-slate-600 dark:text-slate-400 font-['Manrope'] text-sm font-medium hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span>AI 进度</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 text-slate-600 dark:text-slate-400 font-['Manrope'] text-sm font-medium hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="auto_stories">auto_stories</span>
+<span>个人题库</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 text-blue-700 dark:text-blue-400 font-bold bg-blue-50/80 dark:bg-blue-900/30 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="menu_book" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+<span>错题本</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 text-slate-600 dark:text-slate-400 font-['Manrope'] text-sm font-medium hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<span>自由练习</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 text-slate-600 dark:text-slate-400 font-['Manrope'] text-sm font-medium hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+<span>消息中心</span>
+</a>
+</nav>
+<div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-900 space-y-1">
+<a class="flex items-center space-x-3 px-3 py-2 text-slate-600 dark:text-slate-400 font-['Manrope'] text-sm font-medium hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span>Help Center</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 text-slate-600 dark:text-slate-400 font-['Manrope'] text-sm font-medium hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 min-h-screen pb-20 md:pb-12">
+<!-- TopAppBar (Shared Component) -->
+<header class="fixed top-0 right-0 left-0 md:left-64 z-30 bg-white/70 backdrop-blur-md border-b border-blue-100/20 px-6 py-3 flex justify-between items-center shadow-sm">
+<div class="flex items-center space-x-4">
+<span class="text-xl font-bold text-blue-800 tracking-tight font-headline">错题本</span>
+<span class="text-sm text-slate-400 font-medium">Error Notebook</span>
+</div>
+<div class="flex items-center space-x-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+<input class="bg-surface-container-low border-none rounded-full py-1.5 pl-10 pr-4 text-sm w-64 focus:ring-2 focus:ring-primary/20 transition-all" placeholder="搜索题目内容..." type="text"/>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-blue-50/50 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-slate-600">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden">
+<img alt="Profile" class="w-full h-full object-cover" data-alt="User avatar profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAp6hnFp2cAwNXiKurkRLVCQsVR4lHs09BAPM_YPhumFLocaEWoA1rGbYXf_iK5bP2XVkAdeNw_r8R7-GzQ4w9MnqFFLExgm21rZm2oNz4hCKN6Xwf-Ug1HQcgtiVEqr5KITm2RzjsWGDBy_rwMN4mwPDJBKMH5QNX9QAt_2ndaErlIjpX9SM0g0omQPaMovoNBTKqFSSTG95iZthqvu0mg7xkA7kG4L4iq7btCd8LipLFU8WFmLthuvowggRHgbFsI8NfOLW9nm-R_"/>
+</div>
+</div>
+</header>
+<div class="mt-20 px-8 max-w-7xl mx-auto space-y-10">
+<!-- AI Diagnostic Dashboard Section -->
+<section>
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-xl font-bold font-headline text-on-surface">AI 诊断看板</h2>
+<div class="flex items-center space-x-2 text-sm text-primary font-semibold cursor-pointer hover:underline">
+<span>查看详细周报</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Accuracy Rate Bento Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl flex flex-col justify-between group hover:shadow-lg transition-shadow duration-300">
+<div>
+<p class="text-sm font-medium text-slate-500 mb-1">当前纠错正确率</p>
+<h3 class="text-4xl font-black font-headline text-primary tracking-tight">84.2%</h3>
+</div>
+<div class="mt-4 flex items-center text-tertiary text-xs font-bold">
+<span class="material-symbols-outlined text-sm mr-1">trending_up</span>
+<span>比上周提升 5.4%</span>
+</div>
+<div class="mt-6 h-12 w-full flex items-end space-x-1">
+<div class="bg-primary-fixed w-full h-1/2 rounded-t-sm"></div>
+<div class="bg-primary-fixed w-full h-2/3 rounded-t-sm"></div>
+<div class="bg-primary-fixed w-full h-3/4 rounded-t-sm"></div>
+<div class="bg-primary-container w-full h-full rounded-t-sm"></div>
+</div>
+</div>
+<!-- Knowledge Weak Points Bento Card -->
+<div class="md:col-span-2 bg-surface-container-lowest p-6 rounded-xl relative overflow-hidden">
+<div class="relative z-10">
+<p class="text-sm font-medium text-slate-500 mb-4">知识点薄弱项分析</p>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-xs font-bold mb-1">
+<span class="text-on-surface">高等数学：导数与微分</span>
+<span class="text-error">高频错误</span>
+</div>
+<div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="bg-error w-[78%] h-full rounded-full"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-xs font-bold mb-1">
+<span class="text-on-surface">大学英语：虚拟语气</span>
+<span class="text-secondary">中频错误</span>
+</div>
+<div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="bg-secondary w-[45%] h-full rounded-full"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-xs font-bold mb-1">
+<span class="text-on-surface">计算机基础：数据结构</span>
+<span class="text-tertiary">低频错误</span>
+</div>
+<div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="bg-tertiary w-[12%] h-full rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[160px]" data-icon="psychology">psychology</span>
+</div>
+</div>
+</div>
+</section>
+<!-- AI Remediation Center -->
+<section class="bg-primary-container rounded-xl p-8 text-on-primary overflow-hidden relative">
+<div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+<div class="max-w-md">
+<div class="inline-flex items-center px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold tracking-widest uppercase mb-4">
+                            AI Remediation Center
+                        </div>
+<h2 class="text-3xl font-black font-headline mb-4 leading-tight">基于您的薄弱项，<br/>AI 已为您生成专属强化练习。</h2>
+<p class="text-blue-100 text-sm mb-8">精准定位“函数连续性”相关漏洞，建议立即进行针对性纠错。本次包含 12 道精选题。</p>
+<button class="bg-white text-primary px-8 py-3 rounded-xl font-bold flex items-center space-x-3 active:scale-95 transition-transform">
+<span>开始消灭错题</span>
+<span class="material-symbols-outlined">bolt</span>
+</button>
+</div>
+<div class="flex gap-4">
+<!-- Diagnostic Card 1 -->
+<div class="w-48 bg-white/10 backdrop-blur-lg border border-white/10 p-5 rounded-xl">
+<span class="material-symbols-outlined text-white mb-4" data-icon="auto_awesome">auto_awesome</span>
+<h4 class="text-sm font-bold mb-1">相似题型推荐</h4>
+<p class="text-[10px] text-blue-100 leading-relaxed">关联 3 个相似解法，帮助举一反三</p>
+</div>
+<!-- Diagnostic Card 2 -->
+<div class="w-48 bg-white/10 backdrop-blur-lg border border-white/10 p-5 rounded-xl hidden lg:block">
+<span class="material-symbols-outlined text-white mb-4" data-icon="history_edu">history_edu</span>
+<h4 class="text-sm font-bold mb-1">解析深度重构</h4>
+<p class="text-[10px] text-blue-100 leading-relaxed">AI 将原解析重构为更易懂的可视化步骤</p>
+</div>
+</div>
+</div>
+<!-- Abstract Background Gradient Decoration -->
+<div class="absolute -top-24 -right-24 w-96 h-96 bg-blue-500/20 blur-[100px] rounded-full"></div>
+</section>
+<!-- Detailed Error List Section -->
+<section>
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center space-x-6">
+<h2 class="text-xl font-bold font-headline text-on-surface">详细错题库</h2>
+<div class="flex items-center space-x-2">
+<span class="px-3 py-1 bg-surface-container-high rounded-full text-xs font-bold text-slate-600">全部 (124)</span>
+<span class="px-3 py-1 bg-error-container text-error rounded-full text-xs font-bold">未掌握 (42)</span>
+<span class="px-3 py-1 bg-surface-container-high rounded-full text-xs font-bold text-slate-600">已掌握 (82)</span>
+</div>
+</div>
+<div class="flex items-center space-x-3">
+<button class="flex items-center space-x-1 px-3 py-2 text-xs font-bold text-slate-500 border-outline-variant/15 border rounded-lg hover:bg-surface-container-low">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+<span>筛选</span>
+</button>
+</div>
+</div>
+<div class="space-y-4">
+<!-- Error Item Card 1 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl group hover:shadow-md transition-all border border-transparent hover:border-primary/10">
+<div class="flex items-start justify-between">
+<div class="flex-1">
+<div class="flex items-center space-x-3 mb-3">
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded text-[10px] font-bold uppercase">高等数学</span>
+<span class="text-xs text-slate-400 font-medium">错误日期：2023.10.24</span>
+<span class="flex items-center text-error text-[10px] font-bold">
+<span class="material-symbols-outlined text-xs mr-0.5" style="font-variation-settings: 'FILL' 1;">warning</span>
+                                        重灾区
+                                    </span>
+</div>
+<h3 class="text-on-surface font-medium text-base mb-4 leading-relaxed">
+                                    若函数 f(x) 在 [a, b] 上连续，且 f(a)f(b) &lt; 0，试证明在 (a, b) 内至少存在一点 ξ，使得 f(ξ) = 0。这是什么定理的应用？
+                                </h3>
+<div class="flex items-center space-x-6 text-xs font-bold">
+<div class="flex items-center text-slate-500">
+<span class="material-symbols-outlined text-sm mr-1">history</span>
+<span>错题次数：3次</span>
+</div>
+<div class="flex items-center text-slate-500">
+<span class="material-symbols-outlined text-sm mr-1">quiz</span>
+<span>关联题型：零点定理</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col space-y-2">
+<button class="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+<button class="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-slate-400 hover:text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Error Item Card 2 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl group hover:shadow-md transition-all border border-transparent hover:border-primary/10">
+<div class="flex items-start justify-between">
+<div class="flex-1">
+<div class="flex items-center space-x-3 mb-3">
+<span class="px-2 py-0.5 bg-tertiary-container text-on-tertiary text-[10px] font-bold uppercase">计算机基础</span>
+<span class="text-xs text-slate-400 font-medium">错误日期：2023.10.22</span>
+<span class="flex items-center text-secondary text-[10px] font-bold">
+<span class="material-symbols-outlined text-xs mr-0.5">check_circle</span>
+                                        复习中
+                                    </span>
+</div>
+<h3 class="text-on-surface font-medium text-base mb-4 leading-relaxed">
+                                    在 OSI 参考模型中，哪一层负责处理端到端的错误检测和流量控制？
+                                </h3>
+<div class="flex items-center space-x-6 text-xs font-bold">
+<div class="flex items-center text-slate-500">
+<span class="material-symbols-outlined text-sm mr-1">history</span>
+<span>错题次数：1次</span>
+</div>
+<div class="flex items-center text-slate-500">
+<span class="material-symbols-outlined text-sm mr-1">quiz</span>
+<span>关联题型：网络体系结构</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col space-y-2">
+<button class="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+<button class="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-slate-400 hover:text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Error Item Card 3 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl group hover:shadow-md transition-all border border-transparent hover:border-primary/10">
+<div class="flex items-start justify-between">
+<div class="flex-1">
+<div class="flex items-center space-x-3 mb-3">
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded text-[10px] font-bold uppercase">大学英语</span>
+<span class="text-xs text-slate-400 font-medium">错误日期：2023.10.20</span>
+<span class="flex items-center text-tertiary text-[10px] font-bold">
+<span class="material-symbols-outlined text-xs mr-0.5" style="font-variation-settings: 'FILL' 1;">stars</span>
+                                        已标记
+                                    </span>
+</div>
+<h3 class="text-on-surface font-medium text-base mb-4 leading-relaxed">
+                                    If I _____ (know) her telephone number, I would have called her last night.
+                                </h3>
+<div class="flex items-center space-x-6 text-xs font-bold">
+<div class="flex items-center text-slate-500">
+<span class="material-symbols-outlined text-sm mr-1">history</span>
+<span>错题次数：2次</span>
+</div>
+<div class="flex items-center text-slate-500">
+<span class="material-symbols-outlined text-sm mr-1">quiz</span>
+<span>关联题型：虚拟语气回顾</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col space-y-2">
+<button class="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+<button class="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-slate-400 hover:text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar (Shared Component - Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-xl border-t border-blue-50 flex justify-around items-center px-4 pb-safe pt-2 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] rounded-t-2xl">
+<a class="flex flex-col items-center justify-center text-slate-400 px-3 py-1.5 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-['Inter'] text-[10px] font-bold uppercase tracking-wider">AI 进度</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 px-3 py-1.5 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">auto_stories</span>
+<span class="font-['Inter'] text-[10px] font-bold uppercase tracking-wider">题库</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-blue-100 text-blue-800 rounded-xl px-3 py-1.5 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+<span class="font-['Inter'] text-[10px] font-bold uppercase tracking-wider">错题本</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 px-3 py-1.5 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">edit_note</span>
+<span class="font-['Inter'] text-[10px] font-bold uppercase tracking-wider">练习</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 px-3 py-1.5 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-['Inter'] text-[10px] font-bold uppercase tracking-wider">消息</span>
+</a>
+</nav>
+</body></html>

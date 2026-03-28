@@ -52,6 +52,10 @@ from app.contracts import (
     LearningMethodAdminUpdateRequest,
     LearningMethodPracticeCompleteRequest,
     LearningMethodPracticeStartRequest,
+    LearningMethodProfileAutoGenerateRequest,
+    LearningMethodQuestionFeatureAutoBatchRequest,
+    LearningMethodQuestionPackRecommendRequest,
+    LearningMethodQuestionPackFeedbackRequest,
     KnowledgeGraphEnvelopeResponse,
     KnowledgeLayoutSaveRequest,
     KnowledgePrerequisiteUpdateRequest,
@@ -416,6 +420,35 @@ def create_app(db_path: Union[Path, str] = DEFAULT_DB_PATH) -> FastAPI:
         ensure_actor_ready(actor, svc, "student:manage")
         return page_bootstrap("/teacher/student-accounts", "teacher-student-accounts", "学生账号开通", actor=actor)
 
+    @app.get("/teacher/import-history", include_in_schema=False)
+    async def teacher_import_history_redirect(request: Request, svc: QuestionBankService = Depends(service)):
+        frontend_response = build_frontend_entry_response(request)
+        if frontend_response:
+            return frontend_response
+        actor = resolve_page_actor(request)
+        redirect = redirect_for_page_role(actor, ("teacher",))
+        if redirect:
+            return redirect
+        ensure_actor_ready(actor, svc, "question:manage")
+        query_string = str(request.url.query or "").strip()
+        target = "/teacher/questions"
+        if query_string:
+            target = f"{target}?{query_string}"
+        return RedirectResponse(url=f"{target}#import-history", status_code=307)
+
+    @app.get("/teacher/import-history/task/{taskId}", response_model=PageBootstrapResponse, include_in_schema=False)
+    async def teacher_import_history_detail_page(taskId: str, request: Request, svc: QuestionBankService = Depends(service)):
+        frontend_response = build_frontend_entry_response(request)
+        if frontend_response:
+            return frontend_response
+        actor = resolve_page_actor(request)
+        redirect = redirect_for_page_role(actor, ("teacher",))
+        if redirect:
+            return redirect
+        ensure_actor_ready(actor, svc, "question:manage")
+        route_path = f"/teacher/import-history/task/{str(taskId).strip()}"
+        return page_bootstrap(route_path, "teacher-import-history-detail", "导入任务详情", actor=actor)
+
     @app.get("/login", response_model=PageBootstrapResponse, include_in_schema=False)
     async def login_page(request: Request):
         frontend_response = build_frontend_entry_response(request)
@@ -559,6 +592,18 @@ def create_app(db_path: Union[Path, str] = DEFAULT_DB_PATH) -> FastAPI:
     async def student_personal_bank_page(request: Request, svc: QuestionBankService = Depends(service)):
         return redirect_student_question_bank(request, "/student/question-bank/archive")
 
+    @app.get("/student/question-bank/guide", response_model=PageBootstrapResponse, include_in_schema=False)
+    async def student_question_bank_guide_page(request: Request, svc: QuestionBankService = Depends(service)):
+        frontend_response = build_frontend_entry_response(request)
+        if frontend_response:
+            return frontend_response
+        actor = resolve_page_actor(request)
+        redirect = redirect_for_page_role(actor, ("student", "super_admin"))
+        if redirect:
+            return redirect
+        ensure_actor_ready(actor, svc)
+        return page_bootstrap("/student/question-bank/guide", "student-question-bank-guide", "使用文档", actor=actor)
+
     @app.get("/teacher/papers", response_model=PageBootstrapResponse, include_in_schema=False)
     async def teacher_papers_page(request: Request, svc: QuestionBankService = Depends(service)):
         frontend_response = build_frontend_entry_response(request)
@@ -618,6 +663,18 @@ def create_app(db_path: Union[Path, str] = DEFAULT_DB_PATH) -> FastAPI:
             return redirect
         ensure_actor_ready(actor, svc, "question:manage")
         return page_bootstrap("/teacher/knowledge", "teacher-knowledge", "知识点三级树", actor=actor)
+
+    @app.get("/teacher/guide", response_model=PageBootstrapResponse, include_in_schema=False)
+    async def teacher_guide_page(request: Request, svc: QuestionBankService = Depends(service)):
+        frontend_response = build_frontend_entry_response(request)
+        if frontend_response:
+            return frontend_response
+        actor = resolve_page_actor(request)
+        redirect = redirect_for_page_role(actor, ("teacher",))
+        if redirect:
+            return redirect
+        ensure_actor_ready(actor, svc)
+        return page_bootstrap("/teacher/guide", "teacher-guide", "使用文档", actor=actor)
 
     @app.get("/admin/home", response_model=PageBootstrapResponse, include_in_schema=False)
     async def admin_home_page(
@@ -1171,6 +1228,32 @@ def create_app(db_path: Union[Path, str] = DEFAULT_DB_PATH) -> FastAPI:
             require_question_operator(actor)
         ensure_actor_ready(actor, svc, "question:manage")
         return success(svc.sort_admin_learning_methods(payload.model_dump(by_alias=True), actor))
+
+
+    @app.post("/api/question-bank/admin/learning-methods/{methodCode}/profile/auto-generate", response_model=BaseResponse)
+    async def auto_generate_admin_learning_method_profile(
+        methodCode: str,
+        payload: LearningMethodProfileAutoGenerateRequest,
+        csrf_checked: None = Depends(require_admin_csrf),
+        actor: Actor = Depends(get_actor),
+        svc: QuestionBankService = Depends(service),
+    ):
+        if actor.role != ROLE_SUPER_ADMIN:
+            require_question_operator(actor)
+        ensure_actor_ready(actor, svc, "question:manage")
+        return success(svc.auto_generate_learning_method_profile(methodCode, payload.model_dump(by_alias=True), actor))
+
+    @app.post("/api/question-bank/admin/questions/match-features/auto-batch", response_model=BaseResponse)
+    async def auto_batch_admin_question_match_features(
+        payload: LearningMethodQuestionFeatureAutoBatchRequest,
+        csrf_checked: None = Depends(require_admin_csrf),
+        actor: Actor = Depends(get_actor),
+        svc: QuestionBankService = Depends(service),
+    ):
+        if actor.role != ROLE_SUPER_ADMIN:
+            require_question_operator(actor)
+        ensure_actor_ready(actor, svc, "question:manage")
+        return success(svc.auto_batch_question_match_features(payload.model_dump(by_alias=True), actor))
 
     @app.get("/api/question-bank/messages", response_model=BaseResponse)
     async def list_messages(
@@ -1962,6 +2045,41 @@ def create_app(db_path: Union[Path, str] = DEFAULT_DB_PATH) -> FastAPI:
         require_student(actor)
         ensure_actor_ready(actor, svc)
         return success(svc.complete_learning_method_practice(methodCode, payload.model_dump(by_alias=True), actor))
+
+
+    @app.post("/api/question-bank/learning-methods/{methodCode}/question-pack/recommend", response_model=BaseResponse)
+    async def recommend_learning_method_question_pack(
+        methodCode: str,
+        payload: LearningMethodQuestionPackRecommendRequest,
+        actor: Actor = Depends(get_actor),
+        svc: QuestionBankService = Depends(service),
+    ):
+        require_student(actor)
+        ensure_actor_ready(actor, svc)
+        return success(svc.recommend_learning_method_question_pack(methodCode, payload.model_dump(by_alias=True), actor))
+
+    @app.post("/api/question-bank/learning-methods/{methodCode}/question-pack/feedback", response_model=BaseResponse)
+    async def feedback_learning_method_question_pack(
+        methodCode: str,
+        payload: LearningMethodQuestionPackFeedbackRequest,
+        actor: Actor = Depends(get_actor),
+        svc: QuestionBankService = Depends(service),
+    ):
+        require_student(actor)
+        ensure_actor_ready(actor, svc)
+        return success(svc.feedback_learning_method_question_pack(methodCode, payload.model_dump(by_alias=True), actor))
+
+
+    @app.get("/api/question-bank/learning-methods/{methodCode}/question-pack/recommendations", response_model=BaseResponse)
+    async def list_learning_method_question_pack_recommendations(
+        methodCode: str,
+        limit: int = Query(default=10, ge=1, le=50),
+        actor: Actor = Depends(get_actor),
+        svc: QuestionBankService = Depends(service),
+    ):
+        require_student(actor)
+        ensure_actor_ready(actor, svc)
+        return success(svc.list_learning_method_question_pack_recommendations(methodCode, limit, actor))
 
     @app.get("/api/question-bank/student/practice/questions", response_model=BaseResponse)
     async def list_student_practice_questions(

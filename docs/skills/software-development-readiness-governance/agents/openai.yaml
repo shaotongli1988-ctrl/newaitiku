@@ -1,0 +1,6 @@
+interface:
+  display_name: "开发前准备"
+  short_description: "在开工前统一需求、契约、数据库、权限、边界、交互与协作基线"
+  default_prompt: "使用 $software-development-readiness-governance 对当前需求做开发前准备总检查，输出是否可进入开发、阻断项和补齐顺序。"
+policy:
+  allow_implicit_invocation: true

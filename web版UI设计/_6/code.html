@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "inverse-surface": "#2d3133",
+                        "on-secondary-container": "#005b78",
+                        "secondary-container": "#7ed4fd",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#001e2b",
+                        "surface-tint": "#1353d8",
+                        "outline-variant": "#c3c5d7",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-primary-fixed-variant": "#003dab",
+                        "surface-container-highest": "#e0e3e5",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "error": "#ba1a1a",
+                        "surface-container": "#eceef0",
+                        "surface-container-high": "#e6e8ea",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#002113",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#006f4b",
+                        "on-surface-variant": "#434654",
+                        "surface": "#f7f9fb",
+                        "inverse-primary": "#b5c4ff",
+                        "tertiary": "#005438",
+                        "on-tertiary-container": "#68f5b8",
+                        "tertiary-fixed": "#6ffbbe",
+                        "primary": "#003fb1",
+                        "on-secondary-fixed-variant": "#004d66",
+                        "secondary-fixed": "#c0e8ff",
+                        "secondary-fixed-dim": "#7bd1fa",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#eff1f3",
+                        "background": "#f7f9fb",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#1a56db",
+                        "on-background": "#191c1e",
+                        "on-primary-container": "#d4dcff",
+                        "outline": "#737686",
+                        "on-primary-fixed": "#00174d",
+                        "surface-dim": "#d8dadc",
+                        "secondary": "#006686",
+                        "on-surface": "#191c1e",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-bright": "#f7f9fb",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "surface-variant": "#e0e3e5",
+                        "on-primary": "#ffffff"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface">
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl border-b border-slate-200/15 shadow-sm flex justify-between items-center h-16 px-6 w-full">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold text-blue-800 tracking-tight font-headline">学府圣地</span>
+<div class="hidden md:flex bg-surface-container-low px-4 py-1.5 rounded-full items-center gap-2 border border-outline-variant/20">
+<span class="material-symbols-outlined text-outline text-sm">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-64 p-0" placeholder="搜索题目、考点..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-slate-100/50 rounded-full transition-colors">
+<span class="material-symbols-outlined text-slate-600">notifications</span>
+</button>
+<button class="p-2 hover:bg-slate-100/50 rounded-full transition-colors">
+<span class="material-symbols-outlined text-slate-600">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden">
+<img alt="用户头像" class="w-full h-full object-cover" data-alt="User avatar illustration" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcoWMotMe0rGsE6IP1Qz234QARxbsBXrch0DEQuN4d5G_GVJ12rEhGx3-BXR4fiBEiMiqqRjxn__YwQJl6vFKmQMOkzqlFVp1VApJMRsc9loVZLXv-FzradWDHSw9MdMCTL0zqrPat-RVojvZ34AFis_BOZ7-MClMtxGIrBKatOOPgI7sPAB-KNlkKj2ZPgpeqs-MxntVLm9eJY_8--YPlLiZNN1H8JS3MQiqK0Xlw4f6comzfOG5G19Xy7CSPTB-i8q069iX7Db_x"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 bg-slate-50 border-r border-slate-200/15 hidden md:flex flex-col py-8 px-4 space-y-2">
+<div class="px-4 mb-6">
+<h2 class="text-lg font-black text-blue-700 font-headline">学习导航</h2>
+<p class="text-xs text-slate-500 font-medium">Academic Sanctuary</p>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 hover:bg-slate-200/50 rounded-xl transition-all font-semibold text-sm" href="#">
+<span class="material-symbols-outlined">insights</span>
+                AI 进度
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-blue-700 border-r-4 border-blue-700 bg-blue-50/50 rounded-xl transition-all font-semibold text-sm" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+                个人题库
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 hover:bg-slate-200/50 rounded-xl transition-all font-semibold text-sm" href="#">
+<span class="material-symbols-outlined">error_outline</span>
+                错题本
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 hover:bg-slate-200/50 rounded-xl transition-all font-semibold text-sm" href="#">
+<span class="material-symbols-outlined">edit_note</span>
+                自由练习
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-blue-600 hover:bg-slate-200/50 rounded-xl transition-all font-semibold text-sm" href="#">
+<span class="material-symbols-outlined">mail</span>
+                消息中心
+            </a>
+</nav>
+<div class="mt-auto p-4 bg-primary rounded-2xl text-on-primary">
+<p class="text-xs opacity-80 mb-2">备考倒计时</p>
+<p class="text-xl font-bold mb-4 font-headline">128 天</p>
+<button class="w-full py-2 bg-white text-primary rounded-lg font-bold text-sm shadow-sm hover:bg-blue-50 transition-colors">
+                开始模考
+            </button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 pt-24 pb-12 px-8 min-h-screen">
+<div class="max-w-7xl mx-auto space-y-10">
+<!-- Header Section -->
+<header class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h1 class="text-3xl font-extrabold font-headline tracking-tight text-on-surface">个人题库</h1>
+<p class="text-slate-500 mt-1">专属学术圣殿，深度掌握每一处考点。</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-5 py-2.5 bg-surface-container-high text-on-surface-variant font-semibold rounded-full hover:bg-surface-variant transition-colors text-sm">
+<span class="material-symbols-outlined text-sm">file_upload</span>
+                        批量导入题目
+                    </button>
+<button class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold rounded-full shadow-lg shadow-primary/20 hover:scale-95 transition-transform text-sm">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+                        新建自定义题库
+                    </button>
+</div>
+</header>
+<!-- Stats Overview - Bento Grid Style -->
+<section class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6">
+<!-- Primary Progress -->
+<div class="md:col-span-2 lg:col-span-2 bg-surface-container-lowest p-6 rounded-3xl flex flex-col justify-between shadow-sm border border-outline-variant/10">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-sm font-semibold text-slate-500">总体完成率</p>
+<h3 class="text-4xl font-black font-headline text-primary mt-1">68.5%</h3>
+</div>
+<div class="w-12 h-12 rounded-2xl bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">analytics</span>
+</div>
+</div>
+<div class="mt-8 space-y-2">
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full w-[68.5%]"></div>
+</div>
+<div class="flex justify-between text-xs font-bold text-slate-400">
+<span>0%</span>
+<span>已选题目 12,400</span>
+</div>
+</div>
+</div>
+<!-- Detail Stats -->
+<div class="bg-surface-container-lowest p-6 rounded-3xl shadow-sm border border-outline-variant/10 flex flex-col justify-between">
+<p class="text-sm font-semibold text-slate-500">已作答</p>
+<div class="mt-4">
+<span class="text-2xl font-black font-headline text-on-surface">8,492</span>
+<span class="text-xs font-bold text-tertiary ml-1">↑ 12%</span>
+</div>
+<span class="material-symbols-outlined text-tertiary mt-2">task_alt</span>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-3xl shadow-sm border border-outline-variant/10 flex flex-col justify-between">
+<p class="text-sm font-semibold text-slate-500">正确率</p>
+<div class="mt-4">
+<span class="text-2xl font-black font-headline text-on-surface">76%</span>
+<span class="text-xs font-bold text-slate-400 ml-1">平稳</span>
+</div>
+<span class="material-symbols-outlined text-secondary mt-2">verified</span>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-3xl shadow-sm border border-outline-variant/10 flex flex-col justify-between">
+<p class="text-sm font-semibold text-slate-500">未作答</p>
+<div class="mt-4">
+<span class="text-2xl font-black font-headline text-on-surface">3,908</span>
+<span class="text-xs font-bold text-error ml-1">↓ 5%</span>
+</div>
+<span class="material-symbols-outlined text-error mt-2">pending_actions</span>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-3xl shadow-sm border border-outline-variant/10 flex flex-col justify-between">
+<p class="text-sm font-semibold text-slate-500">收藏题目</p>
+<div class="mt-4">
+<span class="text-2xl font-black font-headline text-on-surface">412</span>
+</div>
+<span class="material-symbols-outlined text-amber-500 mt-2" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</section>
+<!-- Review Plan Section -->
+<section class="bg-surface-container-low rounded-[2rem] p-8">
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container">event_note</span>
+</div>
+<h2 class="text-xl font-extrabold font-headline">今日复习计划</h2>
+</div>
+<button class="px-6 py-2 bg-primary text-on-primary rounded-full font-bold shadow-lg shadow-primary/30 hover:bg-primary-container transition-all">
+                        开始复习
+                    </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Plan Item 1 -->
+<div class="bg-surface-container-lowest p-6 rounded-2xl border-l-4 border-primary">
+<h4 class="font-bold text-on-surface mb-2">今日优先复习</h4>
+<p class="text-sm text-slate-500 leading-relaxed mb-4">根据遗忘曲线，今日有 45 道题目需要及时巩固。</p>
+<div class="flex items-center gap-2">
+<span class="px-3 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded-full text-xs font-bold">45 题</span>
+<span class="px-3 py-1 bg-surface-container-highest text-on-surface-variant rounded-full text-xs font-bold">预计 20min</span>
+</div>
+</div>
+<!-- Plan Item 2 -->
+<div class="bg-surface-container-lowest p-6 rounded-2xl border-l-4 border-error">
+<h4 class="font-bold text-on-surface mb-2">高频错题加强</h4>
+<p class="text-sm text-slate-500 leading-relaxed mb-4">马克思主义原理部分错误率较高，建议进行针对性突破。</p>
+<div class="flex items-center gap-2">
+<span class="px-3 py-1 bg-error-container text-on-error-container rounded-full text-xs font-bold">重点关注</span>
+<span class="px-3 py-1 bg-surface-container-highest text-on-surface-variant rounded-full text-xs font-bold">12 组考点</span>
+</div>
+</div>
+<!-- Plan Item 3 -->
+<div class="bg-surface-container-lowest p-6 rounded-2xl border-l-4 border-tertiary">
+<h4 class="font-bold text-on-surface mb-2">未作答题目补齐</h4>
+<p class="text-sm text-slate-500 leading-relaxed mb-4">毛概第四章节尚有 120 道新题未开始，今日建议推进 30 题。</p>
+<div class="flex items-center gap-2">
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-xs font-bold">每日新题</span>
+<span class="px-3 py-1 bg-surface-container-highest text-on-surface-variant rounded-full text-xs font-bold">30 题</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Filters & Subject Cards -->
+<section class="space-y-6">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-4 rounded-2xl shadow-sm border border-outline-variant/10">
+<div class="flex flex-wrap items-center gap-4">
+<div class="flex items-center gap-2 px-4 py-2 bg-surface-container-low rounded-xl border border-outline-variant/20">
+<span class="text-sm font-bold text-slate-400">学科:</span>
+<select class="bg-transparent border-none text-sm font-bold p-0 focus:ring-0">
+<option>全部学科</option>
+<option>马克思主义</option>
+<option>毛泽东思想</option>
+<option>英语</option>
+</select>
+</div>
+<div class="flex items-center gap-2 px-4 py-2 bg-surface-container-low rounded-xl border border-outline-variant/20">
+<span class="text-sm font-bold text-slate-400">题型:</span>
+<select class="bg-transparent border-none text-sm font-bold p-0 focus:ring-0">
+<option>全部题型</option>
+<option>单选题</option>
+<option>多选题</option>
+<option>简答题</option>
+</select>
+</div>
+<div class="flex items-center gap-2 px-4 py-2 bg-surface-container-low rounded-xl border border-outline-variant/20">
+<span class="text-sm font-bold text-slate-400">时间:</span>
+<select class="bg-transparent border-none text-sm font-bold p-0 focus:ring-0">
+<option>最近一周</option>
+<option>最近一月</option>
+<option>半年内</option>
+</select>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">grid_view</span>
+</button>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">list</span>
+</button>
+</div>
+</div>
+<!-- Subject Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Subject Card 1 -->
+<div class="group bg-surface-container-lowest p-8 rounded-[2rem] shadow-sm border border-outline-variant/10 hover:shadow-xl hover:shadow-primary/5 transition-all cursor-pointer relative overflow-hidden">
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-primary/5 rounded-full group-hover:scale-150 transition-transform"></div>
+<div class="relative z-10">
+<div class="w-14 h-14 bg-primary-fixed rounded-2xl flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary text-3xl">menu_book</span>
+</div>
+<h3 class="text-xl font-extrabold font-headline text-on-surface mb-6">马克思主义哲学</h3>
+<div class="grid grid-cols-3 gap-4">
+<div class="text-center p-3 bg-surface-container-low rounded-xl">
+<p class="text-[10px] font-bold text-slate-400 mb-1">章节</p>
+<p class="text-lg font-black font-headline text-primary">12</p>
+</div>
+<div class="text-center p-3 bg-surface-container-low rounded-xl">
+<p class="text-[10px] font-bold text-slate-400 mb-1">题目</p>
+<p class="text-lg font-black font-headline text-primary">840</p>
+</div>
+<div class="text-center p-3 bg-surface-container-low rounded-xl">
+<p class="text-[10px] font-bold text-slate-400 mb-1">考点</p>
+<p class="text-lg font-black font-headline text-primary">245</p>
+</div>
+</div>
+<div class="mt-8 flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200 overflow-hidden">
+<img alt="用户" class="w-full h-full object-cover" data-alt="Avatar snippet" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfhv-640Fo-aZKINxIlzj81cwka_6-o3mPSH86G1JAgyc0HVXbU9vsPOWe5tFJMxe_FBGTCR_jZpQEJ9GvZ7yPTnpHrj8SnhJA8uggX5mCEsh7_3jWHFFpG9hmlqqYZEKPAFkUf6ENnBADmVhxHanrI_92bE3Rq0pLw_EFu9bh5y38kjcAufh7hH4XwOOqpWHjV3Y-h78vaMZD5tTpaViAiHOSHWNGgw7GSwyVRmRZ4GBguT98o5dmfTWcWJeMQtrbA_IK8JYzMmNi"/>
+</div>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-300 overflow-hidden">
+<img alt="用户" class="w-full h-full object-cover" data-alt="Avatar snippet" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNY5kjNwST7L7wuQ07vV75zh_E0b6O1KB9dDW0mRg8kLOKp7jb9NCa2JFhxIvfln6WTr7DoY0YREjIRY0CBjeXyL56oF_ZBnmWnDAuY39L2kllNptWsVqjngLsXh8C90fS2eYZe2PW3Awm4RJAnDDBkMKm7GKD3WZ6tjqL8L93uG-JiexOc32_kUAaZ3m1dXbiWTcLAcdyl00hnVe1aDn7IUB34MaA4X_ovgG2x_nhm6GacUSv6gsGXm539ikkeJDWclNQXzHw9PhX"/>
+</div>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-400">+12</div>
+</div>
+<span class="text-xs font-bold text-slate-400 italic">85% 已掌握</span>
+</div>
+</div>
+</div>
+<!-- Subject Card 2 -->
+<div class="group bg-surface-container-lowest p-8 rounded-[2rem] shadow-sm border border-outline-variant/10 hover:shadow-xl hover:shadow-primary/5 transition-all cursor-pointer relative overflow-hidden">
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-secondary/5 rounded-full group-hover:scale-150 transition-transform"></div>
+<div class="relative z-10">
+<div class="w-14 h-14 bg-secondary-fixed rounded-2xl flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-secondary text-3xl">assignment</span>
+</div>
+<h3 class="text-xl font-extrabold font-headline text-on-surface mb-6">考试形式与大纲</h3>
+<div class="grid grid-cols-3 gap-4">
+<div class="text-center p-3 bg-surface-container-low rounded-xl">
+<p class="text-[10px] font-bold text-slate-400 mb-1">章节</p>
+<p class="text-lg font-black font-headline text-secondary">4</p>
+</div>
+<div class="text-center p-3 bg-surface-container-low rounded-xl">
+<p class="text-[10px] font-bold text-slate-400 mb-1">题目</p>
+<p class="text-lg font-black font-headline text-secondary">120</p>
+</div>
+<div class="text-center p-3 bg-surface-container-low rounded-xl">
+<p class="text-[10px] font-bold text-slate-400 mb-1">考点</p>
+<p class="text-lg font-black font-headline text-secondary">42</p>
+</div>
+</div>
+<div class="mt-8 flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200 overflow-hidden">
+<img alt="用户" class="w-full h-full object-cover" data-alt="Avatar snippet" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3FdTbisk7LR-yvN7VsAOLuW8Aco_d1mOXfo3UISiY3AOLe4vuuHb46yDbyPvfBwgtR3w0bG4v3n5OXSyikwPf2pOKYq9-AdbQpU2cRyZNhdXGJwPYK_HVo2ZzisYxG5RLKfdPYKKXCNTYxi_-UlxBTJk3d3IbsY85Kyz7DXbGJCCsjB8xJ18uoSoCjWXTtctO-nt98p7TMerZ33BrN4RV-IQktNgI6zQsPBxKS6YJbtIRAGMEooXIAG3ukI2WuJAPCbX8xZoS0mEV"/>
+</div>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-300 overflow-hidden">
+<img alt="用户" class="w-full h-full object-cover" data-alt="Avatar snippet" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOfaKErZTho-Da01Rg45xItMSafn59XDEtNCTxGMS80rHqLv-UtHHHLEPsczxN1ahK9tpUalnB_q-oImh9r0f8MFCwsqC4ztVLsa-RZk6RNzJUzpQirT2WRmq_-jEs8vdI5U0pCqV7DGIAjXC4G82fTqggUqBuAo4IAXg1ZCGY4e1Wxkq64GecQwS9-FLYksi8V8-ju9UeM0ZpRosfKIXunutiJZyiAQS9hVK8Y9ijEf67XiMRvsu5d2HlDJtQ2fflQgAI20K8ZN3n"/>
+</div>
+</div>
+<span class="text-xs font-bold text-slate-400 italic">40% 已掌握</span>
+</div>
+</div>
+</div>
+<!-- Subject Card 3 -->
+<div class="group bg-surface-container-lowest p-8 rounded-[2rem] shadow-sm border border-outline-variant/10 hover:shadow-xl hover:shadow-primary/5 transition-all cursor-pointer relative overflow-hidden">
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-tertiary/5 rounded-full group-hover:scale-150 transition-transform"></div>
+<div class="relative z-10">
+<div class="w-14 h-14 bg-tertiary-fixed rounded-2xl flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-tertiary text-3xl">history_edu</span>
+</div>
+<h3 class="text-xl font-extrabold font-headline text-on-surface mb-6">毛泽东思想概论</h3>
+<div class="grid grid-cols-3 gap-4">
+<div class="text-center p-3 bg-surface-container-low rounded-xl">
+<p class="text-[10px] font-bold text-slate-400 mb-1">章节</p>
+<p class="text-lg font-black font-headline text-tertiary">18</p>
+</div>
+<div class="text-center p-3 bg-surface-container-low rounded-xl">
+<p class="text-[10px] font-bold text-slate-400 mb-1">题目</p>
+<p class="text-lg font-black font-headline text-tertiary">1,120</p>
+</div>
+<div class="text-center p-3 bg-surface-container-low rounded-xl">
+<p class="text-[10px] font-bold text-slate-400 mb-1">考点</p>
+<p class="text-lg font-black font-headline text-tertiary">312</p>
+</div>
+</div>
+<div class="mt-8 flex items-center justify-between">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200 overflow-hidden">
+<img alt="用户" class="w-full h-full object-cover" data-alt="Avatar snippet" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrVbiV4uaJjj5WBKQVYySS8F_cbwq06EnbupCUTA9NWnUF_1r1uocimDSnaT6VgUE8n-XBi6Bf5gbURaEIFPlUNpqRl8z10lfSBtj9PnGvDP4a9Oap9iMSx8d28uhtoXDUM07yUygmWEQQLqrsGE24LhgsDfiD7NtPLr5nLluLA-O367xsx16Ooo66mm7gIxPfV0UU4h-9Zzww1eMg0oWK620xsKIWJ0AMlqRQnwxgjC0v8WpHhp5Bkibu_rYLpG48Pku5Lyrue8Ep"/>
+</div>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-300 overflow-hidden">
+<img alt="用户" class="w-full h-full object-cover" data-alt="Avatar snippet" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmMSwRyd4ng8o41XNaabrLYqIa7qJ-6vvCkn47nzs1SkugvCVZ_OZ3WkLwtfXDOHqqWSwIsH-fN6q_4KqdqsAGlHnWV6smBONlnEHsukni_zdOxVcnGuWTopsoAXYbOBw3ihHepvdYCKBwykPhvrHQ3BrQHwtiMhgtBzv9xAt1W7WdV_00TTAzBizzS1DJf-0nyp6VPUgtwHD3RMWAmdzkCW7sXsmwcGMiI9Y0tXjmx-jR_kDEs5jQhIWY5GDwd7cyf5bOPJPZ_LjD"/>
+</div>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-400">+5</div>
+</div>
+<span class="text-xs font-bold text-slate-400 italic">22% 已掌握</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Floating Action Button for Mobile Context -->
+<div class="md:hidden fixed bottom-6 right-6">
+<button class="w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</body></html>

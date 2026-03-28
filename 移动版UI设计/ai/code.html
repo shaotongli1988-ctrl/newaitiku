@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>专升本题库 - AI 进度</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "inverse-surface": "#2d3133",
+                        "on-secondary-container": "#005b78",
+                        "secondary-container": "#7ed4fd",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#001e2b",
+                        "surface-tint": "#1353d8",
+                        "outline-variant": "#c3c5d7",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-primary-fixed-variant": "#003dab",
+                        "surface-container-highest": "#e0e3e5",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "error": "#ba1a1a",
+                        "surface-container": "#eceef0",
+                        "surface-container-high": "#e6e8ea",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#002113",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#006f4b",
+                        "on-surface-variant": "#434654",
+                        "surface": "#f7f9fb",
+                        "inverse-primary": "#b5c4ff",
+                        "tertiary": "#005438",
+                        "on-tertiary-container": "#68f5b8",
+                        "tertiary-fixed": "#6ffbbe",
+                        "primary": "#003fb1",
+                        "on-secondary-fixed-variant": "#004d66",
+                        "secondary-fixed": "#c0e8ff",
+                        "secondary-fixed-dim": "#7bd1fa",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#eff1f3",
+                        "background": "#f7f9fb",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#1a56db",
+                        "on-background": "#191c1e",
+                        "on-primary-container": "#d4dcff",
+                        "outline": "#737686",
+                        "on-primary-fixed": "#00174d",
+                        "surface-dim": "#d8dadc",
+                        "secondary": "#006686",
+                        "on-surface": "#191c1e",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-bright": "#f7f9fb",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "surface-variant": "#e0e3e5",
+                        "on-primary": "#ffffff"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-layering {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #f2f4f6 100%);
+        }
+        .glass-card {
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.7);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+            color: #191c1e;
+        }
+        h1, h2, .font-headline {
+            font-family: 'Manrope', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen pb-24">
+<!-- Top App Bar (Shared Component) -->
+<header class="sticky top-0 w-full z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-[0_12px_40px_rgba(25,28,30,0.06)] flex items-center justify-between px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#003fb1] dark:text-blue-400 active:scale-95 duration-200 cursor-pointer" data-icon="arrow_back">arrow_back</span>
+<h1 class="font-['Manrope'] font-bold text-lg text-[#003fb1] dark:text-blue-400">专升本题库</h1>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-500 hover:bg-slate-100/50 p-2 rounded-full transition-colors" data-icon="search">search</span>
+<span class="material-symbols-outlined text-slate-500 hover:bg-slate-100/50 p-2 rounded-full transition-colors" data-icon="more_vert">more_vert</span>
+</div>
+</header>
+<main class="px-5 pt-4 space-y-8">
+<!-- Hero Progress Card -->
+<section class="relative overflow-hidden bg-primary-container rounded-[2rem] p-6 text-white shadow-xl">
+<div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+<div class="relative z-10 flex flex-col gap-6">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-on-primary-container/80 text-sm font-medium mb-1">AI 学习状态</p>
+<h2 class="text-3xl font-extrabold tracking-tight font-headline">继续努力，准本科生</h2>
+</div>
+<div class="bg-white/20 backdrop-blur-md rounded-2xl p-3 text-center min-w-[64px]">
+<span class="block text-2xl font-bold font-headline">12</span>
+<span class="text-[10px] uppercase tracking-widest opacity-80">Lv.等级</span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-4">
+<div class="flex flex-col">
+<span class="text-on-primary-container/70 text-xs mb-1">累计天数</span>
+<span class="text-xl font-bold font-headline">48 <small class="text-xs font-normal">Days</small></span>
+</div>
+<div class="flex flex-col">
+<span class="text-on-primary-container/70 text-xs mb-1">当前积分</span>
+<span class="text-xl font-bold font-headline">1,240</span>
+</div>
+<div class="flex flex-col">
+<span class="text-on-primary-container/70 text-xs mb-1">今日进度</span>
+<span class="text-xl font-bold font-headline">65%</span>
+</div>
+</div>
+<div class="w-full bg-white/20 h-2.5 rounded-full overflow-hidden">
+<div class="bg-white h-full w-[65%] rounded-full"></div>
+</div>
+<button class="w-full bg-white text-primary font-bold py-4 rounded-xl shadow-lg active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                    立即打卡
+                </button>
+</div>
+<div class="absolute bottom-0 right-0 opacity-10 pointer-events-none p-4">
+<span class="material-symbols-outlined text-[120px]" data-icon="school">school</span>
+</div>
+</section>
+<!-- Stats Grid -->
+<section class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-low p-5 rounded-2xl flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<div>
+<span class="block text-2xl font-bold font-headline">158</span>
+<span class="text-xs text-outline font-medium">预测分</span>
+</div>
+</div>
+<div class="bg-surface-container-low p-5 rounded-2xl flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined" data-icon="timer">timer</span>
+</div>
+<div>
+<span class="block text-2xl font-bold font-headline">2.4h</span>
+<span class="text-xs text-outline font-medium">今日时长</span>
+</div>
+</div>
+</section>
+<!-- Galaxy Map / Learning Insight (Simplified) -->
+<section class="space-y-4">
+<div class="flex justify-between items-end">
+<h3 class="text-xl font-bold font-headline">学习星系图谱</h3>
+<span class="text-primary text-sm font-semibold flex items-center">查看详情 <span class="material-symbols-outlined text-sm ml-1" data-icon="chevron_right">chevron_right</span></span>
+</div>
+<div class="relative h-48 bg-surface-container-lowest rounded-[2rem] flex items-center justify-center overflow-hidden">
+<div class="absolute inset-0 opacity-20 pointer-events-none">
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 border border-primary/20 rounded-full"></div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border border-primary/10 rounded-full"></div>
+</div>
+<!-- Points representing progress -->
+<div class="relative flex flex-col items-center">
+<div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center relative">
+<div class="w-10 h-10 bg-primary rounded-full shadow-[0_0_20px_rgba(0,63,177,0.4)] flex items-center justify-center text-white">
+<span class="material-symbols-outlined" data-icon="psychology" style="font-variation-settings: 'FILL' 1;">psychology</span>
+</div>
+<!-- Floating small nodes -->
+<div class="absolute -top-4 -right-8 px-3 py-1 bg-tertiary text-white text-[10px] rounded-full font-bold">英语 +5%</div>
+<div class="absolute -bottom-6 -left-10 px-3 py-1 bg-secondary text-white text-[10px] rounded-full font-bold">数学 稳固</div>
+</div>
+<p class="mt-4 text-xs text-outline text-center px-8">您的知识体系正向“英语语法”象限迅速扩张</p>
+</div>
+</div>
+</section>
+<!-- Todo List -->
+<section class="space-y-4">
+<div class="flex justify-between items-end">
+<h3 class="text-xl font-bold font-headline">待办任务清单</h3>
+<span class="text-outline text-sm">3项待完成</span>
+</div>
+<div class="space-y-3">
+<div class="bg-surface-container-lowest p-4 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
+<span class="material-symbols-outlined" data-icon="history_edu">history_edu</span>
+</div>
+<div>
+<p class="font-semibold text-sm">真题套卷演练</p>
+<p class="text-xs text-outline">剩余 120 分钟</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="radio_button_unchecked">radio_button_unchecked</span>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-500">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+</div>
+<div>
+<p class="font-semibold text-sm">核心词汇复习 (100词)</p>
+<p class="text-xs text-outline">完成度 0%</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="radio_button_unchecked">radio_button_unchecked</span>
+</div>
+<div class="bg-tertiary/5 p-4 rounded-xl flex items-center justify-between border-l-4 border-tertiary">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-tertiary/10 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<p class="font-semibold text-sm text-tertiary">每日错题重温</p>
+<p class="text-xs text-tertiary/70">已按时完成</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Nav Bar (Shared Component) -->
+<nav class="fixed bottom-0 w-full z-50 pb-safe bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.03)] flex justify-around items-center h-20 px-4 w-full">
+<div class="flex flex-col items-center justify-center text-[#003fb1] dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20 rounded-2xl px-3 py-1 active:scale-90 duration-200 transition-all">
+<span class="material-symbols-outlined" data-icon="trending_up" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+<span class="font-['Inter'] text-[11px] font-medium">进度</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-[#003fb1] transition-all active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span class="font-['Inter'] text-[11px] font-medium">题库</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-[#003fb1] transition-all active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="ink_eraser">ink_eraser</span>
+<span class="font-['Inter'] text-[11px] font-medium">错题</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-[#003fb1] transition-all active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="quiz">quiz</span>
+<span class="font-['Inter'] text-[11px] font-medium">练习</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-[#003fb1] transition-all active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-['Inter'] text-[11px] font-medium">消息</span>
+</div>
+</nav>
+<!-- Floating Action Button (FAB) - Logic Filter applied -->
+<!-- Suppressed based on Task-Focused design requirements if needed, but here it acts as the "Record/Action" button for quick learning -->
+<div class="fixed bottom-24 right-6 z-40">
+<button class="w-14 h-14 bg-primary text-white rounded-full shadow-[0_8px_25px_rgba(0,63,177,0.3)] flex items-center justify-center active:scale-90 transition-all">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+</div>
+</body></html>
