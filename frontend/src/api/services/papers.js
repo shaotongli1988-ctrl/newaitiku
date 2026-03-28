@@ -187,13 +187,17 @@ function normalize_auto_paper_payload(data) {
 
 function normalize_ai_generate_payload(data) {
   assert_plain_object(data, 'PaperAiGenerateModel')
-  const subjectId = data.subjectId
-  const examCategoryCode = data.examCategoryCode
-  const jointExamGroupCode = data.jointExamGroupCode
-  const subjectCode = data.subjectCode
-  const policyVersion = data.policyVersion
-  const normalizedClassIds = normalize_optional_string_id_list(data.classIds, 'classIds')
-  const normalizedKnowledgeScope = normalize_optional_string_id_list(data.knowledgeScope, 'knowledgeScope')
+  const subjectId = data.subjectId ?? data.subject_id
+  const examCategoryCode = data.examCategoryCode ?? data.exam_category_code
+  const jointExamGroupCode = data.jointExamGroupCode ?? data.joint_exam_group_code
+  const subjectCode = data.subjectCode ?? data.subject_code
+  const policyVersion = data.policyVersion ?? data.policy_version
+  const rawClassIds = data.classIds ?? data.class_ids
+  const rawKnowledgeScope = data.knowledgeScope ?? data.knowledge_scope
+  const rawTotalCount = data.totalCount ?? data.total_count
+  const rawDifficulty = data.difficulty ?? data.difficulty_level
+  const normalizedClassIds = normalize_optional_string_id_list(rawClassIds, 'classIds')
+  const normalizedKnowledgeScope = normalize_optional_string_id_list(rawKnowledgeScope, 'knowledgeScope')
   return {
     policyVersion: normalize_non_empty_string(policyVersion ?? POLICY_VERSION, 'policyVersion', 1, 64),
     subjectId: normalize_optional_string(subjectId, 'subjectId', 128) ?? '',
@@ -201,8 +205,8 @@ function normalize_ai_generate_payload(data) {
     jointExamGroupCode: normalize_optional_string(jointExamGroupCode, 'jointExamGroupCode', 64) ?? '',
     subjectCode: normalize_optional_string(subjectCode, 'subjectCode', 64) ?? '',
     classIds: normalizedClassIds === undefined ? [] : normalizedClassIds,
-    totalCount: normalize_integer(data.totalCount, 'totalCount', 10, 50),
-    difficulty: normalize_integer(data.difficulty, 'difficulty', 1, 5),
+    totalCount: normalize_integer(rawTotalCount, 'totalCount', 10, 50),
+    difficulty: normalize_integer(rawDifficulty, 'difficulty', 1, 5),
     knowledgeScope: normalizedKnowledgeScope === undefined ? [] : normalizedKnowledgeScope,
   }
 }

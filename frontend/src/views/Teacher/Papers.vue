@@ -626,14 +626,14 @@ async function handleAiGenerate(payload) {
 
   try {
     const response = await aiGeneratePaper({
-      subject_id: subjectId,
-      exam_category_code: examCategoryCode,
-      joint_exam_group_code: jointExamGroupCode,
-      subject_code: subjectCode,
-      class_ids: classIds,
-      total_count: totalCount,
-      difficulty_level: difficultyLevel,
-      knowledge_scope: knowledgeScope,
+      subjectId,
+      examCategoryCode,
+      jointExamGroupCode,
+      subjectCode,
+      classIds,
+      totalCount,
+      difficulty: difficultyLevel,
+      knowledgeScope,
     })
     stopAiProgress()
     aiGenerationProgress.value = 100

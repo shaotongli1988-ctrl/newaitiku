@@ -417,3 +417,130 @@ INFO:     127.0.0.1:60027 - "GET /api/question-bank/teacher/error-book/questions
 INFO:     127.0.0.1:55754 - "GET /api/question-bank/teacher/error-book/questions?classId=LITERATURE_11&studentUserId=student-002&subjectCodes=&page=1&size=200&knowledgePathNodeId=&chapterCode=&pointCode=&knowledgeId= HTTP/1.1" 422 Unprocessable Content
 INFO:     127.0.0.1:55753 - "GET /api/question-bank/teacher/error-book/summary?classId=LITERATURE_11&studentUserId=student-002&subjectCodes= HTTP/1.1" 422 Unprocessable Content
 INFO:     127.0.0.1:55752 - "GET /api/question-bank/teacher/error-book/class-overview?classId=LITERATURE_11&subjectCodes= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61750 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58098 - "GET /api/question-bank/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58101 - "GET /api/question-bank/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62995 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62996 - "GET /api/question-bank/questions?page=1&size=1&status=REVIEW_PENDING HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62997 - "GET /api/question-bank/papers/overview HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62998 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62999 - "GET /api/question-bank/analytics/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63315 - "GET /api/question-bank/professional-tree HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63314 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63316 - "GET /api/question-bank/tasks?page=1&size=50&type=QUESTION_BATCH_PARSE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63317 - "GET /api/question-bank/questions?page=1&size=10&questionIds=&keyword=&examCategoryCode=&jointExamGroupCode=&subjectCode= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59436 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58261 - "GET /api/question-bank/knowledge/tree?status=&examCategoryCode=&jointExamGroupCode=&subjectCode=&policyVersion=HB_ZSB_2026 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59437 - "GET /api/question-bank/content/baseline HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64821 - "GET /api/question-bank/papers/overview HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64820 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64822 - "GET /api/question-bank/papers/templates HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64823 - "GET /api/question-bank/subjects HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64824 - "GET /api/question-bank/professional-tree HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64825 - "GET /api/user/my-classes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64519 - "GET /api/question-bank/questions?page=1&size=1&status=REVIEW_PENDING HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64518 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49954 - "GET /api/question-bank/papers/overview HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57079 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55849 - "GET /api/question-bank/analytics/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57871 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57872 - "GET /api/question-bank/professional-tree HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51536 - "GET /api/question-bank/tasks?page=1&size=50&type=QUESTION_BATCH_PARSE HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51537 - "GET /api/question-bank/questions?page=1&size=10&questionIds=&keyword=&examCategoryCode=&jointExamGroupCode=&subjectCode= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52616 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52617 - "GET /api/question-bank/questions?page=1&size=1&status=REVIEW_PENDING HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59804 - "GET /api/question-bank/papers/overview HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56264 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60034 - "GET /api/question-bank/analytics/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53764 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53763 - "GET /api/question-bank/professional-tree HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58392 - "GET /api/question-bank/knowledge/tree?status=&examCategoryCode=&jointExamGroupCode=&subjectCode=&policyVersion=HB_ZSB_2026 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53109 - "GET /api/question-bank/knowledge/tree?status=&examCategoryCode=SCIENCE_ENGINEERING&jointExamGroupCode=SCIENCE_ENGINEERING_3&subjectCode=INFO_TECH_INTRO&policyVersion=HB_ZSB_2026 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55205 - "GET /api/question-bank/knowledge/VOCAL_MUSIC_COMPREHENSIVE-n00004 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56526 - "GET /api/question-bank/knowledge/INFO_TECH_INTRO-n00004 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60035 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60034 - "GET /api/question-bank/user/my-classes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62155 - "GET /api/question-bank/teacher/error-book/class-overview?classId=LITERATURE_11&subjectCodes= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62154 - "GET /api/question-bank/teacher/error-book/students HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59221 - "GET /api/question-bank/teacher/error-book/students HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60611 - "GET /api/question-bank/teacher/error-book/summary?classId=LITERATURE_11&studentUserId=student-002&subjectCodes= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:60612 - "GET /api/question-bank/teacher/error-book/questions?classId=LITERATURE_11&studentUserId=student-002&subjectCodes=&page=1&size=200&knowledgePathNodeId=&chapterCode=&pointCode=&knowledgeId= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:50461 - "GET /api/question-bank/teacher/error-book/class-overview?classId=LITERATURE_11&subjectCodes= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57927 - "GET /api/question-bank/teacher/error-book/summary?classId=LITERATURE_11&studentUserId=student-002&subjectCodes= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:52896 - "GET /api/question-bank/teacher/error-book/questions?classId=LITERATURE_11&studentUserId=student-002&subjectCodes=&page=1&size=200&knowledgePathNodeId=&chapterCode=&pointCode=&knowledgeId= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:64554 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52196 - "GET /api/question-bank/professional-tree HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61457 - "GET /api/question-bank/knowledge/tree?status=&examCategoryCode=&jointExamGroupCode=&subjectCode=&policyVersion=HB_ZSB_2026 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63673 - "GET /api/question-bank/knowledge/tree?status=&examCategoryCode=SCIENCE_ENGINEERING&jointExamGroupCode=SCIENCE_ENGINEERING_3&subjectCode=INFO_TECH_INTRO&policyVersion=HB_ZSB_2026 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52979 - "GET /api/question-bank/knowledge/VOCAL_MUSIC_COMPREHENSIVE-n00004 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62425 - "GET /api/question-bank/knowledge/INFO_TECH_INTRO-n00004 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56859 - "GET /api/question-bank/user/my-classes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56858 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54236 - "GET /api/question-bank/teacher/error-book/class-overview?classId=LITERATURE_11&subjectCodes= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54235 - "GET /api/question-bank/teacher/error-book/students HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50620 - "GET /api/question-bank/teacher/error-book/students HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63859 - "GET /api/question-bank/teacher/error-book/summary?classId=LITERATURE_11&studentUserId=student-002&subjectCodes= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:63860 - "GET /api/question-bank/teacher/error-book/questions?classId=LITERATURE_11&studentUserId=student-002&subjectCodes=&page=1&size=200&knowledgePathNodeId=&chapterCode=&pointCode=&knowledgeId= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:53787 - "GET /api/question-bank/teacher/error-book/class-overview?classId=LITERATURE_11&subjectCodes= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58919 - "GET /api/question-bank/teacher/error-book/summary?classId=LITERATURE_11&studentUserId=student-002&subjectCodes= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:58920 - "GET /api/question-bank/teacher/error-book/questions?classId=LITERATURE_11&studentUserId=student-002&subjectCodes=&page=1&size=200&knowledgePathNodeId=&chapterCode=&pointCode=&knowledgeId= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:61851 - "GET /api/question-bank/questions?page=1&size=1&status=REVIEW_PENDING HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61850 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65231 - "GET /api/question-bank/papers/overview HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57791 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61624 - "GET /api/question-bank/analytics/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53454 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53455 - "GET /api/question-bank/user/my-classes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49967 - "GET /api/question-bank/teacher/error-book/students HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49968 - "GET /api/question-bank/teacher/error-book/class-overview?classId=LITERATURE_11&subjectCodes= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64379 - "GET /api/question-bank/teacher/error-book/students HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54386 - "GET /api/question-bank/teacher/error-book/questions?classId=LITERATURE_11&studentUserId=student-002&subjectCodes=&page=1&size=200&knowledgePathNodeId=&chapterCode=&pointCode=&knowledgeId= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:54385 - "GET /api/question-bank/teacher/error-book/summary?classId=LITERATURE_11&studentUserId=student-002&subjectCodes= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:55630 - "GET /api/question-bank/teacher/error-book/questions?classId=LITERATURE_11&studentUserId=student-002&subjectCodes=&page=1&size=200&knowledgePathNodeId=&chapterCode=&pointCode=&knowledgeId= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:55629 - "GET /api/question-bank/teacher/error-book/class-overview?classId=LITERATURE_11&subjectCodes= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57446 - "GET /api/question-bank/teacher/error-book/summary?classId=LITERATURE_11&studentUserId=student-002&subjectCodes= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:60961 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60962 - "GET /api/question-bank/messages/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60963 - "GET /api/question-bank/messages?page=1&size=100&category=&readStatus= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60964 - "GET /api/question-bank/messages/send-history?page=1&size=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58119 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61577 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61578 - "GET /api/question-bank/user/my-classes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62862 - "GET /api/question-bank/teacher/error-book/students HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59012 - "GET /api/question-bank/teacher/error-book/class-overview?classId=LITERATURE_11&subjectCodes= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59013 - "GET /api/question-bank/teacher/error-book/summary?classId=LITERATURE_11&studentUserId=student-002&subjectCodes= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:59014 - "GET /api/question-bank/teacher/error-book/questions?classId=LITERATURE_11&studentUserId=student-002&subjectCodes=&page=1&size=200&knowledgePathNodeId=&chapterCode=&pointCode=&knowledgeId= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:53735 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53736 - "GET /api/question-bank/questions?page=1&size=1&status=REVIEW_PENDING HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55660 - "GET /api/question-bank/papers/overview HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64131 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64718 - "GET /api/question-bank/analytics/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59872 - "GET /api/question-bank/messages?page=1&size=100&category=&readStatus= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59871 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59873 - "GET /api/question-bank/messages/settings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59874 - "GET /api/question-bank/messages/send-history?page=1&size=10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65261 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53302 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53303 - "GET /api/question-bank/user/my-classes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65423 - "GET /api/question-bank/teacher/error-book/students HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65424 - "GET /api/question-bank/teacher/error-book/class-overview?classId=LITERATURE_11&subjectCodes= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53921 - "GET /api/question-bank/teacher/error-book/students HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60799 - "GET /api/question-bank/teacher/error-book/summary?classId=LITERATURE_11&studentUserId=student-002&subjectCodes= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:60800 - "GET /api/question-bank/teacher/error-book/questions?classId=LITERATURE_11&studentUserId=student-002&subjectCodes=&page=1&size=200&knowledgePathNodeId=&chapterCode=&pointCode=&knowledgeId= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:51887 - "GET /api/question-bank/teacher/error-book/class-overview?classId=LITERATURE_11&subjectCodes= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65386 - "GET /api/question-bank/teacher/error-book/questions?classId=LITERATURE_11&studentUserId=student-002&subjectCodes=&page=1&size=200&knowledgePathNodeId=&chapterCode=&pointCode=&knowledgeId= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:65387 - "GET /api/question-bank/teacher/error-book/summary?classId=LITERATURE_11&studentUserId=student-002&subjectCodes= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:63971 - "GET /api/question-bank/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49712 - "GET /api/question-bank/user/my-classes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49713 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49714 - "GET /api/question-bank/teacher/error-book/students HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49717 - "GET /api/question-bank/teacher/error-book/questions?classId=LITERATURE_11&studentUserId=student-002&subjectCodes=&page=1&size=200&knowledgePathNodeId=&chapterCode=&pointCode=&knowledgeId= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:49716 - "GET /api/question-bank/teacher/error-book/summary?classId=LITERATURE_11&studentUserId=student-002&subjectCodes= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:49715 - "GET /api/question-bank/teacher/error-book/class-overview?classId=LITERATURE_11&subjectCodes= HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60908 - "GET /api/question-bank/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57464 - "GET /api/question-bank/messages/unread-count HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57463 - "GET /api/question-bank/user/my-classes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57465 - "GET /api/question-bank/teacher/error-book/students HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57468 - "GET /api/question-bank/teacher/error-book/questions?classId=LITERATURE_11&studentUserId=student-002&subjectCodes=&page=1&size=200&knowledgePathNodeId=&chapterCode=&pointCode=&knowledgeId= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:57467 - "GET /api/question-bank/teacher/error-book/summary?classId=LITERATURE_11&studentUserId=student-002&subjectCodes= HTTP/1.1" 422 Unprocessable Content
+INFO:     127.0.0.1:57466 - "GET /api/question-bank/teacher/error-book/class-overview?classId=LITERATURE_11&subjectCodes= HTTP/1.1" 200 OK

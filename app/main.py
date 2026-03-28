@@ -2628,7 +2628,8 @@ def create_app(db_path: Union[Path, str] = DEFAULT_DB_PATH) -> FastAPI:
 
     @app.get("/api/question-bank/teacher/error-book/summary", response_model=BaseResponse)
     async def teacher_error_book_summary(
-        student_user_id: str = Query(default="", alias="userId"),
+        student_user_id: str = Query(default="", alias="studentUserId"),
+        legacy_user_id: str = Query(default="", alias="userId"),
         subject_code: str = Query(default="", alias="subjectCode"),
         subject_codes: str = Query(default="", alias="subjectCodes"),
         actor: Actor = Depends(get_actor),
@@ -2636,10 +2637,11 @@ def create_app(db_path: Union[Path, str] = DEFAULT_DB_PATH) -> FastAPI:
     ):
         require_analytics_operator(actor)
         ensure_actor_ready(actor, svc, "analytics:view")
+        normalized_student_user_id = student_user_id.strip() or legacy_user_id.strip()
         return success(
             svc.get_teacher_error_book_summary(
                 {
-                    "studentUserId": student_user_id.strip(),
+                    "studentUserId": normalized_student_user_id,
                     "subjectCode": subject_code.strip(),
                     "subjectCodes": subject_codes.strip(),
                 },
@@ -2692,7 +2694,8 @@ def create_app(db_path: Union[Path, str] = DEFAULT_DB_PATH) -> FastAPI:
     async def teacher_error_book_questions(
         page: int = Query(default=1, ge=1),
         size: int = Query(default=100, ge=1, le=200),
-        student_user_id: str = Query(default="", alias="userId"),
+        student_user_id: str = Query(default="", alias="studentUserId"),
+        legacy_user_id: str = Query(default="", alias="userId"),
         subject_code: str = Query(default="", alias="subjectCode"),
         subject_codes: str = Query(default="", alias="subjectCodes"),
         knowledgeId: str = Query(default="", alias="knowledgeId"),
@@ -2705,9 +2708,10 @@ def create_app(db_path: Union[Path, str] = DEFAULT_DB_PATH) -> FastAPI:
     ):
         require_analytics_operator(actor)
         ensure_actor_ready(actor, svc, "analytics:view")
+        normalized_student_user_id = student_user_id.strip() or legacy_user_id.strip()
         items, total = svc.list_teacher_wrong_book_questions(
             {
-                "studentUserId": student_user_id.strip(),
+                "studentUserId": normalized_student_user_id,
                 "subjectCode": subject_code.strip(),
                 "subjectCodes": subject_codes.strip(),
                 "knowledgeId": knowledgeId.strip(),
@@ -2725,17 +2729,19 @@ def create_app(db_path: Union[Path, str] = DEFAULT_DB_PATH) -> FastAPI:
     @app.get("/api/question-bank/teacher/error-book/questions/{questionId}/similar", response_model=BaseResponse)
     async def teacher_error_book_similar_questions(
         questionId: str,
-        student_user_id: str = Query(default="", alias="userId"),
+        student_user_id: str = Query(default="", alias="studentUserId"),
+        legacy_user_id: str = Query(default="", alias="userId"),
         actor: Actor = Depends(get_actor),
         svc: QuestionBankService = Depends(service),
     ):
         require_analytics_operator(actor)
         ensure_actor_ready(actor, svc, "analytics:view")
+        normalized_student_user_id = student_user_id.strip() or legacy_user_id.strip()
         return success(
             svc.list_teacher_similar_wrong_book_questions(
                 questionId,
                 {
-                    "studentUserId": student_user_id.strip(),
+                    "studentUserId": normalized_student_user_id,
                 },
                 actor,
             )
