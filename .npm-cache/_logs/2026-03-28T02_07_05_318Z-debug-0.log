@@ -1,0 +1,379 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.9.0
+2 info using node@v24.14.0
+3 silly config load:file:C:\Program Files\nodejs\node_modules\npm\npmrc
+4 silly config load:file:D:\aitiku\frontend\.npmrc
+5 silly config load:file:C:\Users\Administrator\.npmrc
+6 silly config load:file:C:\Users\Administrator\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm ci
+8 verbose argv "ci" "--no-audit" "--no-fund"
+9 verbose logfile logs-max:10 dir:D:\aitiku\.npm-cache\_logs\2026-03-28T02_07_05_318Z-
+10 verbose logfile D:\aitiku\.npm-cache\_logs\2026-03-28T02_07_05_318Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+13 silly idealTree buildDeps
+14 silly reify moves {}
+15 http cache zrender@https://registry.npmjs.org/zrender/-/zrender-5.6.1.tgz 1ms (cache hit)
+16 http cache yargs-parser@https://registry.npmjs.org/yargs-parser/-/yargs-parser-18.1.3.tgz 0ms (cache hit)
+17 http cache y18n@https://registry.npmjs.org/y18n/-/y18n-4.0.3.tgz 0ms (cache hit)
+18 http cache wrap-ansi@https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-6.2.0.tgz 0ms (cache hit)
+19 http cache yargs@https://registry.npmjs.org/yargs/-/yargs-15.4.1.tgz 0ms (cache hit)
+20 http cache why-is-node-running@https://registry.npmjs.org/why-is-node-running/-/why-is-node-running-2.3.0.tgz 0ms (cache hit)
+21 http cache which-module@https://registry.npmjs.org/which-module/-/which-module-2.0.1.tgz 0ms (cache hit)
+22 http cache webpack-virtual-modules@https://registry.npmjs.org/webpack-virtual-modules/-/webpack-virtual-modules-0.6.2.tgz 0ms (cache hit)
+23 http cache vue-router@https://registry.npmjs.org/vue-router/-/vue-router-4.6.4.tgz 0ms (cache hit)
+24 http cache vue@https://registry.npmjs.org/vue/-/vue-3.5.30.tgz 0ms (cache hit)
+25 http cache vitest@https://registry.npmjs.org/vitest/-/vitest-4.1.0.tgz 0ms (cache hit)
+26 http cache vite@https://registry.npmjs.org/vite/-/vite-8.0.0.tgz 0ms (cache hit)
+27 http cache unplugin-vue-components@https://registry.npmjs.org/unplugin-vue-components/-/unplugin-vue-components-31.0.0.tgz 0ms (cache hit)
+28 http cache unplugin-utils@https://registry.npmjs.org/unplugin-utils/-/unplugin-utils-0.3.1.tgz 0ms (cache hit)
+29 http cache ufo@https://registry.npmjs.org/ufo/-/ufo-1.6.3.tgz 0ms (cache hit)
+30 http cache unplugin@https://registry.npmjs.org/unplugin/-/unplugin-2.3.11.tgz 0ms (cache hit)
+31 http cache tinyrainbow@https://registry.npmjs.org/tinyrainbow/-/tinyrainbow-3.1.0.tgz 0ms (cache hit)
+32 http cache tinyexec@https://registry.npmjs.org/tinyexec/-/tinyexec-1.0.4.tgz 0ms (cache hit)
+33 http cache tinyglobby@https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.15.tgz 0ms (cache hit)
+34 http cache strip-ansi@https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz 0ms (cache hit)
+35 http cache string-width@https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz 0ms (cache hit)
+36 http cache superjson@https://registry.npmjs.org/superjson/-/superjson-2.2.6.tgz 0ms (cache hit)
+37 http cache speakingurl@https://registry.npmjs.org/speakingurl/-/speakingurl-14.0.1.tgz 0ms (cache hit)
+38 http cache tinybench@https://registry.npmjs.org/tinybench/-/tinybench-2.9.0.tgz 0ms (cache hit)
+39 http cache std-env@https://registry.npmjs.org/std-env/-/std-env-4.0.0.tgz 0ms (cache hit)
+40 http cache source-map-js@https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz 0ms (cache hit)
+41 http cache set-blocking@https://registry.npmjs.org/set-blocking/-/set-blocking-2.0.0.tgz 0ms (cache hit)
+42 http cache stackback@https://registry.npmjs.org/stackback/-/stackback-0.0.2.tgz 0ms (cache hit)
+43 http cache rolldown@https://registry.npmjs.org/rolldown/-/rolldown-1.0.0-rc.9.tgz 0ms (cache hit)
+44 http cache siginfo@https://registry.npmjs.org/siginfo/-/siginfo-2.0.0.tgz 0ms (cache hit)
+45 http cache require-main-filename@https://registry.npmjs.org/require-main-filename/-/require-main-filename-2.0.0.tgz 0ms (cache hit)
+46 http cache require-directory@https://registry.npmjs.org/require-directory/-/require-directory-2.1.1.tgz 0ms (cache hit)
+47 http cache readdirp@https://registry.npmjs.org/readdirp/-/readdirp-5.0.0.tgz 0ms (cache hit)
+48 http cache qrcode@https://registry.npmjs.org/qrcode/-/qrcode-1.5.4.tgz 0ms (cache hit)
+49 http cache postcss@https://registry.npmjs.org/postcss/-/postcss-8.5.8.tgz 0ms (cache hit)
+50 http cache pngjs@https://registry.npmjs.org/pngjs/-/pngjs-5.0.0.tgz 0ms (cache hit)
+51 http cache rfdc@https://registry.npmjs.org/rfdc/-/rfdc-1.4.1.tgz 0ms (cache hit)
+52 http cache proxy-from-env@https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-1.1.0.tgz 0ms (cache hit)
+53 http cache picomatch@https://registry.npmjs.org/picomatch/-/picomatch-4.0.3.tgz 0ms (cache hit)
+54 http cache quansync@https://registry.npmjs.org/quansync/-/quansync-0.2.11.tgz 0ms (cache hit)
+55 http cache picocolors@https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz 0ms (cache hit)
+56 http cache pinia@https://registry.npmjs.org/pinia/-/pinia-3.0.4.tgz 0ms (cache hit)
+57 http cache pathe@https://registry.npmjs.org/pathe/-/pathe-2.0.3.tgz 0ms (cache hit)
+58 http cache perfect-debounce@https://registry.npmjs.org/perfect-debounce/-/perfect-debounce-1.0.0.tgz 0ms (cache hit)
+59 http cache p-try@https://registry.npmjs.org/p-try/-/p-try-2.2.0.tgz 0ms (cache hit)
+60 http cache path-exists@https://registry.npmjs.org/path-exists/-/path-exists-4.0.0.tgz 0ms (cache hit)
+61 http cache p-locate@https://registry.npmjs.org/p-locate/-/p-locate-4.1.0.tgz 0ms (cache hit)
+62 http cache obug@https://registry.npmjs.org/obug/-/obug-2.1.1.tgz 0ms (cache hit)
+63 http cache p-limit@https://registry.npmjs.org/p-limit/-/p-limit-2.3.0.tgz 0ms (cache hit)
+64 http cache nprogress@https://registry.npmjs.org/nprogress/-/nprogress-0.2.0.tgz 0ms (cache hit)
+65 http cache mlly@https://registry.npmjs.org/mlly/-/mlly-1.8.1.tgz 0ms (cache hit)
+66 http cache mitt@https://registry.npmjs.org/mitt/-/mitt-3.0.1.tgz 0ms (cache hit)
+67 http cache pkg-types@https://registry.npmjs.org/pkg-types/-/pkg-types-2.3.0.tgz 0ms (cache hit)
+68 http cache mime-types@https://registry.npmjs.org/mime-types/-/mime-types-2.1.35.tgz 0ms (cache hit)
+69 http cache mime-db@https://registry.npmjs.org/mime-db/-/mime-db-1.52.0.tgz 0ms (cache hit)
+70 http cache magic-string@https://registry.npmjs.org/magic-string/-/magic-string-0.30.21.tgz 0ms (cache hit)
+71 http cache math-intrinsics@https://registry.npmjs.org/math-intrinsics/-/math-intrinsics-1.1.0.tgz 0ms (cache hit)
+72 http cache locate-path@https://registry.npmjs.org/locate-path/-/locate-path-5.0.0.tgz 0ms (cache hit)
+73 http cache local-pkg@https://registry.npmjs.org/local-pkg/-/local-pkg-1.1.2.tgz 0ms (cache hit)
+74 http cache lightningcss@https://registry.npmjs.org/lightningcss/-/lightningcss-1.32.0.tgz 0ms (cache hit)
+75 http cache hookable@https://registry.npmjs.org/hookable/-/hookable-5.5.3.tgz 0ms (cache hit)
+76 http cache nanoid@https://registry.npmjs.org/nanoid/-/nanoid-3.3.11.tgz 0ms (cache hit)
+77 http cache hasown@https://registry.npmjs.org/hasown/-/hasown-2.0.2.tgz 0ms (cache hit)
+78 http cache lightningcss-win32-x64-msvc@https://registry.npmjs.org/lightningcss-win32-x64-msvc/-/lightningcss-win32-x64-msvc-1.32.0.tgz 0ms (cache hit)
+79 http cache is-what@https://registry.npmjs.org/is-what/-/is-what-5.5.0.tgz 0ms (cache hit)
+80 http cache has-tostringtag@https://registry.npmjs.org/has-tostringtag/-/has-tostringtag-1.0.2.tgz 0ms (cache hit)
+81 http cache gopd@https://registry.npmjs.org/gopd/-/gopd-1.2.0.tgz 0ms (cache hit)
+82 http cache get-proto@https://registry.npmjs.org/get-proto/-/get-proto-1.0.1.tgz 0ms (cache hit)
+83 http cache get-intrinsic@https://registry.npmjs.org/get-intrinsic/-/get-intrinsic-1.3.0.tgz 0ms (cache hit)
+84 http cache has-symbols@https://registry.npmjs.org/has-symbols/-/has-symbols-1.1.0.tgz 0ms (cache hit)
+85 http cache get-caller-file@https://registry.npmjs.org/get-caller-file/-/get-caller-file-2.0.5.tgz 0ms (cache hit)
+86 http cache follow-redirects@https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.15.11.tgz 0ms (cache hit)
+87 http cache form-data@https://registry.npmjs.org/form-data/-/form-data-4.0.5.tgz 0ms (cache hit)
+88 http cache function-bind@https://registry.npmjs.org/function-bind/-/function-bind-1.1.2.tgz 0ms (cache hit)
+89 http cache find-up@https://registry.npmjs.org/find-up/-/find-up-4.1.0.tgz 0ms (cache hit)
+90 http cache fdir@https://registry.npmjs.org/fdir/-/fdir-6.5.0.tgz 0ms (cache hit)
+91 http cache exsolve@https://registry.npmjs.org/exsolve/-/exsolve-1.0.8.tgz 0ms (cache hit)
+92 http cache expect-type@https://registry.npmjs.org/expect-type/-/expect-type-1.3.0.tgz 0ms (cache hit)
+93 http cache es-set-tostringtag@https://registry.npmjs.org/es-set-tostringtag/-/es-set-tostringtag-2.1.0.tgz 0ms (cache hit)
+94 http cache esbuild@https://registry.npmjs.org/esbuild/-/esbuild-0.27.4.tgz 0ms (cache hit)
+95 http cache is-fullwidth-code-point@https://registry.npmjs.org/is-fullwidth-code-point/-/is-fullwidth-code-point-3.0.0.tgz 0ms (cache hit)
+96 http cache es-object-atoms@https://registry.npmjs.org/es-object-atoms/-/es-object-atoms-1.1.1.tgz 0ms (cache hit)
+97 http cache es-module-lexer@https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-2.0.0.tgz 0ms (cache hit)
+98 http cache es-errors@https://registry.npmjs.org/es-errors/-/es-errors-1.3.0.tgz 0ms (cache hit)
+99 http cache entities@https://registry.npmjs.org/entities/-/entities-7.0.1.tgz 0ms (cache hit)
+100 http cache es-define-property@https://registry.npmjs.org/es-define-property/-/es-define-property-1.0.1.tgz 0ms (cache hit)
+101 http cache emoji-regex@https://registry.npmjs.org/emoji-regex/-/emoji-regex-8.0.0.tgz 0ms (cache hit)
+102 http cache dunder-proto@https://registry.npmjs.org/dunder-proto/-/dunder-proto-1.0.1.tgz 0ms (cache hit)
+103 http cache dijkstrajs@https://registry.npmjs.org/dijkstrajs/-/dijkstrajs-1.0.3.tgz 0ms (cache hit)
+104 http cache estree-walker@https://registry.npmjs.org/estree-walker/-/estree-walker-2.0.2.tgz 0ms (cache hit)
+105 http cache detect-libc@https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz 0ms (cache hit)
+106 http cache decamelize@https://registry.npmjs.org/decamelize/-/decamelize-1.2.0.tgz 0ms (cache hit)
+107 http cache d3-zoom@https://registry.npmjs.org/d3-zoom/-/d3-zoom-3.0.0.tgz 0ms (cache hit)
+108 http cache d3-transition@https://registry.npmjs.org/d3-transition/-/d3-transition-3.0.1.tgz 0ms (cache hit)
+109 http cache d3-selection@https://registry.npmjs.org/d3-selection/-/d3-selection-3.0.0.tgz 0ms (cache hit)
+110 http cache echarts@https://registry.npmjs.org/echarts/-/echarts-5.6.0.tgz 0ms (cache hit)
+111 http cache d3-timer@https://registry.npmjs.org/d3-timer/-/d3-timer-3.0.1.tgz 0ms (cache hit)
+112 http cache d3-interpolate@https://registry.npmjs.org/d3-interpolate/-/d3-interpolate-3.0.1.tgz 0ms (cache hit)
+113 http cache d3-ease@https://registry.npmjs.org/d3-ease/-/d3-ease-3.0.1.tgz 0ms (cache hit)
+114 http cache d3-drag@https://registry.npmjs.org/d3-drag/-/d3-drag-3.0.0.tgz 0ms (cache hit)
+115 http cache d3-dispatch@https://registry.npmjs.org/d3-dispatch/-/d3-dispatch-3.0.1.tgz 0ms (cache hit)
+116 http cache d3-color@https://registry.npmjs.org/d3-color/-/d3-color-3.1.0.tgz 0ms (cache hit)
+117 http cache csstype@https://registry.npmjs.org/csstype/-/csstype-3.2.3.tgz 0ms (cache hit)
+118 http cache copy-anything@https://registry.npmjs.org/copy-anything/-/copy-anything-4.0.5.tgz 0ms (cache hit)
+119 http cache convert-source-map@https://registry.npmjs.org/convert-source-map/-/convert-source-map-2.0.0.tgz 0ms (cache hit)
+120 http cache confbox@https://registry.npmjs.org/confbox/-/confbox-0.2.4.tgz 0ms (cache hit)
+121 http cache combined-stream@https://registry.npmjs.org/combined-stream/-/combined-stream-1.0.8.tgz 0ms (cache hit)
+122 http cache color-name@https://registry.npmjs.org/color-name/-/color-name-1.1.4.tgz 0ms (cache hit)
+123 http cache color-convert@https://registry.npmjs.org/color-convert/-/color-convert-2.0.1.tgz 0ms (cache hit)
+124 http cache cliui@https://registry.npmjs.org/cliui/-/cliui-6.0.0.tgz 0ms (cache hit)
+125 http cache chokidar@https://registry.npmjs.org/chokidar/-/chokidar-5.0.0.tgz 0ms (cache hit)
+126 http cache chai@https://registry.npmjs.org/chai/-/chai-6.2.2.tgz 0ms (cache hit)
+127 http cache camelcase@https://registry.npmjs.org/camelcase/-/camelcase-5.3.1.tgz 0ms (cache hit)
+128 http cache birpc@https://registry.npmjs.org/birpc/-/birpc-2.9.0.tgz 0ms (cache hit)
+129 http cache asynckit@https://registry.npmjs.org/asynckit/-/asynckit-0.4.0.tgz 0ms (cache hit)
+130 http cache call-bind-apply-helpers@https://registry.npmjs.org/call-bind-apply-helpers/-/call-bind-apply-helpers-1.0.2.tgz 0ms (cache hit)
+131 http cache assertion-error@https://registry.npmjs.org/assertion-error/-/assertion-error-2.0.1.tgz 0ms (cache hit)
+132 http cache axios@https://registry.npmjs.org/axios/-/axios-1.13.6.tgz 0ms (cache hit)
+133 http cache ansi-styles@https://registry.npmjs.org/ansi-styles/-/ansi-styles-4.3.0.tgz 0ms (cache hit)
+134 http cache ansi-regex@https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz 0ms (cache hit)
+135 http cache @vue/shared@https://registry.npmjs.org/@vue/shared/-/shared-3.5.30.tgz 0ms (cache hit)
+136 http cache acorn@https://registry.npmjs.org/acorn/-/acorn-8.16.0.tgz 0ms (cache hit)
+137 http cache @vue/server-renderer@https://registry.npmjs.org/@vue/server-renderer/-/server-renderer-3.5.30.tgz 0ms (cache hit)
+138 http cache @vue/runtime-dom@https://registry.npmjs.org/@vue/runtime-dom/-/runtime-dom-3.5.30.tgz 0ms (cache hit)
+139 http cache @vue/runtime-core@https://registry.npmjs.org/@vue/runtime-core/-/runtime-core-3.5.30.tgz 0ms (cache hit)
+140 http cache @vue/reactivity@https://registry.npmjs.org/@vue/reactivity/-/reactivity-3.5.30.tgz 0ms (cache hit)
+141 http cache @vue/devtools-shared@https://registry.npmjs.org/@vue/devtools-shared/-/devtools-shared-7.7.9.tgz 0ms (cache hit)
+142 http cache @vue/devtools-kit@https://registry.npmjs.org/@vue/devtools-kit/-/devtools-kit-7.7.9.tgz 0ms (cache hit)
+143 http cache @vue/devtools-api@https://registry.npmjs.org/@vue/devtools-api/-/devtools-api-7.7.9.tgz 0ms (cache hit)
+144 http cache @vue-flow/core@https://registry.npmjs.org/@vue-flow/core/-/core-1.48.2.tgz 0ms (cache hit)
+145 http cache @vue/compiler-ssr@https://registry.npmjs.org/@vue/compiler-ssr/-/compiler-ssr-3.5.30.tgz 0ms (cache hit)
+146 http cache @vue-flow/controls@https://registry.npmjs.org/@vue-flow/controls/-/controls-1.1.3.tgz 0ms (cache hit)
+147 http cache @vue/compiler-core@https://registry.npmjs.org/@vue/compiler-core/-/compiler-core-3.5.30.tgz 0ms (cache hit)
+148 http cache @vue-flow/background@https://registry.npmjs.org/@vue-flow/background/-/background-1.3.2.tgz 0ms (cache hit)
+149 http cache @vue/compiler-dom@https://registry.npmjs.org/@vue/compiler-dom/-/compiler-dom-3.5.30.tgz 0ms (cache hit)
+150 http cache @vitest/spy@https://registry.npmjs.org/@vitest/spy/-/spy-4.1.0.tgz 0ms (cache hit)
+151 http cache @vue/compiler-sfc@https://registry.npmjs.org/@vue/compiler-sfc/-/compiler-sfc-3.5.30.tgz 0ms (cache hit)
+152 http cache @vitest/utils@https://registry.npmjs.org/@vitest/utils/-/utils-4.1.0.tgz 0ms (cache hit)
+153 http cache @vitejs/plugin-vue@https://registry.npmjs.org/@vitejs/plugin-vue/-/plugin-vue-6.0.5.tgz 0ms (cache hit)
+154 http cache @vitest/runner@https://registry.npmjs.org/@vitest/runner/-/runner-4.1.0.tgz 0ms (cache hit)
+155 http cache @vitest/snapshot@https://registry.npmjs.org/@vitest/snapshot/-/snapshot-4.1.0.tgz 0ms (cache hit)
+156 http cache @types/web-bluetooth@https://registry.npmjs.org/@types/web-bluetooth/-/web-bluetooth-0.0.20.tgz 0ms (cache hit)
+157 http cache @types/estree@https://registry.npmjs.org/@types/estree/-/estree-1.0.8.tgz 0ms (cache hit)
+158 http cache @vitest/pretty-format@https://registry.npmjs.org/@vitest/pretty-format/-/pretty-format-4.1.0.tgz 0ms (cache hit)
+159 http cache @vitest/mocker@https://registry.npmjs.org/@vitest/mocker/-/mocker-4.1.0.tgz 0ms (cache hit)
+160 http cache @vitest/expect@https://registry.npmjs.org/@vitest/expect/-/expect-4.1.0.tgz 0ms (cache hit)
+161 http cache @standard-schema/spec@https://registry.npmjs.org/@standard-schema/spec/-/spec-1.1.0.tgz 0ms (cache hit)
+162 http cache @types/chai@https://registry.npmjs.org/@types/chai/-/chai-5.2.3.tgz 0ms (cache hit)
+163 http cache @types/deep-eql@https://registry.npmjs.org/@types/deep-eql/-/deep-eql-4.0.2.tgz 0ms (cache hit)
+164 http cache @rolldown/pluginutils@https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.0-rc.2.tgz 0ms (cache hit)
+165 http cache @jridgewell/trace-mapping@https://registry.npmjs.org/@jridgewell/trace-mapping/-/trace-mapping-0.3.31.tgz 0ms (cache hit)
+166 http cache @oxc-project/types@https://registry.npmjs.org/@oxc-project/types/-/types-0.115.0.tgz 0ms (cache hit)
+167 http cache @oxc-project/runtime@https://registry.npmjs.org/@oxc-project/runtime/-/runtime-0.115.0.tgz 0ms (cache hit)
+168 http cache @jridgewell/sourcemap-codec@https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.5.tgz 0ms (cache hit)
+169 http cache @jridgewell/resolve-uri@https://registry.npmjs.org/@jridgewell/resolve-uri/-/resolve-uri-3.1.2.tgz 0ms (cache hit)
+170 http cache @esbuild/win32-x64@https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.27.4.tgz 0ms (cache hit)
+171 http cache @rolldown/binding-win32-x64-msvc@https://registry.npmjs.org/@rolldown/binding-win32-x64-msvc/-/binding-win32-x64-msvc-1.0.0-rc.9.tgz 0ms (cache hit)
+172 http cache @jridgewell/gen-mapping@https://registry.npmjs.org/@jridgewell/gen-mapping/-/gen-mapping-0.3.13.tgz 0ms (cache hit)
+173 http cache @babel/types@https://registry.npmjs.org/@babel/types/-/types-7.29.0.tgz 0ms (cache hit)
+174 http cache @jridgewell/remapping@https://registry.npmjs.org/@jridgewell/remapping/-/remapping-2.3.5.tgz 0ms (cache hit)
+175 http cache tslib@https://registry.npmjs.org/tslib/-/tslib-2.3.0.tgz 0ms (cache hit)
+176 http cache @babel/helper-validator-identifier@https://registry.npmjs.org/@babel/helper-validator-identifier/-/helper-validator-identifier-7.28.5.tgz 0ms (cache hit)
+177 http cache @rolldown/pluginutils@https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.0-rc.9.tgz 0ms (cache hit)
+178 http cache @babel/parser@https://registry.npmjs.org/@babel/parser/-/parser-7.29.2.tgz 0ms (cache hit)
+179 http cache @vue/devtools-api@https://registry.npmjs.org/@vue/devtools-api/-/devtools-api-6.6.4.tgz 0ms (cache hit)
+180 http cache @babel/helper-string-parser@https://registry.npmjs.org/@babel/helper-string-parser/-/helper-string-parser-7.27.1.tgz 0ms (cache hit)
+181 http cache pkg-types@https://registry.npmjs.org/pkg-types/-/pkg-types-1.3.1.tgz 0ms (cache hit)
+182 http cache vue-demi@https://registry.npmjs.org/vue-demi/-/vue-demi-0.14.10.tgz 0ms (cache hit)
+183 http cache confbox@https://registry.npmjs.org/confbox/-/confbox-0.1.8.tgz 0ms (cache hit)
+184 http cache tslib@https://registry.npmjs.org/tslib/-/tslib-2.3.0.tgz 0ms (cache hit)
+185 http cache @vueuse/shared@https://registry.npmjs.org/@vueuse/shared/-/shared-10.11.1.tgz 0ms (cache hit)
+186 http cache delayed-stream@https://registry.npmjs.org/delayed-stream/-/delayed-stream-1.0.0.tgz 0ms (cache hit)
+187 http cache @vueuse/metadata@https://registry.npmjs.org/@vueuse/metadata/-/metadata-10.11.1.tgz 0ms (cache hit)
+188 http cache @vueuse/core@https://registry.npmjs.org/@vueuse/core/-/core-10.11.1.tgz 0ms (cache hit)
+189 http cache vue-demi@https://registry.npmjs.org/vue-demi/-/vue-demi-0.14.10.tgz 0ms (cache hit)
+190 http cache estree-walker@https://registry.npmjs.org/estree-walker/-/estree-walker-3.0.3.tgz 0ms (cache hit)
+191 info run esbuild@0.27.4 postinstall node_modules/esbuild node install.js
+192 info run vue-demi@0.14.10 postinstall node_modules/@vue-flow/core/node_modules/@vueuse/core/node_modules/vue-demi node -e "try{require('./scripts/postinstall.js')}catch(e){}"
+193 info run vue-demi@0.14.10 postinstall node_modules/@vue-flow/core/node_modules/@vueuse/shared/node_modules/vue-demi node -e "try{require('./scripts/postinstall.js')}catch(e){}"
+194 info run vue-demi@0.14.10 postinstall { code: 0, signal: null }
+195 info run vue-demi@0.14.10 postinstall { code: 0, signal: null }
+196 info run esbuild@0.27.4 postinstall { code: 0, signal: null }
+197 silly ADD node_modules/zrender
+198 silly ADD node_modules/zrender/node_modules/tslib
+199 silly ADD node_modules/yargs-parser
+200 silly ADD node_modules/yargs
+201 silly ADD node_modules/y18n
+202 silly ADD node_modules/wrap-ansi
+203 silly ADD node_modules/why-is-node-running
+204 silly ADD node_modules/which-module
+205 silly ADD node_modules/webpack-virtual-modules
+206 silly ADD node_modules/vue-router
+207 silly ADD node_modules/vue-router/node_modules/@vue/devtools-api
+208 silly ADD node_modules/vue
+209 silly ADD node_modules/vitest
+210 silly ADD node_modules/vite
+211 silly ADD node_modules/unplugin-vue-components
+212 silly ADD node_modules/unplugin-utils
+213 silly ADD node_modules/unplugin
+214 silly ADD node_modules/ufo
+215 silly ADD node_modules/tinyrainbow
+216 silly ADD node_modules/tinyglobby
+217 silly ADD node_modules/tinyexec
+218 silly ADD node_modules/tinybench
+219 silly ADD node_modules/superjson
+220 silly ADD node_modules/strip-ansi
+221 silly ADD node_modules/string-width
+222 silly ADD node_modules/std-env
+223 silly ADD node_modules/stackback
+224 silly ADD node_modules/speakingurl
+225 silly ADD node_modules/source-map-js
+226 silly ADD node_modules/siginfo
+227 silly ADD node_modules/set-blocking
+228 silly ADD node_modules/rolldown
+229 silly ADD node_modules/rolldown/node_modules/@rolldown/pluginutils
+230 silly ADD node_modules/rfdc
+231 silly ADD node_modules/require-main-filename
+232 silly ADD node_modules/require-directory
+233 silly ADD node_modules/readdirp
+234 silly ADD node_modules/quansync
+235 silly ADD node_modules/qrcode
+236 silly ADD node_modules/proxy-from-env
+237 silly ADD node_modules/postcss
+238 silly ADD node_modules/pngjs
+239 silly ADD node_modules/pkg-types
+240 silly ADD node_modules/pinia
+241 silly ADD node_modules/picomatch
+242 silly ADD node_modules/picocolors
+243 silly ADD node_modules/perfect-debounce
+244 silly ADD node_modules/pathe
+245 silly ADD node_modules/path-exists
+246 silly ADD node_modules/p-try
+247 silly ADD node_modules/p-locate
+248 silly ADD node_modules/p-limit
+249 silly ADD node_modules/obug
+250 silly ADD node_modules/nprogress
+251 silly ADD node_modules/nanoid
+252 silly ADD node_modules/mlly
+253 silly ADD node_modules/mlly/node_modules/pkg-types
+254 silly ADD node_modules/mlly/node_modules/confbox
+255 silly ADD node_modules/mitt
+256 silly ADD node_modules/mime-types
+257 silly ADD node_modules/mime-db
+258 silly ADD node_modules/math-intrinsics
+259 silly ADD node_modules/magic-string
+260 silly ADD node_modules/locate-path
+261 silly ADD node_modules/local-pkg
+262 silly ADD node_modules/lightningcss-win32-x64-msvc
+263 silly ADD node_modules/lightningcss
+264 silly ADD node_modules/is-what
+265 silly ADD node_modules/is-fullwidth-code-point
+266 silly ADD node_modules/hookable
+267 silly ADD node_modules/hasown
+268 silly ADD node_modules/has-tostringtag
+269 silly ADD node_modules/has-symbols
+270 silly ADD node_modules/gopd
+271 silly ADD node_modules/get-proto
+272 silly ADD node_modules/get-intrinsic
+273 silly ADD node_modules/get-caller-file
+274 silly ADD node_modules/function-bind
+275 silly ADD node_modules/form-data
+276 silly ADD node_modules/follow-redirects
+277 silly ADD node_modules/find-up
+278 silly ADD node_modules/fdir
+279 silly ADD node_modules/exsolve
+280 silly ADD node_modules/expect-type
+281 silly ADD node_modules/estree-walker
+282 silly ADD node_modules/esbuild
+283 silly ADD node_modules/es-set-tostringtag
+284 silly ADD node_modules/es-object-atoms
+285 silly ADD node_modules/es-module-lexer
+286 silly ADD node_modules/es-errors
+287 silly ADD node_modules/es-define-property
+288 silly ADD node_modules/entities
+289 silly ADD node_modules/emoji-regex
+290 silly ADD node_modules/echarts
+291 silly ADD node_modules/echarts/node_modules/tslib
+292 silly ADD node_modules/dunder-proto
+293 silly ADD node_modules/dijkstrajs
+294 silly ADD node_modules/detect-libc
+295 silly ADD node_modules/delayed-stream
+296 silly ADD node_modules/decamelize
+297 silly ADD node_modules/d3-zoom
+298 silly ADD node_modules/d3-transition
+299 silly ADD node_modules/d3-timer
+300 silly ADD node_modules/d3-selection
+301 silly ADD node_modules/d3-interpolate
+302 silly ADD node_modules/d3-ease
+303 silly ADD node_modules/d3-drag
+304 silly ADD node_modules/d3-dispatch
+305 silly ADD node_modules/d3-color
+306 silly ADD node_modules/csstype
+307 silly ADD node_modules/copy-anything
+308 silly ADD node_modules/convert-source-map
+309 silly ADD node_modules/confbox
+310 silly ADD node_modules/combined-stream
+311 silly ADD node_modules/color-name
+312 silly ADD node_modules/color-convert
+313 silly ADD node_modules/cliui
+314 silly ADD node_modules/chokidar
+315 silly ADD node_modules/chai
+316 silly ADD node_modules/camelcase
+317 silly ADD node_modules/call-bind-apply-helpers
+318 silly ADD node_modules/birpc
+319 silly ADD node_modules/axios
+320 silly ADD node_modules/asynckit
+321 silly ADD node_modules/assertion-error
+322 silly ADD node_modules/ansi-styles
+323 silly ADD node_modules/ansi-regex
+324 silly ADD node_modules/acorn
+325 silly ADD node_modules/@vue/shared
+326 silly ADD node_modules/@vue/server-renderer
+327 silly ADD node_modules/@vue/runtime-dom
+328 silly ADD node_modules/@vue/runtime-core
+329 silly ADD node_modules/@vue/reactivity
+330 silly ADD node_modules/@vue/devtools-shared
+331 silly ADD node_modules/@vue/devtools-kit
+332 silly ADD node_modules/@vue/devtools-api
+333 silly ADD node_modules/@vue/compiler-ssr
+334 silly ADD node_modules/@vue/compiler-sfc
+335 silly ADD node_modules/@vue/compiler-dom
+336 silly ADD node_modules/@vue/compiler-core
+337 silly ADD node_modules/@vue-flow/core
+338 silly ADD node_modules/@vue-flow/core/node_modules/@vueuse/shared
+339 silly ADD node_modules/@vue-flow/core/node_modules/@vueuse/shared/node_modules/vue-demi
+340 silly ADD node_modules/@vue-flow/core/node_modules/@vueuse/metadata
+341 silly ADD node_modules/@vue-flow/core/node_modules/@vueuse/core
+342 silly ADD node_modules/@vue-flow/core/node_modules/@vueuse/core/node_modules/vue-demi
+343 silly ADD node_modules/@vue-flow/controls
+344 silly ADD node_modules/@vue-flow/background
+345 silly ADD node_modules/@vitest/utils
+346 silly ADD node_modules/@vitest/spy
+347 silly ADD node_modules/@vitest/snapshot
+348 silly ADD node_modules/@vitest/runner
+349 silly ADD node_modules/@vitest/pretty-format
+350 silly ADD node_modules/@vitest/mocker
+351 silly ADD node_modules/@vitest/mocker/node_modules/estree-walker
+352 silly ADD node_modules/@vitest/expect
+353 silly ADD node_modules/@vitejs/plugin-vue
+354 silly ADD node_modules/@types/web-bluetooth
+355 silly ADD node_modules/@types/estree
+356 silly ADD node_modules/@types/deep-eql
+357 silly ADD node_modules/@types/chai
+358 silly ADD node_modules/@standard-schema/spec
+359 silly ADD node_modules/@rolldown/pluginutils
+360 silly ADD node_modules/@rolldown/binding-win32-x64-msvc
+361 silly ADD node_modules/@oxc-project/types
+362 silly ADD node_modules/@oxc-project/runtime
+363 silly ADD node_modules/@jridgewell/trace-mapping
+364 silly ADD node_modules/@jridgewell/sourcemap-codec
+365 silly ADD node_modules/@jridgewell/resolve-uri
+366 silly ADD node_modules/@jridgewell/remapping
+367 silly ADD node_modules/@jridgewell/gen-mapping
+368 silly ADD node_modules/@esbuild/win32-x64
+369 silly ADD node_modules/@babel/types
+370 silly ADD node_modules/@babel/parser
+371 silly ADD node_modules/@babel/helper-validator-identifier
+372 silly ADD node_modules/@babel/helper-string-parser
+373 verbose cwd D:\aitiku\frontend
+374 verbose os Windows_NT 10.0.26200
+375 verbose node v24.14.0
+376 verbose npm  v11.9.0
+377 verbose exit 0
+378 info ok

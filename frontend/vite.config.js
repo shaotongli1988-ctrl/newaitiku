@@ -63,9 +63,13 @@ function createLocalUiComponentResolver() {
       return undefined
     }
 
+    const browserImportPath = componentPath.startsWith('./')
+      ? `/${componentPath.slice(2)}`
+      : componentPath
+
     return {
       name: 'default',
-      from: fileURLToPath(new URL(componentPath, import.meta.url)),
+      from: browserImportPath,
     }
   }
 }
