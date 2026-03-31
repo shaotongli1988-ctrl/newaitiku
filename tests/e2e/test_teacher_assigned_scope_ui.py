@@ -23,6 +23,8 @@ sync_playwright = playwright_sync_api.sync_playwright
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 FRONTEND_DIR = ROOT_DIR / "frontend"
+GLOBAL_SUPER_ADMIN_PHONE = "15373326608"
+DEFAULT_E2E_GLOBAL_SUPER_ADMIN_PASSWORD = "E2E-Global-Super-Admin-001"
 
 
 def _pick_free_port() -> int:
@@ -66,14 +68,18 @@ def _new_request_context(playwright_driver: Playwright, base_url: str, extra_hea
     )
 
 
+def _global_super_admin_password() -> str:
+    return str(os.environ.get("QUESTION_BANK_SUPER_ADMIN_PASSWORD", DEFAULT_E2E_GLOBAL_SUPER_ADMIN_PASSWORD)).strip()
+
+
 def _login_admin_and_bind_teacher_scope(playwright_driver: Playwright, backend_base_url: str) -> None:
     admin_request = _new_request_context(playwright_driver, backend_base_url)
     try:
         login_response = admin_request.post(
             "/api/question-bank/auth/login/password",
             data={
-                "phone": "15373326608",
-                "password": "123456.",
+                "phone": GLOBAL_SUPER_ADMIN_PHONE,
+                "password": _global_super_admin_password(),
             },
         )
         assert login_response.status == 200
@@ -218,6 +224,7 @@ def test_ui_assigned_teacher_scope_hides_cross_group_options(tmp_path_factory: p
     ]
     backend_env = os.environ.copy()
     backend_env["QB_CORS_ORIGINS"] = frontend_base_url
+    backend_env.setdefault("QUESTION_BANK_SUPER_ADMIN_PASSWORD", _global_super_admin_password())
     backend_process = subprocess.Popen(
         backend_command,
         cwd=str(ROOT_DIR),

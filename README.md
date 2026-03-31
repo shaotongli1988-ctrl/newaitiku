@@ -65,6 +65,17 @@
 ./tools/bin/run-frontend-dev.sh
 ```
 
+首次初始化数据库前请先设置全局超管口令环境变量（至少 12 位）：
+
+```bash
+export QUESTION_BANK_SUPER_ADMIN_PASSWORD='Replace-With-A-Strong-Password'
+```
+
+鉴权联调开关说明：
+
+- `QB_ALLOW_HEADER_ACTOR_FALLBACK` 默认关闭；仅在非生产环境显式设置为 `true` 时，才允许通过 `X-Role/X-User-Id` 注入身份。
+- 业务 API（`/api/question-bank/**`）默认要求登录态（Bearer Token 或登录 Cookie）。
+
 启动后访问：
 
 - 前端单入口（开发态）：[http://127.0.0.1:5173/](http://127.0.0.1:5173/)

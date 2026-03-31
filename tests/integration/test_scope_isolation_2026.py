@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from app.db import get_connection
@@ -8,11 +9,13 @@ from tests.support import INFO_TECH_POINT_ID, INFO_TECH_ROOT_ID, INFO_TECH_SECTI
 
 
 def _bind_teacher_scope(client, user_id: str, exam_category_code: str, joint_exam_group_code: str) -> None:
+    admin_password = str(os.environ.get("QUESTION_BANK_SUPER_ADMIN_PASSWORD", "")).strip()
+    assert admin_password
     login_response = client.post(
         "/api/question-bank/auth/login/password",
         json={
             "phone": "15373326608",
-            "password": "123456.",
+            "password": admin_password,
         },
     )
     assert login_response.status_code == 200

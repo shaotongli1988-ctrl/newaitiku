@@ -324,7 +324,6 @@ request.interceptors.request.use(
 
     const token = getAccessToken()
     const storedRole = readStoredRole()
-    const storedUserId = String(localStorage.getItem(USER_ID_STORAGE_KEY) || '').trim()
     const storedAssignedJointGroupCode = readAssignedJointGroupCode()
 
     if (token) {
@@ -333,12 +332,6 @@ request.interceptors.request.use(
     }
 
     config.headers = config.headers || {}
-    if (storedRole && !hasExplicitHeader(config.headers, 'X-Role')) {
-      config.headers['X-Role'] = storedRole
-    }
-    if (storedUserId && !hasExplicitHeader(config.headers, 'X-User-Id')) {
-      config.headers['X-User-Id'] = storedUserId
-    }
     if (shouldAttachJointGroupHeader(config, storedRole, storedAssignedJointGroupCode)) {
       config.headers['X-Joint-Group'] = storedAssignedJointGroupCode
     }

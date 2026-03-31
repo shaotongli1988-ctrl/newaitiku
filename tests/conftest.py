@@ -12,6 +12,8 @@ import pytest_asyncio
 # to business assertions in the default test suites.
 os.environ.setdefault("QB_FORMULA_OCR_ENGINE", "disabled")
 os.environ.setdefault("NO_ALBUMENTATIONS_UPDATE", "1")
+os.environ.setdefault("QB_ENV", "test")
+os.environ.setdefault("QUESTION_BANK_SUPER_ADMIN_PASSWORD", "TestOnly-Global-Super-Admin-001")
 
 from app.main import create_app
 

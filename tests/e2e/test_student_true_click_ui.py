@@ -75,11 +75,18 @@ def _login_student(page: Page, frontend_base_url: str) -> None:
 
 
 def _new_student_request_context(playwright_driver, backend_base_url: str):
+    login_context = playwright_driver.request.new_context(base_url=backend_base_url)
+    login_response = login_context.post(
+        "/api/question-bank/auth/login/password",
+        data={"phone": "13800000005", "password": "seed-password-student-001"},
+    )
+    assert login_response.status == 200
+    access_token = str(login_response.json()["data"]["accessToken"]).strip()
+    login_context.dispose()
     return playwright_driver.request.new_context(
         base_url=backend_base_url,
         extra_http_headers={
-            "X-Role": "student",
-            "X-User-Id": "student-001",
+            "Authorization": f"Bearer {access_token}",
         },
     )
 

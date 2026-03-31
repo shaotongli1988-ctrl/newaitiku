@@ -60,6 +60,11 @@ def test_student_cannot_access_admin_learning_methods(tmp_path: Path) -> None:
 
 def test_teacher_admin_learning_method_write_requires_csrf(tmp_path: Path) -> None:
     client = make_client(tmp_path)
+    login_response = client.post(
+        "/api/question-bank/auth/login/password",
+        json={"phone": "13800000002", "password": "seed-password-teacher-001"},
+    )
+    assert login_response.status_code == 200
     payload = {
         "methodCode": "M99",
         "methodName": "测试方法",
@@ -75,7 +80,6 @@ def test_teacher_admin_learning_method_write_requires_csrf(tmp_path: Path) -> No
     }
     forbidden_write = client.post(
         "/api/question-bank/admin/learning-methods",
-        headers=teacher_headers(),
         json=payload,
     )
     assert forbidden_write.status_code == 403

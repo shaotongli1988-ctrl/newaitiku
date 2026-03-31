@@ -6,7 +6,7 @@ import json
 import re
 import sqlite3
 import zipfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -39,6 +39,7 @@ from tests.support import (
     make_client,
     payload,
     poll_task,
+    injected_actor_headers,
     student_headers,
     super_admin_headers,
     teacher_headers,
@@ -307,6 +308,94 @@ def test_auth_register_password_login_me_and_logout(tmp_path: Path):
     expired_me = client.get("/api/question-bank/auth/me", headers=auth_headers(token))
     assert expired_me.status_code == 401
     assert expired_me.json()["code"] == "AUTH_UNAUTHORIZED"
+
+
+def test_question_bank_api_requires_login_state(tmp_path: Path):
+    client = make_client(tmp_path)
+    listed = client.get("/api/question-bank/questions")
+    assert listed.status_code == 401
+    assert listed.json()["code"] == "AUTH_UNAUTHORIZED"
+
+    created = client.post("/api/question-bank/questions", json=payload())
+    assert created.status_code == 401
+    assert created.json()["code"] == "AUTH_UNAUTHORIZED"
+
+    deleted = client.delete("/api/question-bank/questions/question-seed-001")
+    assert deleted.status_code == 401
+    assert deleted.json()["code"] == "AUTH_UNAUTHORIZED"
+
+
+def test_question_bank_api_rejects_injected_actor_when_fallback_disabled(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("QB_ENV", "dev")
+    monkeypatch.delenv("QB_ALLOW_HEADER_ACTOR_FALLBACK", raising=False)
+    client = make_client(tmp_path)
+    response = client.get(
+        "/api/question-bank/questions",
+        headers={"X-Role": "teacher", "X-User-Id": "teacher-001"},
+    )
+    assert response.status_code == 401
+    assert response.json()["code"] == "AUTH_UNAUTHORIZED"
+
+
+def test_question_bank_api_accepts_injected_actor_when_dev_fallback_enabled(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("QB_ENV", "dev")
+    monkeypatch.setenv("QB_ALLOW_HEADER_ACTOR_FALLBACK", "true")
+    client = make_client(tmp_path)
+    response = client.get(
+        "/api/question-bank/questions",
+        headers={"X-Role": "teacher", "X-User-Id": "teacher-001"},
+    )
+    assert response.status_code == 200
+    assert response.json()["code"] == "OK"
+
+
+def test_first_boot_requires_configured_global_super_admin_password(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv("QUESTION_BANK_SUPER_ADMIN_PASSWORD", raising=False)
+    with pytest.raises(RuntimeError) as exc_info:
+        make_client(tmp_path)
+    assert "QUESTION_BANK_SUPER_ADMIN_PASSWORD" in str(exc_info.value)
+
+
+def test_global_super_admin_password_is_not_overwritten_after_restart(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("QUESTION_BANK_SUPER_ADMIN_PASSWORD", "Initial-Global-Super-Admin-001")
+    client = make_client(tmp_path)
+
+    login = client.post(
+        "/api/question-bank/auth/login/password",
+        json={"phone": "15373326608", "password": "Initial-Global-Super-Admin-001"},
+    )
+    assert login.status_code == 200
+
+    sms = client.post(
+        "/api/question-bank/auth/sms-code",
+        json={"phone": "15373326608", "purpose": "reset_password"},
+    )
+    assert sms.status_code == 200
+    reset_code = sms.json()["data"]["devCode"]
+    reset = client.post(
+        "/api/question-bank/auth/password/reset",
+        json={"phone": "15373326608", "smsCode": reset_code, "newPassword": "ResetAdm001"},
+    )
+    assert reset.status_code == 200
+
+    assert client.post(
+        "/api/question-bank/auth/login/password",
+        json={"phone": "15373326608", "password": "ResetAdm001"},
+    ).status_code == 200
+    assert client.post(
+        "/api/question-bank/auth/login/password",
+        json={"phone": "15373326608", "password": "Initial-Global-Super-Admin-001"},
+    ).status_code == 403
+
+    restarted = make_client(tmp_path)
+    assert restarted.post(
+        "/api/question-bank/auth/login/password",
+        json={"phone": "15373326608", "password": "ResetAdm001"},
+    ).status_code == 200
+    assert restarted.post(
+        "/api/question-bank/auth/login/password",
+        json={"phone": "15373326608", "password": "Initial-Global-Super-Admin-001"},
+    ).status_code == 403
 
 
 def test_auth_login_by_sms_and_reset_password(tmp_path: Path):
@@ -1462,7 +1551,7 @@ def test_student_is_forbidden_for_question_bank(tmp_path: Path):
     client = make_client(tmp_path)
     response = client.get(
         "/api/question-bank/questions",
-        headers={"X-Role": "student", "X-User-Id": "student-001"},
+        headers=student_headers(),
     )
     assert response.status_code == 403
     assert response.json()["code"] == "QUESTION_FORBIDDEN"
@@ -2140,13 +2229,13 @@ def test_role_portals_are_strictly_isolated(tmp_path: Path):
     assert super_admin_to_student.status_code == 200
     teacher_page = client.get("/admin/control-center", headers=teacher_headers(), follow_redirects=False)
     assert teacher_page.status_code == 302
-    assert teacher_page.headers["location"] == "/login"
+    assert teacher_page.headers["location"] == "/teacher/home?role=teacher&userId=teacher-001"
     student_to_teacher = client.get("/teacher/questions", headers=student_headers(), follow_redirects=False)
     assert student_to_teacher.status_code == 302
     assert student_to_teacher.headers["location"] == "/student/home?role=student&userId=student-001"
     student_page = client.get("/admin/control-center", headers=student_headers(), follow_redirects=False)
     assert student_page.status_code == 302
-    assert student_page.headers["location"] == "/login"
+    assert student_page.headers["location"] == "/student/home?role=student&userId=student-001"
 
 
 def test_super_admin_can_use_student_analysis_and_practice_apis(tmp_path: Path):
@@ -2172,13 +2261,14 @@ def test_super_admin_can_use_student_analysis_and_practice_apis(tmp_path: Path):
     )
     assert practice_questions.status_code == 200
     assert practice_questions.json()["code"] == "OK"
+    client.cookies.clear()
     query_super_admin = client.get("/admin/control-center", params={"role": "super_admin", "userId": "admin-001"}, follow_redirects=False)
     assert query_super_admin.status_code == 302
     assert query_super_admin.headers["location"] == "/login"
 
     assert client.get("/api/question-bank/questions", headers=super_admin_headers()).status_code == 403
-    assert client.get("/api/question-bank/admin/console", headers=teacher_headers()).status_code == 401
-    assert client.get("/api/question-bank/admin/users", headers=student_headers()).status_code == 401
+    assert client.get("/api/question-bank/admin/console", headers=teacher_headers()).status_code == 403
+    assert client.get("/api/question-bank/admin/users", headers=student_headers()).status_code == 403
 
 
 def test_knowledge_tree_response_allows_wrong_count_field(tmp_path: Path):
@@ -4339,7 +4429,7 @@ def test_save_student_profile_keeps_hot_state_and_only_updates_cold_snapshot(tmp
 
     student_messages = client.get(
         "/api/question-bank/messages?page=1&size=50",
-        headers=student_headers(student_user_id),
+        headers=headers,
     )
     assert student_messages.status_code == 200
     assert any(item["title"] == send_title for item in student_messages.json()["data"]["items"])
@@ -5082,7 +5172,7 @@ def test_task_owner_can_cancel_running_or_queued_task(tmp_path: Path):
 
 def test_admin_console_settings_and_user_directory(tmp_path: Path):
     client = make_client(tmp_path)
-    unauthorized = client.get("/api/question-bank/admin/console", headers=super_admin_headers())
+    unauthorized = client.get("/api/question-bank/admin/console")
     assert unauthorized.status_code == 401
     assert "登录态" in unauthorized.json()["message"]
     unauthorized_home = client.get(
@@ -5672,12 +5762,15 @@ def test_personal_bank_summary_and_export_are_not_truncated_at_500(tmp_path: Pat
 def test_personal_bank_filters_align_for_archive_window_and_question_ids(tmp_path: Path):
     client = make_client(tmp_path)
     repo = client.app.state.service.repository
+    now_utc = datetime.now(timezone.utc)
+    recent_archived_at = (now_utc - timedelta(days=3)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    old_archived_at = (now_utc - timedelta(days=45)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
     seed_personal_bank_question(
         repo,
         question_id="question-personal-archive-recent",
         stem="沉淀题库筛选联动题-最近归档",
-        archived_at="2026-03-22T10:00:00Z",
+        archived_at=recent_archived_at,
         is_archived=True,
         source_type="HARVESTED_ARCHIVE",
         source_label="已斩获归档",
@@ -5686,7 +5779,7 @@ def test_personal_bank_filters_align_for_archive_window_and_question_ids(tmp_pat
         repo,
         question_id="question-personal-archive-old",
         stem="沉淀题库筛选联动题-历史归档",
-        archived_at="2026-01-10T10:00:00Z",
+        archived_at=old_archived_at,
         is_archived=True,
         source_type="HARVESTED_ARCHIVE",
         source_label="已斩获归档",
@@ -5738,6 +5831,43 @@ def test_personal_bank_filters_align_for_archive_window_and_question_ids(tmp_pat
     assert "question-personal-archive-old" in exported_content
     assert "question-personal-archive-recent" not in exported_content
     assert "question-personal-active" not in exported_content
+
+
+def test_personal_bank_archive_window_last_7_days_boundary_is_inclusive(tmp_path: Path):
+    client = make_client(tmp_path)
+    repo = client.app.state.service.repository
+    now_utc = datetime.now(timezone.utc)
+    inside_last_7_days = (now_utc - timedelta(days=7) + timedelta(minutes=1)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    outside_last_7_days = (now_utc - timedelta(days=7, minutes=1)).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+    seed_personal_bank_question(
+        repo,
+        question_id="question-personal-archive-boundary",
+        stem="沉淀题库筛选联动题-七天边界",
+        archived_at=inside_last_7_days,
+        is_archived=True,
+        source_type="HARVESTED_ARCHIVE",
+        source_label="已斩获归档",
+    )
+    seed_personal_bank_question(
+        repo,
+        question_id="question-personal-archive-older-than-7d",
+        stem="沉淀题库筛选联动题-七天外",
+        archived_at=outside_last_7_days,
+        is_archived=True,
+        source_type="HARVESTED_ARCHIVE",
+        source_label="已斩获归档",
+    )
+
+    listed = client.get(
+        "/api/question-bank/student/personal-bank/questions",
+        headers=student_headers(),
+        params={"keyword": "沉淀题库筛选联动题", "archiveWindow": "LAST_7_DAYS"},
+    )
+    assert listed.status_code == 200
+    listed_ids = [item["id"] for item in listed.json()["data"]["items"]]
+    assert "question-personal-archive-boundary" in listed_ids
+    assert "question-personal-archive-older-than-7d" not in listed_ids
 
 
 def test_personal_bank_summary_contains_review_plan(tmp_path: Path):
@@ -6454,7 +6584,7 @@ def test_admin_created_teacher_account_can_access_teacher_side_and_respects_perm
     assert paper_allowed.status_code == 200
 
 
-def test_permission_validation_and_import_export_guards(tmp_path: Path):
+def test_permission_validation_and_import_export_guards(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     client = make_client(tmp_path)
     admin_headers = super_admin_auth_headers(client)
 
@@ -6498,7 +6628,8 @@ def test_permission_validation_and_import_export_guards(tmp_path: Path):
     )
     assert disabled_user.status_code == 200
 
-    disabled = client.get("/api/question-bank/questions", headers=teacher_headers("teacher-010"))
+    monkeypatch.setenv("QB_ALLOW_HEADER_ACTOR_FALLBACK", "true")
+    disabled = client.get("/api/question-bank/questions", headers=injected_actor_headers("teacher", "teacher-010"))
     assert disabled.status_code == 403
     assert "已停用" in disabled.json()["message"]
 
@@ -6765,10 +6896,10 @@ def test_unauthorized_access(tmp_path: Path):
     client = make_client(tmp_path)
 
     teacher_admin_console = client.get("/api/question-bank/admin/console", headers=teacher_headers())
-    assert teacher_admin_console.status_code == 401
+    assert teacher_admin_console.status_code == 403
 
     student_admin_users = client.get("/api/question-bank/admin/users?page=1&size=10", headers=student_headers())
-    assert student_admin_users.status_code == 401
+    assert student_admin_users.status_code == 403
 
     cross_category_access = client.get(
         "/api/question-bank/student/practice/questions?examCategoryCode=ART",

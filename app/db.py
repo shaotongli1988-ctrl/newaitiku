@@ -31,10 +31,8 @@ DIAGNOSTIC_STANDARD_MIN_PUBLISHED_QUESTIONS = 4
 DIAGNOSTIC_STANDARD_OWNER_ID = "teacher-001"
 GLOBAL_SUPER_ADMIN_ID = "admin-15373326608"
 GLOBAL_SUPER_ADMIN_PHONE = "15373326608"
-GLOBAL_SUPER_ADMIN_PASSWORD = os.environ.get(
-    "QUESTION_BANK_SUPER_ADMIN_PASSWORD",
-    "123456.",
-)
+GLOBAL_SUPER_ADMIN_PASSWORD_ENV_KEY = "QUESTION_BANK_SUPER_ADMIN_PASSWORD"
+GLOBAL_SUPER_ADMIN_PASSWORD_MIN_LENGTH = 12
 GLOBAL_SUPER_ADMIN_PERMISSIONS = [
     "question:manage",
     "paper:manage",
@@ -1846,6 +1844,19 @@ def _global_super_admin_ext_json() -> Dict[str, object]:
     }
 
 
+def _resolve_global_super_admin_password_for_first_boot() -> str:
+    password = str(os.environ.get(GLOBAL_SUPER_ADMIN_PASSWORD_ENV_KEY, "")).strip()
+    if not password:
+        raise RuntimeError(
+            f"缺少环境变量 {GLOBAL_SUPER_ADMIN_PASSWORD_ENV_KEY}：首次启动必须显式提供全局超管口令。"
+        )
+    if len(password) < GLOBAL_SUPER_ADMIN_PASSWORD_MIN_LENGTH:
+        raise RuntimeError(
+            f"环境变量 {GLOBAL_SUPER_ADMIN_PASSWORD_ENV_KEY} 不安全：长度必须至少 {GLOBAL_SUPER_ADMIN_PASSWORD_MIN_LENGTH} 位。"
+        )
+    return password
+
+
 def ensure_global_super_admin_account(connection: sqlite3.Connection) -> None:
     existing_user = connection.execute(
         f'SELECT {USER_SELECT_SQL} FROM "user" WHERE phone = ? LIMIT 1',
@@ -1858,7 +1869,6 @@ def ensure_global_super_admin_account(connection: sqlite3.Connection) -> None:
         ).fetchone()
 
     ext_json = _global_super_admin_ext_json()
-    password = hash_password(GLOBAL_SUPER_ADMIN_PASSWORD)
     now = SEED_TIME
 
     if existing_user:
@@ -1868,7 +1878,6 @@ def ensure_global_super_admin_account(connection: sqlite3.Connection) -> None:
             '''
             UPDATE "user"
             SET phone = ?,
-                password = ?,
                 status = ?,
                 extJson = ?,
                 updateTime = ?
@@ -1876,7 +1885,6 @@ def ensure_global_super_admin_account(connection: sqlite3.Connection) -> None:
             ''',
             (
                 GLOBAL_SUPER_ADMIN_PHONE,
-                password,
                 "ENABLED",
                 dump_json(merged_ext_json),
                 now,
@@ -1885,6 +1893,7 @@ def ensure_global_super_admin_account(connection: sqlite3.Connection) -> None:
         )
         target_user_id = str(existing_user["id"])
     else:
+        password = hash_password(_resolve_global_super_admin_password_for_first_boot())
         payload = {
             "id": GLOBAL_SUPER_ADMIN_ID,
             "phone": GLOBAL_SUPER_ADMIN_PHONE,

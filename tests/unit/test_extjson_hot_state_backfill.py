@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from app.db import get_connection
-from tests.support import make_client
+from tests.support import make_client, student_headers, teacher_headers
 
 
 def load_backfill_module():
@@ -66,7 +66,7 @@ def test_run_backfill_restores_consistency_after_formal_rows_are_deleted(tmp_pat
 
     sent = client.post(
         "/api/question-bank/messages/send",
-        headers={"X-Role": "teacher", "X-User-Id": "teacher-001"},
+        headers=teacher_headers(),
         json={
             "targetMode": "userIds",
             "userIds": ["student-001"],
@@ -79,7 +79,7 @@ def test_run_backfill_restores_consistency_after_formal_rows_are_deleted(tmp_pat
 
     submit = client.post(
         "/api/question-bank/student/papers/paper-demo-001/submit",
-        headers={"X-Role": "student", "X-User-Id": "student-001"},
+        headers=student_headers(),
         json={
             "answers": [
                 {"questionId": "question-seed-001", "answer": "B", "elapsedSec": 35, "marked": False},

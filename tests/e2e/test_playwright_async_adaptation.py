@@ -39,11 +39,12 @@ def _expect_envelope(payload: dict) -> dict:
     return payload
 
 
-def _request_headers(role: str, user_id: str) -> dict[str, str]:
-    return {
-        "X-Role": role,
-        "X-User-Id": user_id,
-    }
+ROLE_LOGIN_CREDENTIALS: dict[tuple[str, str], tuple[str, str]] = {
+    ("student", "student-001"): ("13800000005", "seed-password-student-001"),
+    ("teacher", "teacher-001"): ("13800000002", "seed-password-teacher-001"),
+    ("teacher", "teacher-002"): ("13800000003", "seed-password-teacher-002"),
+    ("super_admin", "admin-001"): ("13800000001", "seed-password-admin-001"),
+}
 
 
 @pytest.fixture(scope="module")
@@ -82,9 +83,25 @@ def live_base_url(tmp_path_factory: pytest.TempPathFactory) -> str:
 
 def _new_request_context(base_url: str, role: str, user_id: str) -> tuple[Playwright, APIRequestContext]:
     playwright_driver = sync_playwright().start()
+    login_context = playwright_driver.request.new_context(base_url=base_url)
+    credentials = ROLE_LOGIN_CREDENTIALS.get((role, user_id))
+    if credentials is None:
+        login_context.dispose()
+        playwright_driver.stop()
+        raise RuntimeError(f"缺少测试账号凭据映射: role={role}, user_id={user_id}")
+    login_response = login_context.post(
+        "/api/question-bank/auth/login/password",
+        data={"phone": credentials[0], "password": credentials[1]},
+    )
+    if login_response.status != 200:
+        login_context.dispose()
+        playwright_driver.stop()
+        raise RuntimeError(f"登录失败，status={login_response.status}")
+    token = str(_expect_envelope(login_response.json())["data"].get("accessToken", "")).strip()
+    login_context.dispose()
     request_context = playwright_driver.request.new_context(
         base_url=base_url,
-        extra_http_headers=_request_headers(role, user_id),
+        extra_http_headers={"Authorization": f"Bearer {token}"},
     )
     return playwright_driver, request_context
 

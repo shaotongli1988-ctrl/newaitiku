@@ -11,6 +11,7 @@ services:
       QB_ENV: production
       QB_CORS_ORIGINS: http://localhost
       QB_COOKIE_SECURE: "false"
+      QUESTION_BANK_SUPER_ADMIN_PASSWORD: ${QUESTION_BANK_SUPER_ADMIN_PASSWORD:-}
     volumes:
       - ../:/srv/app
     expose:

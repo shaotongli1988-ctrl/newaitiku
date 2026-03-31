@@ -2,6 +2,7 @@ from __future__ import annotations
 
 # Observability note: auth flow changes should keep log/trace/metric evidence aligned with release docs.
 from dataclasses import dataclass
+import os
 import secrets
 from typing import Optional, Sequence
 
@@ -33,6 +34,16 @@ class Actor:
 
 AUTH_COOKIE_NAME = "qbAccessToken"
 CSRF_COOKIE_NAME = "qbCsrfToken"
+HEADER_ACTOR_FALLBACK_ENV_KEY = "QB_ALLOW_HEADER_ACTOR_FALLBACK"
+
+API_LOGIN_OPTIONAL_PATHS = {
+    "/api/question-bank/auth/sms-code",
+    "/api/question-bank/auth/register",
+    "/api/question-bank/auth/login/password",
+    "/api/question-bank/auth/login/sms",
+    "/api/question-bank/auth/password/reset",
+    "/api/question-bank/auth/logout",
+}
 
 ROLE_HOME_PATH = {
     ROLE_SUPER_ADMIN: "/admin/home",
@@ -45,6 +56,26 @@ def parse_bearer_token(authorization: Optional[str]) -> str:
     if not isinstance(authorization, str):
         return ""
     return authorization.replace("Bearer ", "").strip()
+
+
+def is_production_env() -> bool:
+    return os.getenv("QB_ENV", "").strip().lower() in {"prod", "production"}
+
+
+def is_question_bank_api_path(path: str) -> bool:
+    return str(path or "").strip().startswith("/api/question-bank/")
+
+
+def requires_authenticated_question_bank_api(path: str) -> bool:
+    normalized = str(path or "").strip()
+    return is_question_bank_api_path(normalized) and normalized not in API_LOGIN_OPTIONAL_PATHS
+
+
+def header_actor_fallback_enabled() -> bool:
+    raw = os.getenv(HEADER_ACTOR_FALLBACK_ENV_KEY, "").strip().lower()
+    if raw not in {"1", "true", "yes", "on"}:
+        return False
+    return not is_production_env()
 
 
 def _resolve_actor_from_token(
@@ -107,6 +138,8 @@ def get_actor(
     role: Optional[str] = Query(default=None),
     userId: Optional[str] = Query(default=None),
 ) -> Actor:
+    request_path = str(request.url.path or "").strip()
+    requires_authenticated_api = requires_authenticated_question_bank_api(request_path)
     normalized_injected_joint_group = str(x_joint_group or "").strip()
     token_actor = _resolve_actor_from_token(request, authorization, qb_access_token)
     if token_actor:
@@ -123,14 +156,23 @@ def get_actor(
         role = None
     if not isinstance(userId, str):
         userId = None
-    raw_role = str(x_role or role or qb_role or ROLE_TEACHER).strip()
+    fallback_enabled = header_actor_fallback_enabled()
+    if requires_authenticated_api:
+        if not fallback_enabled:
+            raise unauthorized("该模块仅支持登录态访问，请先登录。")
+        if not str(x_role or role or qb_role or "").strip() or not str(x_user_id or userId or qb_user_id or "").strip():
+            raise unauthorized("该模块仅支持登录态访问，请先登录。")
+    raw_role = str(x_role or role or qb_role or ("" if requires_authenticated_api else ROLE_TEACHER)).strip()
     resolved_role = normalize_role(raw_role)
-    default_user_id = "teacher-001"
-    if resolved_role == ROLE_SUPER_ADMIN:
-        default_user_id = "admin-001"
-    elif resolved_role == ROLE_STUDENT:
-        default_user_id = "student-001"
-    resolved_user_id = x_user_id or userId or qb_user_id or default_user_id
+    if requires_authenticated_api:
+        resolved_user_id = x_user_id or userId or qb_user_id or ""
+    else:
+        default_user_id = "teacher-001"
+        if resolved_role == ROLE_SUPER_ADMIN:
+            default_user_id = "admin-001"
+        elif resolved_role == ROLE_STUDENT:
+            default_user_id = "student-001"
+        resolved_user_id = x_user_id or userId or qb_user_id or default_user_id
     if raw_role not in ACCEPTED_ROLES or resolved_role not in ALL_ROLES:
         raise validation_failed("角色不合法，请使用 super_admin、teacher 或 student。")
     if not resolved_user_id.strip():

@@ -15,6 +15,7 @@ describe('devLogin helpers', () => {
   it('resolves student preset from student pathname', () => {
     expect(resolveDevLoginPresetFromPath('/student/question-bank/repair')?.role).toBe('student')
     expect(resolveDevLoginPresetFromPath('/teacher/home')?.role).toBe('teacher')
+    expect(resolveDevLoginPresetFromPath('/admin/control-center')?.role).toBe('super_admin')
   })
 
   it('maps teacher entry html to teacher home when dev login preset is present', () => {
