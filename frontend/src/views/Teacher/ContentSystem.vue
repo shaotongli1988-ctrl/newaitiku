@@ -81,6 +81,12 @@ function renderBarChart() {
     },
     xAxis: {
       type: 'category',
+      axisLine: {
+        show: false,
+      },
+      axisTick: {
+        show: false,
+      },
       axisLabel: {
         interval: 0,
         rotate: 24,
@@ -89,6 +95,15 @@ function renderBarChart() {
     },
     yAxis: {
       type: 'value',
+      axisLine: {
+        show: false,
+      },
+      axisTick: {
+        show: false,
+      },
+      nameTextStyle: {
+        color: 'transparent',
+      },
       name: '题量',
     },
     series: [
