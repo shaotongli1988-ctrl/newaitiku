@@ -37,12 +37,10 @@ export function resolveDevLoginPresetFromPath(pathname = '') {
   if (normalizedPathname === '/student' || normalizedPathname.startsWith('/student/')) {
     return DEV_LOGIN_PRESETS.student
   }
-  if (
-    normalizedPathname === '/teacher'
-    || normalizedPathname === '/admin'
-    || normalizedPathname.startsWith('/teacher/')
-    || normalizedPathname.startsWith('/admin/')
-  ) {
+  if (normalizedPathname === '/admin' || normalizedPathname.startsWith('/admin/')) {
+    return DEV_LOGIN_PRESETS.admin
+  }
+  if (normalizedPathname === '/teacher' || normalizedPathname.startsWith('/teacher/')) {
     return DEV_LOGIN_PRESETS.teacher
   }
   return null

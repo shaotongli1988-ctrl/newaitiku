@@ -2310,6 +2310,37 @@ function normalize_scope_params(params = {}) {
   }
 }
 
+function normalize_question_list_params(params = {}) {
+  const normalized_params = {
+    ...params,
+    knowledgeId: normalize_string(params.knowledgeId ?? params.knowledge_id),
+    questionIds: normalize_string(params.questionIds ?? params.question_ids),
+    userId: normalize_string(params.userId ?? params.user_id),
+    keyword: normalize_string(params.keyword),
+    type: normalize_string(params.type),
+    status: normalize_string(params.status),
+    chapterCode: normalize_string(params.chapterCode ?? params.chapter_code),
+    pointCode: normalize_string(params.pointCode ?? params.point_code),
+    examCategoryCode: normalize_string(params.examCategoryCode ?? params.exam_category_code),
+    jointExamGroupCode: normalize_string(params.jointExamGroupCode ?? params.joint_exam_group_code),
+    subjectCode: normalize_string(params.subjectCode ?? params.subject_code),
+    policyVersion: normalize_string(params.policyVersion ?? params.policy_version ?? POLICY_VERSION),
+  }
+
+  delete normalized_params.knowledge_id
+  delete normalized_params.question_ids
+  delete normalized_params.user_id
+  delete normalized_params.chapter_code
+  delete normalized_params.point_code
+  delete normalized_params.exam_category_code
+  delete normalized_params.joint_exam_group_code
+  delete normalized_params.subject_code
+  delete normalized_params.policy_version
+  delete normalized_params.policyVersionCode
+
+  return normalized_params
+}
+
 function normalize_login_password_payload(payload = {}) {
   return {
     phone: normalize_string(payload.phone),
@@ -2520,7 +2551,7 @@ export async function fetchContentBaseline(options = {}) {
 }
 
 export async function fetchQuestionList(params) {
-  const response = await listQuestions(params || {})
+  const response = await listQuestions(normalize_question_list_params(params || {}))
   return unwrap_page_data(response)
 }
 

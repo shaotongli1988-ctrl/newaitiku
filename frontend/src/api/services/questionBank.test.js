@@ -240,6 +240,46 @@ describe('knowledge tree service helpers', () => {
   })
 })
 
+describe('question list service helpers', () => {
+  it('normalizes professional scope params to camelCase before listing questions', async () => {
+    requestMock.mockResolvedValue({ data: { items: [], page: 1, size: 10, total: 0 } })
+    const { fetchQuestionList } = await loadQuestionBankService()
+
+    await fetchQuestionList({
+      page: 1,
+      size: 10,
+      exam_category_code: ' LITERATURE ',
+      joint_exam_group_code: ' LITERATURE_1 ',
+      subject_code: ' ARTS_HISTORY_FOUNDATION ',
+      policy_version: ' HB_ZSB_2026 ',
+      question_ids: 'question-1',
+    })
+
+    expect(requestMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'get',
+        url: '/api/question-bank/questions',
+        params: {
+          page: 1,
+          size: 10,
+          questionIds: 'question-1',
+          knowledgeId: '',
+          userId: '',
+          keyword: '',
+          type: '',
+          status: '',
+          chapterCode: '',
+          pointCode: '',
+          examCategoryCode: 'LITERATURE',
+          jointExamGroupCode: 'LITERATURE_1',
+          subjectCode: 'ARTS_HISTORY_FOUNDATION',
+          policyVersion: 'HB_ZSB_2026',
+        },
+      }),
+    )
+  })
+})
+
 describe('personal bank service helpers', () => {
   it('passes archive and review-plan filters through when listing questions', async () => {
     requestMock.mockResolvedValue({ data: { items: [], total: 0, page: 1, size: 20 } })

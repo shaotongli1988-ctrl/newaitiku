@@ -235,7 +235,7 @@ async function loadKnowledgeTreeOptions(subjectCode = '', { force = false } = {}
   try {
     const response = await knowledgeTreeV2({
       status: 'ENABLED',
-      subject_code: normalizedSubjectCode,
+      subjectCode: normalizedSubjectCode,
     })
     const treePayload = parseEnvelopeData(response) || {}
     const selectorState = normalizeKnowledgeTreeOptions(treePayload)
@@ -573,9 +573,9 @@ async function handleBatchFileChange(uploadFile) {
   try {
     const payload = await parseQuestionBatchFromWordFile({
       file,
-      exam_category_code: scopeMeta.categoryCode,
-      joint_exam_group_code: scopeMeta.groupCode,
-      subject_code: scopeMeta.subjectCode,
+      examCategoryCode: scopeMeta.categoryCode,
+      jointExamGroupCode: scopeMeta.groupCode,
+      subjectCode: scopeMeta.subjectCode,
     })
     if (payload?.deferred && payload?.taskId) {
       await pollBatchTaskUntilDone(payload.taskId)
@@ -612,26 +612,26 @@ async function handleBatchCreate() {
         title: String(row.title || '').trim() || String(row.content || '').trim().slice(0, 60),
         content: String(row.content || '').trim(),
         type: String(row.type || 'single_choice').trim() || 'single_choice',
-        exam_category_code: String(scopeMeta.categoryCode || row.scopePath[0] || '').trim(),
-        joint_exam_group_code: String(scopeMeta.groupCode || row.scopePath[1] || '').trim(),
-        subject_code: String(scopeMeta.subjectCode || row.scopePath[2] || '').trim(),
-        subject_type: String(scopeMeta.subjectType || scopeMeta.subjectSlot || '').trim(),
-        module_code: String(row.moduleCode || '').trim(),
-        knowledge_points: [knowledgeId],
+        examCategoryCode: String(scopeMeta.categoryCode || row.scopePath[0] || '').trim(),
+        jointExamGroupCode: String(scopeMeta.groupCode || row.scopePath[1] || '').trim(),
+        subjectCode: String(scopeMeta.subjectCode || row.scopePath[2] || '').trim(),
+        subjectType: String(scopeMeta.subjectType || scopeMeta.subjectSlot || '').trim(),
+        moduleCode: String(row.moduleCode || '').trim(),
+        knowledgePoints: [knowledgeId],
         options: Array.isArray(row.options) ? row.options : [],
         answer: String(row.answer || '').trim(),
         analysis: String(row.analysis || '').trim(),
-        source_type: 'word_batch_parse',
+        sourceType: 'word_batch_parse',
         status: 'DRAFT',
-        ext_json: {
-          chapter_code: String(row.chapterCode || '').trim(),
-          point_code: String(row.pointCode || '').trim(),
-          path_label: String(row.pathLabel || '').trim(),
-          batch_preview_id: String(row.previewId || '').trim(),
+        extJson: {
+          chapterCode: String(row.chapterCode || '').trim(),
+          pointCode: String(row.pointCode || '').trim(),
+          pathLabel: String(row.pathLabel || '').trim(),
+          batchPreviewId: String(row.previewId || '').trim(),
         },
       }
     })
-    .filter((item) => item.content && item.answer && item.knowledge_points.length)
+    .filter((item) => item.content && item.answer && item.knowledgePoints.length)
 
   if (!payloadItems.length) {
     ElMessage.warning('当前没有通过校验的题目，请先修正标签和答案。')
@@ -739,20 +739,20 @@ async function handleSubmit() {
     title: String(formModel.title || '').trim(),
     content: String(formModel.content || '').trim(),
     type: String(formModel.type || '').trim(),
-    exam_category_code: scopeMeta.categoryCode,
-    joint_exam_group_code: scopeMeta.groupCode,
-    subject_code: scopeMeta.subjectCode,
-    subject_type: scopeMeta.subjectType || scopeMeta.subjectSlot || '',
-    module_code: selectedModuleCode,
-    knowledge_points: [selectedKnowledgePointId.value],
-    ext_json: {
-      chapter_code: chapterCode,
-      point_code: pointCode,
+    examCategoryCode: scopeMeta.categoryCode,
+    jointExamGroupCode: scopeMeta.groupCode,
+    subjectCode: scopeMeta.subjectCode,
+    subjectType: scopeMeta.subjectType || scopeMeta.subjectSlot || '',
+    moduleCode: selectedModuleCode,
+    knowledgePoints: [selectedKnowledgePointId.value],
+    extJson: {
+      chapterCode: chapterCode,
+      pointCode: pointCode,
     },
     options: optionsPayload,
     answer: String(formModel.answer || '').trim(),
     analysis: String(formModel.analysis || '').trim(),
-    source_type: 'manual',
+    sourceType: 'manual',
     status: 'DRAFT',
   }
 
