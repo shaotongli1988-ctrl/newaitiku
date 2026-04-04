@@ -89,6 +89,42 @@ def test_batch_parse_returns_2026_structured_payload(tmp_path: Path) -> None:
     assert first_item.get("knowledge_points") == ["计算机基础"]
 
 
+def test_batch_parse_decodes_gb18030_txt_upload(tmp_path: Path) -> None:
+    client = make_client(tmp_path)
+    unique_stem = "\u7f16\u7801\u56de\u5f52GB18030\u9898\u5e72\u6d4b\u8bd5"
+    content = "\n".join(
+        [
+            "\u3010\u9898\u578b\u3011single_choice",
+            f"\u3010\u9898\u5e72\u3011{unique_stem}",
+            "\u3010\u9009\u9879\u3011A.\u652f\u6301|B.\u4e0d\u652f\u6301",
+            "\u3010\u7b54\u6848\u3011A",
+            "\u3010\u89e3\u6790\u3011GB18030 \u6587\u672c\u7f16\u7801\u89e3\u6790\u9a8c\u8bc1",
+            "\u3010\u77e5\u8bc6\u70b9\u3011\u8ba1\u7b97\u673a\u57fa\u7840",
+        ]
+    )
+    response = client.post(
+        "/api/question-bank/batch-parse",
+        headers=teacher_headers("teacher-002"),
+        data={
+            "examCategoryCode": "SCIENCE_ENGINEERING",
+            "jointExamGroupCode": "SCIENCE_ENGINEERING_3",
+            "subjectCode": "INFO_TECH_INTRO",
+        },
+        files={
+            "file": ("batch-parse.txt", content.encode("gb18030"), "text/plain"),
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload.get("code") == "OK"
+    data = payload.get("data", {})
+    assert data.get("valid_count") == 1
+    assert data.get("invalid_count") == 0
+    first_item = (data.get("items") or [{}])[0]
+    assert str(first_item.get("content", "")).strip() == unique_stem
+    assert str(first_item.get("analysis", "")).strip().startswith("GB18030")
+
+
 def test_batch_parse_normalizes_math_and_chem_formula_text(tmp_path: Path) -> None:
     client = make_client(tmp_path)
     content = "\n".join(
@@ -156,6 +192,97 @@ def test_batch_parse_keeps_multiline_english_stem_and_long_options(tmp_path: Pat
     options = item.get("options", [])
     assert len(options) == 4
     assert "f'(x)=2x" in str(options[0].get("content", ""))
+
+
+def test_batch_parse_maps_bracket_knowledge_hint_to_knowledge_path(tmp_path: Path) -> None:
+    client = make_client(tmp_path)
+    svc = client.app.state.service
+    scope = {
+        "examCategoryCode": "SCIENCE_ENGINEERING",
+        "jointExamGroupCode": "SCIENCE_ENGINEERING_3",
+        "subjectCode": "INFO_TECH_INTRO",
+        "policyVersionCode": "HB_ZSB_2026",
+    }
+    semantic_pool = svc._build_question_semantic_pool(scope)
+    target = next(
+        (
+            item
+            for item in semantic_pool
+            if int(item.get("level", 0) or 0) >= 5 and isinstance(item.get("path_levels", []), list)
+        ),
+        None,
+    )
+    assert target is not None
+    hint_path = " -> ".join(
+        str(level.get("label", "")).strip()
+        for level in target.get("path_levels", [])
+        if str(level.get("label", "")).strip()
+    )
+    assert hint_path
+
+    content = "\n".join(
+        [
+            "[type] single_choice",
+            "[content] Which component is the core of a computer system?",
+            "[options] A.CPU|B.Display|C.Keyboard|D.Mouse",
+            "[answer] A",
+            "[analysis] CPU is responsible for instruction execution and data processing.",
+            f"[knowledge] {hint_path}",
+        ]
+    )
+    response = client.post(
+        "/api/question-bank/batch-parse",
+        headers=teacher_headers("teacher-002"),
+        data={
+            "examCategoryCode": "SCIENCE_ENGINEERING",
+            "jointExamGroupCode": "SCIENCE_ENGINEERING_3",
+            "subjectCode": "INFO_TECH_INTRO",
+        },
+        files={
+            "file": ("batch-parse.txt", content.encode("utf-8"), "text/plain"),
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json().get("data", {})
+    item = (payload.get("items") or [{}])[0]
+    assert str(item.get("pointCode", "")).strip() == str(target.get("pointCode", "")).strip()
+    assert len(item.get("knowledge_path") or []) >= 1
+    assert bool(item.get("manual_review_required")) is False
+
+
+def test_batch_parse_fallback_subject_semantic_pool_for_shared_subject(tmp_path: Path) -> None:
+    client = make_client(tmp_path)
+    content = "\n".join(
+        [
+            "[type] single_choice",
+            "[content] 距今约7000至5000年前，黄河中游地区粟为主要栽培作物的时期是（   ）",
+            "[options] A.大汶口文化|B.仰韶文化|C.北京人|D.河姆渡文化",
+            "[answer] B",
+            "[analysis] 题干对应史前文化相关内容。",
+            "[knowledge] 文史基础 -> 具体内容与要求 -> 中国古代史 -> 史前文化 -> 了解仰韶文化",
+        ]
+    )
+    # ARTS_HISTORY_FOUNDATION is shared across groups. Some seeded nodes are scoped
+    # to EDUCATION_3; parser should still fallback by subject code when current group
+    # has no direct semantic pool rows.
+    response = client.post(
+        "/api/question-bank/batch-parse",
+        headers=teacher_headers("teacher-002"),
+        data={
+            "examCategoryCode": "LITERATURE",
+            "jointExamGroupCode": "LITERATURE_1",
+            "subjectCode": "ARTS_HISTORY_FOUNDATION",
+        },
+        files={
+            "file": ("batch-parse.txt", content.encode("utf-8"), "text/plain"),
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json().get("data", {})
+    item = (payload.get("items") or [{}])[0]
+    assert str(item.get("pointCode", "")).strip()
+    assert len(item.get("knowledge_path") or []) >= 1
+    assert bool(item.get("manual_review_required")) is False
 
 
 def test_batch_parse_uses_docx_image_ocr_fallback_for_formula_content(tmp_path: Path, monkeypatch) -> None:

@@ -32,6 +32,7 @@ const route = useRoute()
 const router = useRouter()
 
 const errorMessage = ref('')
+const fallbackSearchNotice = ref('')
 const subjectCodeOptions = ref([])
 const transitioningQuestionId = ref('')
 const questionTableRef = ref(null)
@@ -100,7 +101,7 @@ const {
   createInitialFilters: createQuestionFilters,
   createInitialPagination: createQuestionPagination,
   async fetchPage({ filters: currentFilters, pagination: currentPagination }) {
-    return fetchQuestionList({
+    const requestPayload = {
       page: currentPagination.page,
       size: currentPagination.size,
       questionIds: scopedQuestionIds.value.join(','),
@@ -108,7 +109,37 @@ const {
       examCategoryCode: String(currentFilters.examCategoryCode || '').trim(),
       jointExamGroupCode: String(currentFilters.jointExamGroupCode || '').trim(),
       subjectCode: String(currentFilters.subjectCode || '').trim(),
+    }
+    const primaryPage = await fetchQuestionList(requestPayload)
+    const primaryItems = Array.isArray(primaryPage?.items) ? primaryPage.items : []
+    if (primaryItems.length > 0) {
+      fallbackSearchNotice.value = ''
+      return primaryPage
+    }
+
+    const shouldRunRelaxedScopeFallback = (
+      !scopedQuestionIds.value.length
+      && Boolean(requestPayload.subjectCode)
+      && (Boolean(requestPayload.examCategoryCode) || Boolean(requestPayload.jointExamGroupCode))
+    )
+    if (!shouldRunRelaxedScopeFallback) {
+      fallbackSearchNotice.value = ''
+      return primaryPage
+    }
+
+    const relaxedPage = await fetchQuestionList({
+      ...requestPayload,
+      examCategoryCode: '',
+      jointExamGroupCode: '',
     })
+    const relaxedItems = Array.isArray(relaxedPage?.items) ? relaxedPage.items : []
+    if (relaxedItems.length > 0) {
+      fallbackSearchNotice.value = '当前筛选范围未命中，已自动展示同科目下匹配关键词的题目。'
+      return relaxedPage
+    }
+
+    fallbackSearchNotice.value = ''
+    return primaryPage
   },
   async onLoaded(rows) {
     errorMessage.value = ''
@@ -324,9 +355,18 @@ const tableRows = computed(() =>
         (Array.isArray(ext.applicableGroups) ? String(ext.applicableGroups[0] || '') : ''),
       ),
       subjectCode: String(ext.subjectCode || ''),
+      answer: String(questionItem.answer || '').trim(),
       updateTime: String(questionItem.updateTime || ''),
     }
   }),
+)
+
+const queryResultRows = computed(() =>
+  tableRows.value.map((row, index) => ({
+    seq: (Math.max(1, Number(pagination.page || 1)) - 1) * Math.max(1, Number(pagination.size || 10)) + index + 1,
+    stem: String(row?.stem || '').trim(),
+    answer: String(row?.answer || '').trim() || '-',
+  })),
 )
 
 const detailExtJson = computed(() => parseExtJson(detailQuestion.value?.extJson))
@@ -653,12 +693,14 @@ function clearScopedQuestionFilter() {
 function handleSearch(nextFilter) {
   filterModel.value = nextFilter || {}
   pagination.page = 1
+  fallbackSearchNotice.value = ''
   loadQuestionList()
 }
 
 function handleReset() {
   resetFilters()
   pagination.page = 1
+  fallbackSearchNotice.value = ''
   loadQuestionList()
 }
 
@@ -1179,6 +1221,38 @@ watch(
       @reset="handleReset"
     />
 
+    <el-alert
+      v-if="fallbackSearchNotice"
+      type="info"
+      show-icon
+      :closable="false"
+      :title="fallbackSearchNotice"
+    />
+
+    <section class="query-result-list-panel">
+      <header class="query-result-list-panel__header">
+        <strong>查询结果列表</strong>
+        <span class="helper-text">按序号展示题目与正确答案</span>
+      </header>
+      <div v-if="queryResultRows.length" class="query-result-list-panel__list">
+        <div class="query-result-list-panel__row query-result-list-panel__row--head">
+          <span>序号</span>
+          <span>题目</span>
+          <span>正确答案</span>
+        </div>
+        <div
+          v-for="item in queryResultRows"
+          :key="`query-result-${item.seq}`"
+          class="query-result-list-panel__row"
+        >
+          <span>{{ item.seq }}</span>
+          <span>{{ item.stem }}</span>
+          <span>{{ item.answer }}</span>
+        </div>
+      </div>
+      <div v-else class="query-result-list-panel__empty">当前筛选条件下暂无题目数据</div>
+    </section>
+
     <el-table
       ref="questionTableRef"
       v-loading="loading"
@@ -1566,6 +1640,55 @@ p {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.query-result-list-panel {
+  border: 1px solid var(--qb-primary-soft-border);
+  border-radius: 12px;
+  background: var(--qb-bg-card);
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.query-result-list-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.query-result-list-panel__list {
+  border: 1px solid var(--qb-border-muted);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.query-result-list-panel__row {
+  display: grid;
+  grid-template-columns: 96px 1fr 160px;
+  gap: 8px;
+  align-items: start;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--qb-border-muted);
+  font-size: 13px;
+}
+
+.query-result-list-panel__row:last-child {
+  border-bottom: none;
+}
+
+.query-result-list-panel__row--head {
+  background: var(--qb-primary-soft-bg);
+  font-weight: 600;
+}
+
+.query-result-list-panel__empty {
+  border: 1px dashed var(--qb-border-muted);
+  border-radius: 8px;
+  color: var(--qb-text-subtle-8);
+  font-size: 13px;
+  padding: 16px 12px;
 }
 
 .pagination-wrap {

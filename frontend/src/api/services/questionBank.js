@@ -606,7 +606,17 @@ export function previewTemplateImport(data = {}) {
  * 可选字段: examCategoryCode、jointExamGroupCode、subjectCode
  */
 export function batchParseQuestions(data = {}) {
-  const form_data = build_form_data(data, ['file'])
+  const normalized_data = {
+    ...data,
+    examCategoryCode: data.examCategoryCode ?? data.examCategoryCode ?? '',
+    jointExamGroupCode: data.jointExamGroupCode ?? data.jointExamGroupCode ?? '',
+    subjectCode: data.subjectCode ?? data.subjectCode ?? '',
+    policyVersion: data.policyVersion ?? data.policyVersion ?? 'HB_ZSB_2026',
+  }
+  const form_data = build_form_data(
+    normalized_data,
+    ['file', 'examCategoryCode', 'jointExamGroupCode', 'subjectCode'],
+  )
   return request({
     method: 'post',
     url: '/api/question-bank/batch-parse',
@@ -2787,15 +2797,17 @@ export async function parseQuestionBatchFromWordFile(data = {}) {
     policyVersion: data.policyVersion ?? data.policyVersion ?? KNOWLEDGE_SCOPE_POLICY_VERSION,
   })
   const payload = unwrap_data(response) || {}
+  console.log('=== parseQuestionBatchFromWordFile 调试 ===')
+  console.log('unwrap_data 结果:', payload)
+  console.log('payload.items:', payload?.items)
+  console.log('payload.items长度:', payload?.items?.length)
+  console.log('=== 调试结束 ===')
+  
   const normalized_scope = normalize_knowledge_scope_payload(payload.scope, request_scope)
   return {
     ...payload,
     scope: normalized_scope,
     scope_path: normalized_scope.scope_path,
-    examCategoryCode: normalized_scope.examCategoryCode,
-    jointExamGroupCode: normalized_scope.jointExamGroupCode,
-    subjectCode: normalized_scope.subjectCode,
-    policyVersion: normalized_scope.policyVersion,
     examCategoryCode: normalized_scope.examCategoryCode,
     jointExamGroupCode: normalized_scope.jointExamGroupCode,
     subjectCode: normalized_scope.subjectCode,

@@ -1419,6 +1419,26 @@ def test_list_questions_supports_chapter_code_and_point_code_filters(tmp_path: P
     assert any(str(item.get("id", "")) == created_id for item in point_items)
 
 
+def test_list_questions_supports_shared_professional_subject_exam_scope(tmp_path: Path):
+    client = make_client(tmp_path)
+    response = client.get(
+        "/api/question-bank/questions",
+        headers=teacher_headers("teacher-001"),
+        params={
+            "examCategoryCode": "LITERATURE",
+            "jointExamGroupCode": "LITERATURE_1",
+            "subjectCode": "ARTS_HISTORY_FOUNDATION",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    items = payload["items"]
+    item_ids = {str(item.get("id", "")).strip() for item in items}
+
+    assert payload["total"] >= 1
+    assert "question-seed-std-arts-history-foundation-001" in item_ids
+
+
 def test_teacher_cannot_create_other_owners_question(tmp_path: Path):
     client = make_client(tmp_path)
     response = client.post(
@@ -1530,6 +1550,56 @@ def test_review_pending_question_is_visible_to_cross_teacher_pool(tmp_path: Path
         headers=teacher_headers("teacher-002"),
     )
     assert review_response.status_code == 200
+
+    cross_teacher_list = client.get("/api/question-bank/questions", headers=teacher_headers("teacher-002"))
+    assert cross_teacher_list.status_code == 200
+    ids = [item["id"] for item in cross_teacher_list.json()["data"]["items"]]
+    assert question_id in ids
+
+
+def test_draft_question_is_visible_to_cross_teacher_pool(tmp_path: Path):
+    client = make_client(tmp_path)
+    created = client.post(
+        "/api/question-bank/questions",
+        headers=teacher_headers("teacher-001"),
+        json=payload(user_id="teacher-001"),
+    )
+    assert created.status_code == 200
+    question_id = created.json()["data"]["id"]
+
+    cross_teacher_list = client.get("/api/question-bank/questions", headers=teacher_headers("teacher-002"))
+    assert cross_teacher_list.status_code == 200
+    ids = [item["id"] for item in cross_teacher_list.json()["data"]["items"]]
+    assert question_id in ids
+
+
+def test_published_question_is_visible_to_cross_teacher_pool(tmp_path: Path):
+    client = make_client(tmp_path)
+    created = client.post(
+        "/api/question-bank/questions",
+        headers=teacher_headers("teacher-001"),
+        json=payload(user_id="teacher-001"),
+    )
+    assert created.status_code == 200
+    question_id = created.json()["data"]["id"]
+
+    qa_response = client.post(
+        f"/api/question-bank/questions/{question_id}/status/QA_IN_PROGRESS",
+        headers=teacher_headers("teacher-001"),
+    )
+    assert qa_response.status_code == 200
+
+    review_response = client.post(
+        f"/api/question-bank/questions/{question_id}/status/REVIEW_PENDING",
+        headers=teacher_headers("teacher-002"),
+    )
+    assert review_response.status_code == 200
+
+    publish_response = client.post(
+        f"/api/question-bank/questions/{question_id}/status/PUBLISHED",
+        headers=teacher_headers("teacher-002"),
+    )
+    assert publish_response.status_code == 200
 
     cross_teacher_list = client.get("/api/question-bank/questions", headers=teacher_headers("teacher-002"))
     assert cross_teacher_list.status_code == 200
@@ -1737,6 +1807,41 @@ def test_template_import_uses_same_contract(tmp_path: Path):
     data = response.json()["data"]
     assert data["imported"] == 1
     assert data["failed"] == 0
+
+
+def test_template_import_decodes_utf16_text_file(tmp_path: Path):
+    client = make_client(tmp_path)
+    unique_stem = "\u7f16\u7801\u56de\u5f52UTF16\u9898\u5e72\u6d4b\u8bd5"
+    content = "\n".join(
+        [
+            "\u3010\u9898\u578b\u3011single_choice",
+            "\u3010\u96be\u5ea6\u3011medium",
+            f"\u3010\u9898\u5e72\u3011{unique_stem}",
+            "\u3010\u9009\u9879\u3011A.\u6b63\u786e|B.\u9519\u8bef",
+            "\u3010\u7b54\u6848\u3011A",
+            "\u3010\u89e3\u6790\u3011UTF16 \u4e0a\u4f20\u7f16\u7801\u89e3\u6790\u9a8c\u8bc1",
+            "\u3010\u77e5\u8bc6\u70b9\u3011\u5b9e\u8df5\u4e0e\u8ba4\u8bc6",
+        ]
+    )
+    response = client.post(
+        "/api/question-bank/imports/template",
+        headers=teacher_headers(),
+        files={"file": ("questions.txt", io.BytesIO(content.encode("utf-16")), "text/plain")},
+        data={"knowledgeId": POLITICS_POINT_ID},
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["imported"] == 1
+    assert data["failed"] == 0
+
+    listed = client.get(
+        "/api/question-bank/questions",
+        headers=teacher_headers(),
+        params={"keyword": unique_stem, "userId": "teacher-001"},
+    )
+    assert listed.status_code == 200
+    items = listed.json()["data"]["items"]
+    assert any(str(item.get("stem", "")).strip() == unique_stem for item in items)
 
 
 def test_template_import_example_is_served_by_api(tmp_path: Path):
@@ -2196,6 +2301,24 @@ def test_knowledge_tree_response_allows_wrong_count_field(tmp_path: Path):
     assert all("wrongCount" in item for item in payload["nodes"])
     assert all("shortLabel" in item for item in payload["nodes"])
     assert all("fullLabel" in item for item in payload["nodes"])
+
+
+def test_knowledge_tree_supports_shared_professional_subject_scope_filter(tmp_path: Path):
+    client = make_client(tmp_path)
+
+    knowledge_tree = client.get(
+        "/api/knowledge-tree",
+        headers=teacher_headers("teacher-001"),
+        params={
+            "subjectCode": "ARTS_HISTORY_FOUNDATION",
+            "examCategoryCode": "LITERATURE",
+            "jointExamGroupCode": "LITERATURE_1",
+        },
+    )
+
+    assert knowledge_tree.status_code == 200
+    payload = knowledge_tree.json()["data"]
+    assert len(payload["nodes"]) >= 1
 
 
 def test_init_db_backfills_l5_diagnostic_nodes_for_sparse_subjects(tmp_path: Path):

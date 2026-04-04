@@ -1101,9 +1101,10 @@ class InternalQuestionPaperServiceMixin:
         return None
 
     def _load_template_content(self, file_name: str, file_bytes: bytes) -> str:
-        if file_name.endswith(".docx"):
+        normalized_name = str(file_name or "").lower()
+        if normalized_name.endswith(".docx"):
             return parse_word_content(file_bytes)
-        return file_bytes.decode("utf-8")
+        return decode_uploaded_text_bytes(file_bytes)
 
     def _parse_template_questions(
         self,

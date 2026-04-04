@@ -5235,19 +5235,45 @@ class QuestionRepository:
 
         exam_category_code = str(normalized_filters.get("examCategoryCode") or "").strip()
         if exam_category_code:
-            clauses.append(
-                "("
-                "COALESCE(json_extract(extJson, '$.examCategoryCode'), '') = :exam_category_code "
-                "OR COALESCE(json_extract(extJson, '$.subjectType'), '') = 'PUBLIC'"
-                ")"
-            )
             params["exam_category_code"] = exam_category_code
+            allowed_group_codes = [
+                str(item.get("jointExamGroupCode", "")).strip()
+                for item in list_joint_exam_groups(exam_category_code)
+                if str(item.get("jointExamGroupCode", "")).strip()
+            ]
+            if allowed_group_codes:
+                allowed_group_placeholders: List[str] = []
+                for index, group_code in enumerate(allowed_group_codes):
+                    placeholder = f"knowledge_allowed_group_code_{index}"
+                    allowed_group_placeholders.append(f":{placeholder}")
+                    params[placeholder] = group_code
+                clauses.append(
+                    "("
+                    "COALESCE(json_extract(extJson, '$.examCategoryCode'), '') = :exam_category_code "
+                    "OR COALESCE(json_extract(extJson, '$.subjectType'), '') = 'PUBLIC' "
+                    "OR EXISTS ("
+                    "SELECT 1 FROM json_each(extJson, '$.applicableGroups') AS applicable_group "
+                    f"WHERE applicable_group.value IN ({','.join(allowed_group_placeholders)})"
+                    ")"
+                    ")"
+                )
+            else:
+                clauses.append(
+                    "("
+                    "COALESCE(json_extract(extJson, '$.examCategoryCode'), '') = :exam_category_code "
+                    "OR COALESCE(json_extract(extJson, '$.subjectType'), '') = 'PUBLIC'"
+                    ")"
+                )
 
         joint_exam_group_code = str(normalized_filters.get("jointExamGroupCode") or "").strip()
         if joint_exam_group_code:
             clauses.append(
                 "("
                 "COALESCE(json_extract(extJson, '$.jointExamGroupCode'), '') = :joint_exam_group_code "
+                "OR EXISTS ("
+                "SELECT 1 FROM json_each(extJson, '$.applicableGroups') AS applicable_group "
+                "WHERE applicable_group.value = :joint_exam_group_code"
+                ") "
                 "OR COALESCE(json_extract(extJson, '$.subjectType'), '') = 'PUBLIC'"
                 ")"
             )
@@ -5442,14 +5468,11 @@ class QuestionRepository:
                     params[placeholder] = group_code
                 clauses.append(
                     "("
-                    "(COALESCE(json_extract(extJson, '$.subjectType'), '') != 'PUBLIC' "
-                    "AND COALESCE(json_extract(extJson, '$.examCategoryCode'), '') = :exam_category_code)"
-                    " OR "
-                    "(COALESCE(json_extract(extJson, '$.subjectType'), '') = 'PUBLIC' "
-                    "AND EXISTS ("
+                    "COALESCE(json_extract(extJson, '$.examCategoryCode'), '') = :exam_category_code"
+                    " OR EXISTS ("
                     "SELECT 1 FROM json_each(extJson, '$.applicableGroups') AS applicable_group "
                     f"WHERE applicable_group.value IN ({','.join(allowed_group_placeholders)})"
-                    "))"
+                    ")"
                     ")"
                 )
             else:
@@ -5479,7 +5502,9 @@ class QuestionRepository:
             clauses.append("COALESCE(json_extract(extJson, '$.pointCode'), '') = :point_code")
             params["point_code"] = point_code
         if actor_role == "teacher":
-            clauses.append("(userId = :actorUserId OR status IN ('QA_IN_PROGRESS', 'REVIEW_PENDING'))")
+            # Teachers should always see their own questions, plus same-scope
+            # shared pool entries (including drafts) for collaborative query.
+            clauses.append("(userId = :actorUserId OR status IN ('DRAFT', 'QA_IN_PROGRESS', 'REVIEW_PENDING', 'PUBLISHED'))")
             params["actorUserId"] = actor_user_id
         where_clause = " AND ".join(clauses)
         offset = (page - 1) * size

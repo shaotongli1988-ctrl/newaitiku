@@ -16,7 +16,7 @@ import zipfile
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 from xml.etree import ElementTree as ET
 
 import httpx
@@ -248,6 +248,49 @@ _FORMULA_SYMBOL_REPLACEMENTS = {
     "\u200b": "",
     "\ufeff": "",
 }
+_TEXT_MARKER_HINTS = (
+    "【题干】",
+    "【选项】",
+    "【答案】",
+    "【解析】",
+    "【知识点】",
+    "【题型】",
+    "题干",
+    "选项",
+    "答案",
+    "解析",
+    "知识点",
+    "题型",
+)
+_MOJIBAKE_HINT_TOKENS = (
+    "Ã",
+    "Â",
+    "å",
+    "é",
+    "锟",
+    "銆",
+    "鈥",
+    "鍙",
+    "閫",
+)
+_TEXT_DECODE_CANDIDATE_ENCODINGS: Sequence[str] = (
+    "utf-8-sig",
+    "utf-8",
+    "utf-16",
+    "utf-16-le",
+    "utf-16-be",
+    "gb18030",
+    "gbk",
+    "gb2312",
+    "big5",
+)
+_MOJIBAKE_RECODE_PAIRS: Sequence[Tuple[str, str]] = (
+    ("latin-1", "utf-8"),
+    ("cp1252", "utf-8"),
+    ("gbk", "utf-8"),
+    ("gb18030", "utf-8"),
+    ("big5", "utf-8"),
+)
 
 
 def is_docx_available() -> bool:
@@ -332,7 +375,74 @@ def parse_word_content(file_bytes: bytes) -> str:
         raise failed_dependency(_DOCX_MISSING_MESSAGE) from exc
     _ = _Document
 
-    return _extract_docx_document_text(file_bytes)
+    extracted_text = _extract_docx_document_text(file_bytes)
+    return _repair_mojibake_text(extracted_text)
+
+
+def _looks_like_binary_text(text: str) -> bool:
+    normalized = str(text or "")
+    if not normalized:
+        return False
+    control_count = sum(1 for char in normalized if ord(char) < 32 and char not in {"\n", "\r", "\t"})
+    return control_count > max(3, len(normalized) // 25)
+
+
+def _text_quality_score(text: str) -> int:
+    normalized = str(text or "")
+    if not normalized:
+        return -10**9
+    if _looks_like_binary_text(normalized):
+        return -10**8
+    marker_hits = sum(1 for marker in _TEXT_MARKER_HINTS if marker in normalized)
+    cjk_count = sum(1 for char in normalized if "\u4e00" <= char <= "\u9fff")
+    replacement_count = normalized.count("\ufffd")
+    mojibake_count = sum(normalized.count(token) for token in _MOJIBAKE_HINT_TOKENS)
+    question_mark_penalty = normalized.count("?") if cjk_count == 0 and marker_hits == 0 else 0
+    return (
+        marker_hits * 240
+        + min(cjk_count, 800)
+        - replacement_count * 500
+        - mojibake_count * 18
+        - question_mark_penalty * 2
+    )
+
+
+def _repair_mojibake_text(source_text: str) -> str:
+    normalized = str(source_text or "")
+    candidates: List[str] = [normalized]
+    for source_encoding, target_encoding in _MOJIBAKE_RECODE_PAIRS:
+        try:
+            repaired = normalized.encode(source_encoding).decode(target_encoding)
+        except Exception:
+            continue
+        repaired = str(repaired or "")
+        if repaired and repaired not in candidates:
+            candidates.append(repaired)
+    return max(candidates, key=_text_quality_score)
+
+
+def decode_uploaded_text_bytes(file_bytes: bytes) -> str:
+    normalized_bytes = bytes(file_bytes or b"")
+    if not normalized_bytes:
+        return ""
+
+    best_candidate = ""
+    best_score = -10**9
+    for encoding in _TEXT_DECODE_CANDIDATE_ENCODINGS:
+        try:
+            decoded = normalized_bytes.decode(encoding)
+        except Exception:
+            continue
+        repaired = _repair_mojibake_text(decoded)
+        score = _text_quality_score(repaired)
+        if score > best_score:
+            best_score = score
+            best_candidate = repaired
+
+    if str(best_candidate or "").strip():
+        return best_candidate
+
+    raise validation_failed("无法解析上传文本编码，请将文件另存为 UTF-8 / UTF-16 / GB18030 后重试。")
 
 
 def normalize_formula_source_text(source_text: str) -> str:

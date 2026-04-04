@@ -720,19 +720,19 @@ class PaperQuestionServiceMixin:
             if merged_text.strip():
                 return self._normalize_batch_parse_text(merged_text)
         if normalized_name.endswith(".txt"):
-            return self._normalize_batch_parse_text(file_bytes.decode("utf-8"))
+            decoded_text = decode_uploaded_text_bytes(file_bytes)
+            return self._normalize_batch_parse_text(decoded_text)
         if normalized_name.endswith(".doc") and hasattr(self, "_extract_syllabus_source_text"):
             extracted_text, _ = self._extract_syllabus_source_text(file_name, file_bytes)  # type: ignore[attr-defined]
             text = str(extracted_text or "").strip()
             if text:
                 return self._normalize_batch_parse_text(text)
-        for encoding in ("utf-8", "gbk", "gb2312"):
-            try:
-                decoded = file_bytes.decode(encoding)
-            except Exception:
-                continue
-            if str(decoded or "").strip():
-                return self._normalize_batch_parse_text(decoded)
+        try:
+            decoded = decode_uploaded_text_bytes(file_bytes)
+        except Exception:
+            decoded = ""
+        if str(decoded or "").strip():
+            return self._normalize_batch_parse_text(decoded)
         raise validation_failed("无法解析上传文件内容，请使用 UTF-8 文本或标准 docx 文件。")
 
     def _parse_template_block_fields(self, block: str) -> Dict[str, str]:

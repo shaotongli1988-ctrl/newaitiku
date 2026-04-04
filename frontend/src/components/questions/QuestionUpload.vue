@@ -89,8 +89,10 @@ function createEmptyBatchRow() {
     options: [],
     answer: '',
     analysis: '',
+    subjectType: '',
     scopePath: [],
     knowledgePath: [],
+    knowledgePoints: [], // Word中解析的文本知识点名称
     chapterCode: '',
     pointCode: '',
     moduleCode: '',
@@ -269,16 +271,27 @@ function normalizeBatchPreviewRows(items = []) {
     options: Array.isArray(item?.options) ? item.options : [],
     answer: String(item?.answer || '').trim(),
     analysis: String(item?.analysis || '').trim(),
+    subjectType: String(item?.subject_type || item?.subjectType || '').trim(),
+    // 支持蛇形命名法和驼峰命名法
     scopePath: Array.isArray(item?.scope_path)
       ? item.scope_path.map((value) => String(value || '').trim()).filter((value) => value)
-      : [],
+      : Array.isArray(item?.scopePath)
+        ? item.scopePath.map((value) => String(value || '').trim()).filter((value) => value)
+        : [],
     knowledgePath: Array.isArray(item?.knowledge_path)
       ? item.knowledge_path.map((value) => String(value || '').trim()).filter((value) => value)
-      : [],
-    chapterCode: String(item?.chapter_code || '').trim(),
-    pointCode: String(item?.point_code || '').trim(),
-    moduleCode: String(item?.module_code || '').trim(),
-    pathLabel: String(item?.path_label || '').trim(),
+      : Array.isArray(item?.knowledgePath)
+        ? item.knowledgePath.map((value) => String(value || '').trim()).filter((value) => value)
+        : [],
+    knowledgePoints: Array.isArray(item?.knowledge_points)
+      ? item.knowledge_points.map((value) => String(value || '').trim()).filter((value) => value)
+      : Array.isArray(item?.knowledgePoints)
+        ? item.knowledgePoints.map((value) => String(value || '').trim()).filter((value) => value)
+        : [],
+    chapterCode: String(item?.chapter_code || item?.chapterCode || '').trim(),
+    pointCode: String(item?.point_code || item?.pointCode || '').trim(),
+    moduleCode: String(item?.module_code || item?.moduleCode || '').trim(),
+    pathLabel: String(item?.path_label || item?.pathLabel || '').trim(),
     confidence: Number(item?.confidence || 0),
     manualReviewRequired: Boolean(item?.manual_review_required || item?.manualReviewRequired),
     reviewMessage: String(item?.review_message || item?.reviewMessage || '').trim(),
@@ -286,9 +299,30 @@ function normalizeBatchPreviewRows(items = []) {
 }
 
 function updateBatchRows(payload = {}) {
-  batchRows.value = normalizeBatchPreviewRows(payload?.items)
-  batchErrors.value = Array.isArray(payload?.errors) ? payload.errors : []
-  batchParserReport.value = payload?.parserReport && typeof payload.parserReport === 'object' ? payload.parserReport : {}
+  const currentScopePath = formModel.scopePath || []
+  // 支持两种数据格式：{ items: [...] } 或 { data: { items: [...] } }
+  const items = payload?.items || payload?.data?.items || []
+  
+  const rows = normalizeBatchPreviewRows(items)
+  
+  // 自动填充当前选择的专业属性到解析后的题目
+  rows.forEach((row) => {
+    if (!row.scopePath || row.scopePath.length === 0) {
+      row.scopePath = [...currentScopePath]
+    }
+    if (!String(row.subjectType || '').trim()) {
+      const scopeMeta = subjectScopeMap.value[buildScopeKey(row.scopePath)] || {}
+      row.subjectType = String(scopeMeta.subjectSlot || scopeMeta.subjectType || '').trim()
+    }
+  })
+  
+  batchRows.value = rows
+  batchErrors.value = Array.isArray(payload?.errors) ? payload.errors : (Array.isArray(payload?.data?.errors) ? payload.data.errors : [])
+  batchParserReport.value = (payload?.parserReport && typeof payload.parserReport === 'object') 
+    ? payload.parserReport 
+    : (payload?.data?.parserReport && typeof payload.data.parserReport === 'object') 
+      ? payload.data.parserReport 
+      : {}
 }
 
 const batchParserSummary = computed(() => {
@@ -296,10 +330,12 @@ const batchParserSummary = computed(() => {
   const extractMethod = String(report?.extractMethod || '').trim()
   const formulaEngines = Array.isArray(report?.imageFormulaOcrEngines) ? report.imageFormulaOcrEngines.filter(Boolean) : []
   const chemicalEngines = Array.isArray(report?.imageChemicalOcrEngines) ? report.imageChemicalOcrEngines.filter(Boolean) : []
+  const questionCount = Number(report?.questionBlockCount || batchRows.value.length || 0)
   const parts = []
   if (extractMethod) {
     parts.push(`提取链路：${extractMethod}`)
   }
+  parts.push(`提取到的题目数：${questionCount}道题`)
   if (formulaEngines.length) {
     parts.push(`公式引擎：${formulaEngines.join(' / ')}`)
   }
@@ -370,6 +406,8 @@ async function handleBatchScopePathChange(row, nextPath) {
   row.scopePath = Array.isArray(nextPath)
     ? nextPath.map((item) => String(item || '').trim()).filter((item) => item)
     : []
+  const nextScopeMeta = subjectScopeMap.value[buildScopeKey(row.scopePath)] || {}
+  row.subjectType = String(nextScopeMeta.subjectSlot || nextScopeMeta.subjectType || '').trim()
   row.knowledgePath = []
   row.chapterCode = ''
   row.pointCode = ''
@@ -571,22 +609,30 @@ async function handleBatchFileChange(uploadFile) {
   batchFileName.value = String(file?.name || '').trim()
   resetBatchState()
   try {
-    const payload = await parseQuestionBatchFromWordFile({
+    const response = await parseQuestionBatchFromWordFile({
       file,
       examCategoryCode: scopeMeta.categoryCode,
       jointExamGroupCode: scopeMeta.groupCode,
       subjectCode: scopeMeta.subjectCode,
     })
-    if (payload?.deferred && payload?.taskId) {
-      await pollBatchTaskUntilDone(payload.taskId)
+    
+    if (response?.deferred && response?.taskId) {
+      await pollBatchTaskUntilDone(response.taskId)
       ElMessage.success('批量题目解析完成，请确认后入库。')
       return
     }
-    updateBatchRows(payload || {})
+    updateBatchRows(response || {})
     batchTaskStatus.value = 'COMPLETED'
     batchTaskProgress.value = 100
     batchTaskSummary.value = `本次同步解析完成，共识别 ${batchRows.value.length} 道题目。`
     taskCenterRef.value?.reload?.()
+    
+    // 自动加载知识树选项
+    const subjectCode = String(formModel.scopePath?.[2] || '').trim()
+    if (subjectCode) {
+      await loadKnowledgeTreeOptions(subjectCode, { force: true })
+    }
+    
     ElMessage.success(`已识别 ${batchRows.value.length} 道题目，请确认标签后入库。`)
   } catch (error) {
     resetBatchState()
@@ -601,8 +647,40 @@ async function handleBatchCreate() {
     ElMessage.warning('请先上传并解析题目。')
     return
   }
+  
+  // 调试信息
+  console.log('题目总数:', batchRows.value.length)
+  batchRows.value.forEach((row, index) => {
+    console.log(`第${index + 1}题:`, {
+      scopePath: row.scopePath,
+      scopePathLength: row.scopePath?.length,
+      knowledgePath: row.knowledgePath,
+      knowledgePathLength: row.knowledgePath?.length,
+      content: row.content?.slice(0, 50),
+      answer: row.answer,
+    })
+  })
+  
+  const validRows = batchRows.value.filter((row) => {
+    const hasScope = Array.isArray(row.scopePath) && row.scopePath.length === 3
+    const hasContent = !!row.content
+    const hasAnswer = !!row.answer
+    const hasKnowledge = Array.isArray(row.knowledgePath) && row.knowledgePath.length > 0
+    return hasScope && hasContent && hasAnswer && hasKnowledge
+  })
+  
+  const missingScopeCount = batchRows.value.filter((row) => !Array.isArray(row.scopePath) || row.scopePath.length !== 3).length
+  const missingAnswerCount = batchRows.value.filter((row) => !row.answer).length
+  const missingKnowledgeCount = batchRows.value.filter((row) => !Array.isArray(row.knowledgePath) || row.knowledgePath.length === 0).length
+  
+  console.log('通过校验的题目数:', validRows.length)
+  console.log('缺少专业属性:', missingScopeCount)
+  console.log('缺少答案:', missingAnswerCount)
+  console.log('缺少知识点标签:', missingKnowledgeCount)
+  
   const payloadItems = batchRows.value
     .filter((row) => Array.isArray(row.scopePath) && row.scopePath.length === 3)
+    .filter((row) => !!row.content && !!row.answer)
     .filter((row) => Array.isArray(row.knowledgePath) && row.knowledgePath.length > 0)
     .map((row) => {
       const scopeKey = buildScopeKey(row.scopePath)
@@ -615,9 +693,9 @@ async function handleBatchCreate() {
         examCategoryCode: String(scopeMeta.categoryCode || row.scopePath[0] || '').trim(),
         jointExamGroupCode: String(scopeMeta.groupCode || row.scopePath[1] || '').trim(),
         subjectCode: String(scopeMeta.subjectCode || row.scopePath[2] || '').trim(),
-        subjectType: String(scopeMeta.subjectType || scopeMeta.subjectSlot || '').trim(),
+        subjectType: String(row.subjectType || scopeMeta.subjectSlot || scopeMeta.subjectType || '').trim(),
         moduleCode: String(row.moduleCode || '').trim(),
-        knowledgePoints: [knowledgeId],
+        knowledgePoints: knowledgeId ? [knowledgeId] : [],
         options: Array.isArray(row.options) ? row.options : [],
         answer: String(row.answer || '').trim(),
         analysis: String(row.analysis || '').trim(),
@@ -631,10 +709,23 @@ async function handleBatchCreate() {
         },
       }
     })
-    .filter((item) => item.content && item.answer && item.knowledgePoints.length)
+    .filter((item) => item.content && item.answer && item.knowledgePoints && item.knowledgePoints.length > 0)
 
   if (!payloadItems.length) {
-    ElMessage.warning('当前没有通过校验的题目，请先修正标签和答案。')
+    const missingParts = []
+    if (missingKnowledgeCount > 0) {
+      missingParts.push(`${missingKnowledgeCount}道题缺少知识点标签`)
+    }
+    if (missingScopeCount > 0) {
+      missingParts.push(`${missingScopeCount}道题缺少专业属性`)
+    }
+    if (missingAnswerCount > 0) {
+      missingParts.push(`${missingAnswerCount}道题缺少答案`)
+    }
+    const hintMessage = missingParts.length > 0 
+      ? `请先在"3+2 标签纠偏"列中选择知识点标签。当前有${missingParts.join('，')}。`
+      : '当前没有通过校验的题目，请先修正标签和答案。'
+    ElMessage.warning(hintMessage)
     return
   }
 
@@ -742,7 +833,7 @@ async function handleSubmit() {
     examCategoryCode: scopeMeta.categoryCode,
     jointExamGroupCode: scopeMeta.groupCode,
     subjectCode: scopeMeta.subjectCode,
-    subjectType: scopeMeta.subjectType || scopeMeta.subjectSlot || '',
+    subjectType: scopeMeta.subjectSlot || scopeMeta.subjectType || '',
     moduleCode: selectedModuleCode,
     knowledgePoints: [selectedKnowledgePointId.value],
     extJson: {
@@ -1052,6 +1143,9 @@ watch(
           <template #default="scope">
             <div class="knowledge-search-item">
               <span class="knowledge-search-name">{{ scope.row.pathLabel || '建议手动标注' }}</span>
+              <small class="knowledge-search-path" v-if="scope.row.knowledgePoints && scope.row.knowledgePoints.length > 0">
+                <el-tag size="small" type="info">Word知识点: {{ scope.row.knowledgePoints.join(', ') }}</el-tag>
+              </small>
               <small class="knowledge-search-path">
                 置信度 {{ Math.round(Number(scope.row.confidence || 0) * 100) }}%
                 <span v-if="scope.row.reviewMessage"> / {{ scope.row.reviewMessage }}</span>
@@ -1069,6 +1163,8 @@ watch(
                 :loading="loadingTree"
                 clearable
                 filterable
+                :class="{ 'cascader-warning': !Array.isArray(scope.row.scopePath) || scope.row.scopePath.length !== 3 }"
+                placeholder="请选择：学科门类 / 联考组 / 科目"
                 @change="(value) => handleBatchScopePathChange(scope.row, value)"
               />
               <el-cascader
@@ -1078,6 +1174,8 @@ watch(
                 :loading="loadingKnowledgeTree"
                 clearable
                 filterable
+                :class="{ 'cascader-warning': !Array.isArray(scope.row.knowledgePath) || scope.row.knowledgePath.length === 0 }"
+                placeholder="请选择知识点标签（必填）"
                 @visible-change="(visible) => visible && ensureBatchKnowledgeOptions(scope.row)"
                 @change="(value) => handleBatchKnowledgePathChange(scope.row, value)"
               />
@@ -1209,6 +1307,15 @@ watch(
 .batch-edit-grid {
   display: grid;
   gap: 8px;
+}
+
+.cascader-warning :deep(.el-input__wrapper) {
+  border-color: #f56c6c !important;
+  box-shadow: 0 0 0 1px #f56c6c inset !important;
+}
+
+.cascader-warning :deep(.el-input__inner::placeholder) {
+  color: #f56c6c !important;
 }
 
 .batch-actions {

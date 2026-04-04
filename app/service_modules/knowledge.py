@@ -232,29 +232,80 @@ class KnowledgeServiceMixin:
         return normalized.strip()
 
     def _strip_question_number_prefix(self, line: str) -> str:
-        return re.sub(r"^(?:第?\d+题|\d+[、.．)])\s*", "", str(line or "").strip()).strip()
+        normalized_line = str(line or "").strip()
+        return re.sub(r"^(?:\d+[\.\)])\s*", "", normalized_line).strip()
+
+    def _extract_marker_prefix(self, line: str) -> Tuple[str, str]:
+        normalized_line = str(line or "").strip()
+        if not normalized_line:
+            return "", ""
+        if normalized_line.startswith("【") and "】" in normalized_line:
+            end_index = normalized_line.find("】")
+            marker = normalized_line[1:end_index].strip().lower()
+            remainder = normalized_line[end_index + 1 :].strip()
+            if remainder.startswith(":") or remainder.startswith("："):
+                remainder = remainder[1:].strip()
+            return marker, remainder
+        if normalized_line.startswith("[") and "]" in normalized_line:
+            end_index = normalized_line.find("]")
+            marker = normalized_line[1:end_index].strip().lower()
+            remainder = normalized_line[end_index + 1 :].strip()
+            if remainder.startswith(":") or remainder.startswith("："):
+                remainder = remainder[1:].strip()
+            return marker, remainder
+        for separator in (":", "："):
+            if separator in normalized_line:
+                marker, remainder = normalized_line.split(separator, 1)
+                return marker.strip().lower(), remainder.strip()
+        return normalized_line.lower(), ""
 
     def _is_answer_marker_line(self, line: str) -> bool:
-        return bool(re.match(r"^(答案|参考答案|answer|Answer)[:：]", str(line or "").strip()))
+        marker, _ = self._extract_marker_prefix(line)
+        return marker in {"答案", "参考答案", "answer"}
 
     def _strip_answer_marker(self, line: str) -> str:
-        return re.sub(r"^(答案|参考答案|answer|Answer)[:：]\s*", "", str(line or "").strip()).strip()
+        marker, remainder = self._extract_marker_prefix(line)
+        if marker in {"答案", "参考答案", "answer"}:
+            return remainder
+        return str(line or "").strip()
 
     def _is_analysis_marker_line(self, line: str) -> bool:
-        return bool(re.match(r"^(解析|答案解析|解析说明|analysis|Analysis|explanation|Explanation)[:：]?", str(line or "").strip()))
+        marker, _ = self._extract_marker_prefix(line)
+        return marker in {
+            "解析",
+            "答案解析",
+            "解析说明",
+            "analysis",
+            "explanation",
+        }
 
     def _strip_analysis_marker(self, line: str) -> str:
-        return re.sub(
-            r"^(解析|答案解析|解析说明|analysis|Analysis|explanation|Explanation)[:：]?\s*",
-            "",
-            str(line or "").strip(),
-        ).strip()
+        marker, remainder = self._extract_marker_prefix(line)
+        if marker in {
+            "解析",
+            "答案解析",
+            "解析说明",
+            "analysis",
+            "explanation",
+        }:
+            return remainder
+        return str(line or "").strip()
+
+    def _is_knowledge_marker_line(self, line: str) -> bool:
+        marker, _ = self._extract_marker_prefix(line)
+        return marker in {"知识点", "知識點", "knowledge"}
+
+    def _strip_knowledge_marker(self, line: str) -> str:
+        marker, remainder = self._extract_marker_prefix(line)
+        if marker in {"知识点", "知識點", "knowledge"}:
+            return remainder
+        return str(line or "").strip()
 
     def _looks_like_question_start(self, line: str) -> bool:
         normalized_line = str(line or "").strip()
-        if normalized_line.startswith("【题干】"):
+        if normalized_line.startswith("【题型】") or normalized_line.startswith("【题干】"):
             return True
-        return bool(re.match(r"^(?:第?\d+题|\d+[、.．)])\s+\S+", normalized_line))
+        return bool(re.match(r"^(?:第?\d+题|\d+[\.．、\)])\s*\S+", normalized_line))
 
     def _current_question_block_complete(self, current_block: List[str]) -> bool:
         option_count = 0
@@ -335,18 +386,38 @@ class KnowledgeServiceMixin:
         if subject_code and str(item_ext.get("subjectCode", "")).strip() != subject_code:
             return False
 
+        item_group_codes = {
+            str(group_code or "").strip()
+            for group_code in (
+                item_ext.get("applicableGroups", [])
+                if isinstance(item_ext.get("applicableGroups", []), list)
+                else []
+            )
+            if str(group_code or "").strip()
+        }
         exam_category_code = str(repository_filters.get("examCategoryCode", "")).strip()
         if exam_category_code:
             item_exam_category_code = str(item_ext.get("examCategoryCode", "")).strip()
             item_subject_type = str(item_ext.get("subjectType", "")).strip()
-            if item_subject_type != "PUBLIC" and item_exam_category_code != exam_category_code:
+            allowed_group_codes = {
+                str(group_item.get("jointExamGroupCode", "")).strip()
+                for group_item in list_joint_exam_groups(exam_category_code)
+                if str(group_item.get("jointExamGroupCode", "")).strip()
+            }
+            has_exam_match = item_exam_category_code == exam_category_code
+            has_group_match = bool(item_group_codes.intersection(allowed_group_codes))
+            if item_subject_type != "PUBLIC" and not has_exam_match and not has_group_match:
                 return False
 
         joint_exam_group_code = str(repository_filters.get("jointExamGroupCode", "")).strip()
         if joint_exam_group_code:
             item_joint_exam_group_code = str(item_ext.get("jointExamGroupCode", "")).strip()
             item_subject_type = str(item_ext.get("subjectType", "")).strip()
-            if item_subject_type != "PUBLIC" and item_joint_exam_group_code != joint_exam_group_code:
+            has_group_match = (
+                item_joint_exam_group_code == joint_exam_group_code
+                or joint_exam_group_code in item_group_codes
+            )
+            if item_subject_type != "PUBLIC" and not has_group_match:
                 return False
         return True
 
@@ -828,15 +899,16 @@ class KnowledgeServiceMixin:
                     current_block.append("")
                 blank_count += 1
                 continue
-            if (
-                current_block
-                and self._looks_like_question_start(line)
-                and (blank_count > 0 or self._current_question_block_complete(current_block))
-            ):
-                blocks.append(current_block[:])
-                current_block = [line]
-                blank_count = 0
-                continue
+            
+            # 检查是否是题目开始，即使前面没有空行
+            if current_block and self._looks_like_question_start(line):
+                # 检查当前块是否已经包含完整的题目内容
+                if self._current_question_block_complete(current_block) or len(current_block) > 10:
+                    blocks.append(current_block[:])
+                    current_block = [line]
+                    blank_count = 0
+                    continue
+            
             current_block.append(line)
             blank_count = 0
 
@@ -848,7 +920,26 @@ class KnowledgeServiceMixin:
             for block in blocks
             if any(str(item or "").strip() for item in block)
         ]
-        return [block for block in normalized_blocks if block]
+        
+        # 过滤掉太短的块，可能是标题或其他非题目内容
+        filtered_blocks = []
+        for block in normalized_blocks:
+            # 检查块是否包含题目特征：选项和答案
+            lines_in_block = block.splitlines()
+            has_options = False
+            has_answer = False
+            
+            for line in lines_in_block:
+                if QUESTION_OPTION_LINE_PATTERN.match(line.strip()):
+                    has_options = True
+                elif self._is_answer_marker_line(line.strip()):
+                    has_answer = True
+            
+            # 如果有选项或答案，或者块比较长，认为是题目
+            if has_options or has_answer or len(lines_in_block) > 5:
+                filtered_blocks.append(block)
+        
+        return filtered_blocks
 
     def _build_question_batch_preview_item(
         self,
@@ -919,32 +1010,37 @@ class KnowledgeServiceMixin:
         if not text:
             raise validation_failed("题目块为空。")
 
+        stem_key = "题干"
+        option_key = "选项"
+        type_key = "题型"
+        answer_key = "答案"
+        analysis_key = "解析"
+        title_key = "标题"
+        knowledge_key = "知识点"
+
         fields = {}
         parse_fields = getattr(self, "_parse_template_block_fields", None)
         if callable(parse_fields):
             fields = parse_fields(text)
-        if fields.get("题干"):
-            options = parse_question_option_lines(str(fields.get("选项", "")).strip())
+
+        if fields.get(stem_key):
+            options = parse_question_option_lines(str(fields.get(option_key, "")).strip())
             inferred_type = self._infer_question_type(
-                str(fields.get("题型", "")).strip(),
+                str(fields.get(type_key, "")).strip(),
                 options,
-                str(fields.get("答案", "")).strip(),
+                str(fields.get(answer_key, "")).strip(),
             )
-            content = self._normalize_question_block_text(str(fields.get("题干", "")).strip())
-            analysis = self._normalize_question_block_text(str(fields.get("解析", "")).strip())
-            answer = self._normalize_question_block_text(str(fields.get("答案", "")).strip())
+            content = self._normalize_question_block_text(str(fields.get(stem_key, "")).strip())
+            analysis = self._normalize_question_block_text(str(fields.get(analysis_key, "")).strip())
+            answer = self._normalize_question_block_text(str(fields.get(answer_key, "")).strip())
             return {
-                "title": str(fields.get("标题", "")).strip() or content.splitlines()[0][:60],
+                "title": str(fields.get(title_key, "")).strip() or content.splitlines()[0][:60],
                 "content": content,
                 "type": inferred_type,
                 "options": options,
                 "answer": answer,
                 "analysis": analysis,
-                "knowledge_points": [
-                    item.strip()
-                    for item in str(fields.get("知识点", "")).split(",")
-                    if item.strip()
-                ],
+                "knowledge_points": self._parse_batch_knowledge_point_hints(str(fields.get(knowledge_key, ""))),
             }
 
         lines = [str(line or "").strip() for line in text.splitlines() if str(line or "").strip()]
@@ -954,6 +1050,7 @@ class KnowledgeServiceMixin:
         stem_lines: List[str] = []
         analysis_lines: List[str] = []
         answer_lines: List[str] = []
+        knowledge_lines: List[str] = []
         options: List[Dict[str, str]] = []
         current_section = "stem"
         current_option: Optional[Dict[str, str]] = None
@@ -971,6 +1068,13 @@ class KnowledgeServiceMixin:
                 if analysis_value:
                     analysis_lines.append(analysis_value)
                 current_section = "analysis"
+                current_option = None
+                continue
+            if self._is_knowledge_marker_line(normalized_line):
+                knowledge_value = self._strip_knowledge_marker(normalized_line)
+                if knowledge_value:
+                    knowledge_lines.append(knowledge_value)
+                current_section = "knowledge"
                 current_option = None
                 continue
             option_match = QUESTION_OPTION_LINE_PATTERN.match(normalized_line)
@@ -991,6 +1095,9 @@ class KnowledgeServiceMixin:
             if current_section == "analysis":
                 analysis_lines.append(normalized_line)
                 continue
+            if current_section == "knowledge":
+                knowledge_lines.append(normalized_line)
+                continue
             stem_lines.append(normalized_line)
 
         content = self._normalize_question_block_text("\n".join(stem_lines).strip()) or text[:500]
@@ -1003,6 +1110,191 @@ class KnowledgeServiceMixin:
             "options": options,
             "answer": answer.strip(),
             "analysis": self._normalize_question_block_text("\n".join(analysis_lines).strip()),
+            "knowledge_points": self._parse_batch_knowledge_point_hints("\n".join(knowledge_lines)),
+        }
+
+    def _parse_batch_knowledge_point_hints(self, raw_text: str) -> List[str]:
+        normalized_text = str(raw_text or "").replace("\r\n", "\n").strip()
+        if not normalized_text:
+            return []
+        chunks = [item.strip() for item in re.split(r"[\n;\uFF1B]+", normalized_text) if str(item or "").strip()]
+        hints: List[str] = []
+        for chunk in chunks:
+            normalized_chunk = str(chunk or "").strip()
+            if not normalized_chunk:
+                continue
+            # Keep full path expressions as one hint.
+            if "->" in normalized_chunk or "=>" in normalized_chunk or "\u2192" in normalized_chunk or "\uFF0C" in normalized_chunk:
+                hints.append(normalized_chunk)
+                continue
+            # Backward-compatible support: split multiple tags separated by ASCII comma.
+            if "," in normalized_chunk:
+                split_items = [item.strip() for item in normalized_chunk.split(",") if str(item or "").strip()]
+                hints.extend(split_items)
+                continue
+            hints.append(normalized_chunk)
+
+        deduped: List[str] = []
+        seen: set[str] = set()
+        for item in hints:
+            key = str(item or "").strip()
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            deduped.append(key)
+        return deduped[:20]
+
+    def _normalize_knowledge_hint_token(self, value: str) -> str:
+        normalized = str(value or "").strip().lower()
+        if not normalized:
+            return ""
+        normalized = re.sub(r"(\.{3,}|\u2026+)$", "", normalized)
+        normalized = "".join(normalized.split())
+        normalized = normalized.replace('"', "").replace("'", "").replace("`", "")
+        normalized = (
+            normalized.replace("\uFF0C", ",")
+            .replace("\u3001", ",")
+            .replace("\uFF1B", ";")
+            .replace("\uFF1A", ":")
+            .replace("\u3002", ".")
+        )
+        normalized = normalized.replace(",", "").replace(";", "").replace(":", "").replace(".", "")
+        return normalized.strip("|")
+
+    def _split_knowledge_hint_segments(self, raw_hint: str) -> List[str]:
+        normalized_hint = str(raw_hint or "").strip()
+        if not normalized_hint:
+            return []
+        normalized_hint = (
+            normalized_hint.replace("\u2192", "->")
+            .replace("\u279C", "->")
+            .replace("\u27F6", "->")
+            .replace("\uFF0C", ",")
+            .replace("\u3001", ",")
+            .replace("\uFF1B", ";")
+            .replace(chr(0xFF1F), "?")
+        )
+        has_path_separator = any(token in normalized_hint for token in ("->", "=>", ">", "/", "\\", "|"))
+        if has_path_separator:
+            segments = re.split(r"\s*(?:->|=>|>|/|\\|\|)\s*", normalized_hint)
+        else:
+            segments = re.split(r"\s*(?:,|;|\?)\s*", normalized_hint)
+        return [
+            token
+            for token in (self._normalize_knowledge_hint_token(item) for item in segments)
+            if token
+        ]
+
+    def _count_suffix_label_matches(self, hint_segments: List[str], label_segments: List[str]) -> int:
+        if not hint_segments or not label_segments:
+            return 0
+        matched = 0
+        left_index = len(hint_segments) - 1
+        right_index = len(label_segments) - 1
+        while left_index >= 0 and right_index >= 0:
+            if hint_segments[left_index] != label_segments[right_index]:
+                break
+            matched += 1
+            left_index -= 1
+            right_index -= 1
+        return matched
+
+    def _align_question_block_by_knowledge_hints(
+        self,
+        parsed_question: Dict[str, object],
+        semantic_pool: List[Dict[str, object]],
+    ) -> Optional[Dict[str, object]]:
+        raw_hints = parsed_question.get("knowledge_points", [])
+        if not isinstance(raw_hints, list):
+            return None
+
+        point_candidates = [
+            item
+            for item in semantic_pool
+            if int(item.get("level", 0) or 0) >= 5 and str(item.get("pointCode", "")).strip()
+        ]
+        if not point_candidates:
+            return None
+
+        best_candidate: Optional[Dict[str, object]] = None
+        best_rank: Tuple[int, int, int, int, float] = (0, 0, 0, 0, 0.0)
+        best_hint_length = 0
+
+        for raw_hint in raw_hints:
+            hint_segments = self._split_knowledge_hint_segments(str(raw_hint or ""))
+            if not hint_segments:
+                continue
+            best_hint_length = max(best_hint_length, len(hint_segments))
+            hint_leaf_candidates = [hint_segments[-1]]
+            max_tail_length = min(len(hint_segments), 6)
+            for tail_length in range(2, max_tail_length + 1):
+                hint_leaf_candidates.append("".join(hint_segments[-tail_length:]))
+
+            for candidate in point_candidates:
+                candidate_name = self._normalize_knowledge_hint_token(str(candidate.get("name", "")))
+                if not candidate_name:
+                    continue
+                path_levels = candidate.get("path_levels", [])
+                if not isinstance(path_levels, list):
+                    path_levels = []
+                candidate_path_segments = [
+                    self._normalize_knowledge_hint_token(str(row.get("label", "")))
+                    for row in path_levels
+                    if self._normalize_knowledge_hint_token(str(row.get("label", "")))
+                ]
+                suffix_match_count = self._count_suffix_label_matches(hint_segments, candidate_path_segments)
+                parent_suffix_match_count = self._count_suffix_label_matches(
+                    hint_segments[:-1],
+                    candidate_path_segments[:-1],
+                )
+                leaf_similarity = max(
+                    (SequenceMatcher(None, leaf_candidate, candidate_name).ratio() for leaf_candidate in hint_leaf_candidates),
+                    default=0.0,
+                )
+                exact_leaf = int(any(leaf_candidate == candidate_name for leaf_candidate in hint_leaf_candidates))
+                contains_leaf = int(
+                    any(
+                        bool(leaf_candidate) and (leaf_candidate in candidate_name or candidate_name in leaf_candidate)
+                        for leaf_candidate in hint_leaf_candidates
+                    )
+                )
+                rank = (
+                    exact_leaf,
+                    suffix_match_count,
+                    parent_suffix_match_count,
+                    contains_leaf,
+                    round(float(leaf_similarity), 4),
+                )
+                if rank > best_rank:
+                    best_rank = rank
+                    best_candidate = candidate
+
+        if not best_candidate:
+            return None
+
+        exact_leaf, suffix_match_count, parent_suffix_match_count, contains_leaf, leaf_similarity = best_rank
+        is_strong_match = (
+            (exact_leaf == 1 and suffix_match_count >= 1)
+            or suffix_match_count >= 2
+            or parent_suffix_match_count >= 3
+            or (contains_leaf == 1 and parent_suffix_match_count >= 2)
+            or leaf_similarity >= 0.97
+            or (contains_leaf == 1 and leaf_similarity >= 0.92)
+        )
+        if not is_strong_match:
+            return None
+
+        confidence = min(0.9999, 0.92 + min(0.06, suffix_match_count * 0.015) + max(0.0, leaf_similarity - 0.9))
+        path_levels = best_candidate.get("path_levels", [])
+        if not isinstance(path_levels, list):
+            path_levels = []
+        return {
+            "chapterCode": str(best_candidate.get("chapterCode", "")).strip() or None,
+            "pointCode": str(best_candidate.get("pointCode", "")).strip() or None,
+            "confidence": round(float(confidence), 4),
+            "manual_review_required": False,
+            "review_message": "",
+            "path_levels": list(path_levels),
         }
 
     def _infer_question_type(self, raw_type: str, options: List[Dict[str, str]], answer: str) -> str:
@@ -1026,6 +1318,10 @@ class KnowledgeServiceMixin:
         parsed_question: Dict[str, object],
         semantic_pool: List[Dict[str, object]],
     ) -> Dict[str, object]:
+        hint_alignment = self._align_question_block_by_knowledge_hints(parsed_question, semantic_pool)
+        if hint_alignment:
+            return hint_alignment
+
         content = str(parsed_question.get("content", "")).strip()
         analysis = str(parsed_question.get("analysis", "")).strip()
         semantic_text = f"{content}\n{analysis}".strip()
@@ -1071,6 +1367,16 @@ class KnowledgeServiceMixin:
     def _build_question_semantic_pool(self, scope_filters: Dict[str, str]) -> List[Dict[str, object]]:
         repository_filters = self._build_knowledge_repository_filters(scope_filters)
         items = self.repository.list_knowledge("", repository_filters)
+        if not items:
+            normalized_subject_code = str(scope_filters.get("subjectCode", "")).strip()
+            normalized_policy_version = str(scope_filters.get("policyVersionCode", "")).strip() or POLICY_VERSION_CODE
+            if normalized_subject_code:
+                fallback_filters = {
+                    "subject_code": normalized_subject_code,
+                    "subjectCode": normalized_subject_code,
+                    "policy_version": normalized_policy_version,
+                }
+                items = self.repository.list_knowledge("", fallback_filters)
         if not items:
             return []
 
@@ -1926,7 +2232,21 @@ class KnowledgeServiceMixin:
             return True
 
         joint_exam_group_code = str(scope_filters.get("jointExamGroupCode", "")).strip()
-        if joint_exam_group_code and str(item_ext.get("jointExamGroupCode", "")).strip() != joint_exam_group_code:
+        item_joint_exam_group_code = str(item_ext.get("jointExamGroupCode", "")).strip()
+        item_group_codes = {
+            str(group_code or "").strip()
+            for group_code in (
+                item_ext.get("applicableGroups", [])
+                if isinstance(item_ext.get("applicableGroups", []), list)
+                else []
+            )
+            if str(group_code or "").strip()
+        }
+        if (
+            joint_exam_group_code
+            and item_joint_exam_group_code != joint_exam_group_code
+            and joint_exam_group_code not in item_group_codes
+        ):
             return False
         return True
 

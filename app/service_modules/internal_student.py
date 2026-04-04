@@ -2094,14 +2094,20 @@ class InternalStudentServiceMixin:
         content_filters = self._content_filter_values(filters)
         exam_category_code = content_filters["examCategoryCode"]
         if exam_category_code:
-            if ext_json.get("subjectType") == "PUBLIC":
-                allowed_group_codes = {
-                    item["jointExamGroupCode"]
-                    for item in list_joint_exam_groups(exam_category_code)
-                }
-                if not allowed_group_codes.intersection(set(ext_json.get("applicableGroups", []))):
-                    return False
-            elif ext_json.get("examCategoryCode") != exam_category_code:
+            allowed_group_codes = {
+                str(item.get("jointExamGroupCode", "")).strip()
+                for item in list_joint_exam_groups(exam_category_code)
+                if str(item.get("jointExamGroupCode", "")).strip()
+            }
+            question_group_codes = {
+                str(item or "").strip()
+                for item in (ext_json.get("applicableGroups", []) if isinstance(ext_json.get("applicableGroups", []), list) else [])
+                if str(item or "").strip()
+            }
+            question_exam_category_code = str(ext_json.get("examCategoryCode", "")).strip()
+            has_exam_match = question_exam_category_code == exam_category_code
+            has_group_match = bool(allowed_group_codes.intersection(question_group_codes))
+            if not has_exam_match and not has_group_match:
                 return False
         joint_exam_group_code = content_filters["jointExamGroupCode"]
         if joint_exam_group_code and joint_exam_group_code not in ext_json.get("applicableGroups", []):
