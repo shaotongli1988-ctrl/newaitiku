@@ -200,17 +200,14 @@ async function ensureBatchUploadIdentityReady() {
 
 function applyProfessionalScopeOptions(treePayload) {
   const { options, scopeMetaMap } = createProfessionalScopeOptions(treePayload, {
-    assignedJointGroupCode: isScopeLocked.value ? assignedJointGroupCode.value : '',
+    assignedJointGroupCode: '', // 不传递专业组代码，返回所有学科门类
   })
   subjectScopeMap.value = scopeMetaMap
   professionalOptions.value = options
 
   const currentScopeValid = Boolean(subjectScopeMap.value[buildScopeKey(formModel.scopePath)])
-  if (!isScopeLocked.value) {
-    if (Array.isArray(formModel.scopePath) && formModel.scopePath.length === 3 && !currentScopeValid) {
-      formModel.scopePath = []
-    }
-    return
+  if (Array.isArray(formModel.scopePath) && formModel.scopePath.length === 3 && !currentScopeValid) {
+    formModel.scopePath = []
   }
 
   if (!currentScopeValid) {
@@ -221,20 +218,61 @@ function applyProfessionalScopeOptions(treePayload) {
   }
 }
 
-async function fetchProfessionalTree() {
-  loadingTree.value = true
-  try {
-    const response = await professionalTree()
-    professionalTreeRaw.value = parseEnvelopeData(response) || []
-    applyProfessionalScopeOptions(professionalTreeRaw.value)
-  } catch (error) {
-    professionalTreeRaw.value = []
+function fetchProfessionalTree() {
+  // 使用与题库筛选相同的数据源：userStore.availableExamCategories
+  const availableExamCategories = userStore.availableExamCategories
+  if (Array.isArray(availableExamCategories) && availableExamCategories.length) {
+    // 为每个专业组添加默认的科目信息
+    const defaultSubjects = {
+      'LITERATURE_1': [
+        { subjectCode: 'ARTS_HISTORY_FOUNDATION', subjectName: '文史基础' },
+        { subjectCode: 'FOREIGN_LANGUAGE_COMPREHENSIVE', subjectName: '外语专业综合' },
+        { subjectCode: 'NEW_MEDIA_INTRO', subjectName: '新媒体概论' }
+      ],
+      'LITERATURE_2': [
+        { subjectCode: 'ARTS_HISTORY_FOUNDATION', subjectName: '文史基础' },
+        { subjectCode: 'FOREIGN_LANGUAGE_COMPREHENSIVE', subjectName: '外语专业综合' }
+      ],
+      'SCIENCE_ENGINEERING_1': [
+        { subjectCode: 'CHEMICAL_PRINCIPLES', subjectName: '化工原理' },
+        { subjectCode: 'ADVANCED_MATH_1', subjectName: '高等数学（一）' }
+      ],
+      'SCIENCE_ENGINEERING_2': [
+        { subjectCode: 'ENGINEERING_MECHANICS', subjectName: '工程力学' },
+        { subjectCode: 'ADVANCED_MATH_1', subjectName: '高等数学（一）' }
+      ],
+      'MANAGEMENT_1': [
+        { subjectCode: 'MANAGEMENT_PRINCIPLES', subjectName: '管理学原理' },
+        { subjectCode: 'ADVANCED_MATH_2', subjectName: '高等数学（二）' }
+      ],
+      'MANAGEMENT_2': [
+        { subjectCode: 'MANAGEMENT_PRINCIPLES', subjectName: '管理学原理' },
+        { subjectCode: 'ADVANCED_MATH_2', subjectName: '高等数学（二）' }
+      ]
+    }
+    
+    // 转换 userStore.availableExamCategories 格式为 professionalTree 格式
+    const treePayload = availableExamCategories.map(category => ({
+      code: category.examCategoryCode,
+      name: category.examCategoryName,
+      children: (category.jointExamGroups || []).map(group => ({
+        code: group.jointExamGroupCode,
+        name: group.jointExamGroupName,
+        children: (group.professionalSubjects || defaultSubjects[group.jointExamGroupCode] || []).map(subject => ({
+          code: subject.subjectCode,
+          name: subject.subjectName,
+          subjectType: subject.subjectType || 'PROFESSIONAL',
+          subjectSlot: subject.subjectSlot || 'PROFESSIONAL',
+          score: subject.score || 150
+        }))
+      }))
+    }))
+    applyProfessionalScopeOptions(treePayload)
+  } else {
     professionalOptions.value = []
     subjectScopeMap.value = {}
-    ElMessage.error(error?.response?.data?.message || error?.message || '专业层级字典加载失败')
-  } finally {
-    loadingTree.value = false
   }
+  loadingTree.value = false
 }
 
 function normalizeKnowledgeTreeOptions(treePayload) {
