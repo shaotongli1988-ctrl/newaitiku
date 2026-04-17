@@ -2,6 +2,16 @@ from __future__ import annotations
 
 from app.service_shared import *
 
+GENERIC_KNOWLEDGE_PATH_LABELS = {
+    "具体内容与要求",
+    "科目简介",
+    "考试说明",
+    "考试要求",
+    "课程简介",
+    "课程说明",
+    "复习建议",
+}
+
 
 class InternalQuestionPaperServiceMixin:
     def _knowledge_question_count_map(self, knowledge_ids: set[str]) -> Dict[str, int]:
@@ -278,15 +288,17 @@ class InternalQuestionPaperServiceMixin:
         ext_json["difficulty"] = str(ext_json.get("difficulty") or existing_ext.get("difficulty") or "medium")
         ext_json["analysis"] = str(ext_json.get("analysis") or existing_ext.get("analysis") or "")
 
-        provided_knowledge_tags = ext_json.get("knowledgeTags")
+        provided_knowledge_tags = self._normalize_two_level_knowledge_tags(ext_json.get("knowledgeTags"))
+        if not provided_knowledge_tags:
+            provided_knowledge_tags = self._extract_two_level_knowledge_tags_from_ext_json(ext_json)
         if knowledge_changed:
-            ext_json["knowledgeTags"] = question_context["knowledgeTags"]
-        elif isinstance(provided_knowledge_tags, list) and provided_knowledge_tags:
+            ext_json["knowledgeTags"] = self._normalize_two_level_knowledge_tags(question_context["knowledgeTags"])
+        elif provided_knowledge_tags:
             ext_json["knowledgeTags"] = provided_knowledge_tags
         elif not existing_ext.get("knowledgeTags"):
-            ext_json["knowledgeTags"] = question_context["knowledgeTags"]
+            ext_json["knowledgeTags"] = self._normalize_two_level_knowledge_tags(question_context["knowledgeTags"])
         else:
-            ext_json["knowledgeTags"] = existing_ext.get("knowledgeTags")
+            ext_json["knowledgeTags"] = self._normalize_two_level_knowledge_tags(existing_ext.get("knowledgeTags"))
 
         ext_json.setdefault("paperBindings", existing_ext.get("paperBindings", []))
         ext_json.setdefault("practiceConfig", existing_ext.get("practiceConfig", {"timeLimitSec": 60}))
@@ -310,6 +322,53 @@ class InternalQuestionPaperServiceMixin:
             }
         ).model_dump()
         return record
+
+    def _normalize_two_level_knowledge_tags(self, raw_tags: object) -> List[str]:
+        normalized_tags: List[str] = []
+        for item in raw_tags if isinstance(raw_tags, list) else []:
+            label = str(item or "").strip()
+            if label and label not in normalized_tags:
+                normalized_tags.append(label)
+        if not normalized_tags:
+            return []
+        if len(normalized_tags) <= 2:
+            return normalized_tags
+        root_label = normalized_tags[0]
+        second_label = ""
+        for candidate in normalized_tags[1:]:
+            if candidate not in GENERIC_KNOWLEDGE_PATH_LABELS:
+                second_label = candidate
+                break
+        if not second_label:
+            second_label = normalized_tags[1]
+        if second_label == root_label:
+            return [root_label]
+        return [root_label, second_label]
+
+    def _extract_two_level_knowledge_tags_from_ext_json(self, ext_json: Dict[str, object]) -> List[str]:
+        path_levels = ext_json.get("path_levels")
+        if not isinstance(path_levels, list):
+            path_levels = ext_json.get("pathLevels")
+        labels: List[str] = []
+        for item in path_levels if isinstance(path_levels, list) else []:
+            if not isinstance(item, dict):
+                continue
+            label = str(item.get("label", "")).strip()
+            if label:
+                labels.append(label)
+        if labels:
+            return self._normalize_two_level_knowledge_tags(labels)
+
+        raw_path_label = str(ext_json.get("pathLabel") or ext_json.get("path_label") or "").strip()
+        if not raw_path_label:
+            return []
+        normalized_path = (
+            raw_path_label.replace("->", "/")
+            .replace("=>", "/")
+            .replace("|", "/")
+        )
+        path_labels = [item.strip() for item in normalized_path.split("/") if item.strip()]
+        return self._normalize_two_level_knowledge_tags(path_labels)
 
     def _normalize_question_content_tags(
         self,

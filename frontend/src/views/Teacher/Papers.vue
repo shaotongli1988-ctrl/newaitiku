@@ -97,7 +97,11 @@ const professionalCascaderProps = {
 }
 const groupPaperCascaderProps = {
   ...professionalCascaderProps,
-  checkStrictly: true,
+  checkStrictly: false,
+}
+const manualPaperCascaderProps = {
+  ...professionalCascaderProps,
+  checkStrictly: false,
 }
 const PAPER_EXPORT_FORMAT_OPTIONS = [
   { value: 'txt', label: 'TXT 文本预览' },
@@ -368,6 +372,42 @@ function resolveTemplateScopeLabel(row) {
   }
 
   return `${resolveContentLabel(scopeLabelMaps.value.examCategoryNameMap, examCategoryCode)} / ${resolveContentLabel(scopeLabelMaps.value.jointExamGroupNameMap, jointExamGroupCode)}`
+}
+
+function resolvePaperTypeLabel(paperType) {
+  const normalized = String(paperType || '').trim()
+  if (normalized === 'chapter') return '章节练习'
+  if (normalized === 'unit') return '单元练习'
+  if (normalized === 'final') return '期末考'
+  if (normalized === 'simulation') return '模拟考试'
+  return normalized || '-'
+}
+
+function buildTemplateDescription(row) {
+  const parts = []
+  const paperTypeLabel = resolvePaperTypeLabel(row?.paperType)
+  if (paperTypeLabel) {
+    parts.push(`卷型：${paperTypeLabel}`)
+  }
+  const scopeLabel = resolveTemplateScopeLabel(row)
+  if (scopeLabel) {
+    parts.push(`范围：${scopeLabel}`)
+  }
+  const difficultyLabel = String(row?.difficulty || '').trim()
+  if (difficultyLabel) {
+    parts.push(`难度：${difficultyLabel}`)
+  }
+  const totalScore = Number(row?.totalScore || 0)
+  if (totalScore > 0) {
+    parts.push(`总分：${totalScore}`)
+  }
+  const durationMinutes = Number(row?.durationMinutes || 0)
+  if (durationMinutes > 0) {
+    parts.push(`考试时长：${durationMinutes} 分钟`)
+  }
+  const ruleCount = Array.isArray(row?.typeRules) ? row.typeRules.length : 0
+  parts.push(`题型规则：${ruleCount} 条`)
+  return parts.join(' · ')
 }
 
 function addTemplateRule() {
@@ -646,6 +686,7 @@ async function handleAiGenerate(payload) {
     ElMessage.success(`AI 智能组卷完成，试卷ID：${paperId}`)
     aiDialogVisible.value = false
     await loadPaperOverview()
+    await loadPaperTemplates()
   } catch (error) {
     stopAiProgress()
     aiGenerationProgress.value = 0
@@ -1460,7 +1501,7 @@ watch(
             clearable
             :teleported="false"
             expand-trigger="hover"
-            :show-all-levels="false"
+            :show-all-levels="true"
             placeholder="请选择：报考大类 / 联考专业组，可继续下钻到考试科目"
           />
         </el-form-item>
@@ -1506,52 +1547,47 @@ watch(
         </div>
       </div>
 
-      <el-table
-        v-loading="templateLoading"
-        :data="paperTemplateRows"
-        border
-        class="template-table"
-        empty-text="暂无组卷模板"
-      >
-        <el-table-column prop="templateName" label="模板名称" min-width="200" />
-        <el-table-column prop="paperType" label="卷型" width="120" />
-        <el-table-column label="组卷范围" min-width="180">
-          <template #default="scope">
-            {{ resolveTemplateScopeLabel(scope.row) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="difficulty" label="难度" width="100" />
-        <el-table-column prop="totalScore" label="总分" width="90" />
-        <el-table-column prop="durationMinutes" label="时长" width="90" />
-        <el-table-column label="题型规则" min-width="240">
-          <template #default="scope">
-            <div class="rule-preview">
-              {{ scope.row.typeRules.map((item) => `${item.type} x${item.count} / ${item.questionScore}分`).join('；') || '-' }}
+      <div class="template-list-block">
+        <div class="template-list-head">
+          <strong>已有模板</strong>
+          <span>如果数据库中已有模板，会在这里按列表展示。</span>
+        </div>
+        <div v-loading="templateLoading" class="template-list">
+          <el-empty v-if="!paperTemplateRows.length" description="暂无组卷模板" />
+          <article
+            v-for="row in paperTemplateRows"
+            :key="row.templateId"
+            class="template-list-item"
+          >
+            <div class="template-list-item__body">
+              <div class="template-list-item__head">
+                <h5>{{ row.templateName }}</h5>
+                <el-tag size="small" effect="light">{{ resolvePaperTypeLabel(row.paperType) }}</el-tag>
+              </div>
+              <p class="template-list-item__desc">{{ buildTemplateDescription(row) }}</p>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="240" fixed="right">
-          <template #default="scope">
-            <el-button
-              link
-              type="success"
-              :loading="applyingTemplateId === scope.row.templateId"
-              @click="handleApplyTemplate(scope.row)"
-            >
-              应用生成
-            </el-button>
-            <el-button link type="primary" @click="populateTemplateForm(scope.row)">编辑</el-button>
-            <el-button
-              link
-              type="danger"
-              :loading="deletingTemplateId === scope.row.templateId"
-              @click="handleDeleteTemplate(scope.row)"
-            >
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+            <div class="template-list-item__actions">
+              <el-button
+                link
+                type="success"
+                :loading="applyingTemplateId === row.templateId"
+                @click="handleApplyTemplate(row)"
+              >
+                应用生成
+              </el-button>
+              <el-button link type="primary" @click="populateTemplateForm(row)">编辑</el-button>
+              <el-button
+                link
+                type="danger"
+                :loading="deletingTemplateId === row.templateId"
+                @click="handleDeleteTemplate(row)"
+              >
+                删除
+              </el-button>
+            </div>
+          </article>
+        </div>
+      </div>
     </el-card>
 
     <el-dialog
@@ -1567,12 +1603,12 @@ watch(
             <el-cascader
               v-model="manualForm.scope_path"
               :options="professionalOptions"
-              :props="groupPaperCascaderProps"
+              :props="manualPaperCascaderProps"
               filterable
               clearable
               :teleported="false"
               expand-trigger="hover"
-              :show-all-levels="false"
+              :show-all-levels="true"
               :disabled="manualProfessionalLoading"
               placeholder="请选择：学科门类 / 联考专业组，可继续下钻到考试科目"
             />
@@ -1595,8 +1631,9 @@ watch(
             <el-select
               v-model="manualForm.publish_class_ids"
               multiple
-              collapse-tags
-              collapse-tags-tooltip
+              :collapse-tags="manualForm.publish_class_ids.length > 5"
+              :collapse-tags-tooltip="manualForm.publish_class_ids.length > 5"
+              :max-collapse-tags="5"
               filterable
               clearable
               placeholder="请选择发布班级"
@@ -1839,6 +1876,78 @@ watch(
   display: grid;
   gap: 10px;
   margin-bottom: 12px;
+}
+
+.template-list-block {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.template-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.template-list-head strong {
+  font-size: 16px;
+}
+
+.template-list-head span {
+  color: var(--qb-text-subtle-7);
+  font-size: 13px;
+}
+
+.template-list {
+  display: grid;
+  gap: 10px;
+}
+
+.template-list-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--qb-primary-soft-border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 248, 255, 0.95));
+}
+
+.template-list-item__body {
+  min-width: 0;
+  flex: 1;
+}
+
+.template-list-item__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.template-list-item__head h5 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.template-list-item__desc {
+  margin: 8px 0 0;
+  color: var(--qb-text-subtle-7);
+  line-height: 1.6;
+}
+
+.template-list-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .template-rule-row {

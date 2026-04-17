@@ -39,6 +39,22 @@ export function createScopedRouter({ routes = [], entryType = 'student' } = {}) 
       await userStore.initialize({ routePath: to.path })
     }
 
+    const normalizedToPath = String(to.path || '').trim()
+    const needsTeacherIdentityCheck = entryType === 'teacher' && normalizedToPath.startsWith('/teacher')
+    if (hasToken && needsTeacherIdentityCheck) {
+      const identityResult = await userStore.verifyTokenIdentityConsistency()
+      if (identityResult?.reason === 'mismatch' || identityResult?.reason === 'unauthorized') {
+        ElMessage.warning('检测到登录身份与本地缓存不一致，请重新登录后继续。')
+        await userStore.logout()
+        return {
+          path: '/login',
+          query: {
+            ...(to.fullPath ? { redirect: to.fullPath } : {}),
+          },
+        }
+      }
+    }
+
     if (!isRoutePathAllowedInEntry(to.path, entryType)) {
       ElMessage.warning(
         entryType === 'teacher'

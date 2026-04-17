@@ -64,6 +64,17 @@ QUESTION_BATCH_PROMPT_TEMPLATE = (
 QUESTION_OPTION_LINE_PATTERN = re.compile(r"^[\(（]?([A-Z])(?:[\)）][\.\:：、．]?|[\.\:：、．])\s*(.*)$")
 
 
+GENERIC_KNOWLEDGE_PATH_LABELS = {
+    "具体内容与要求",
+    "科目简介",
+    "考试说明",
+    "考试要求",
+    "课程简介",
+    "课程说明",
+    "复习建议",
+}
+
+
 class KnowledgeServiceMixin:
     def get_student_syllabus_catalog(self) -> Dict[str, object]:
         if not KNOWLEDGE_TREE_PATH.exists():
@@ -630,7 +641,222 @@ class KnowledgeServiceMixin:
                 links.append({"source": prerequisite_id, "target": knowledge_id, "type": "prerequisite"})
                 link_keys.add(prerequisite_key)
 
-        return {"nodes": nodes, "links": links}
+        collapsed_nodes, collapsed_links = self._collapse_knowledge_graph_to_two_layers(nodes, links)
+        return {"nodes": collapsed_nodes, "links": collapsed_links}
+
+    def _is_generic_knowledge_label(self, label: object) -> bool:
+        normalized_label = str(label or "").strip()
+        if not normalized_label:
+            return True
+        return normalized_label in GENERIC_KNOWLEDGE_PATH_LABELS
+
+    def _collapse_knowledge_graph_to_two_layers(
+        self,
+        nodes: List[Dict[str, object]],
+        links: List[Dict[str, object]],
+    ) -> Tuple[List[Dict[str, object]], List[Dict[str, object]]]:
+        if not nodes:
+            return [], []
+
+        node_by_id: Dict[str, Dict[str, object]] = {}
+        parent_by_id: Dict[str, str] = {}
+        children_by_parent: Dict[str, List[str]] = {}
+        for item in nodes:
+            node_id = str(item.get("id", "")).strip()
+            if not node_id:
+                continue
+            normalized_item = dict(item)
+            normalized_item["id"] = node_id
+            node_by_id[node_id] = normalized_item
+            parent_id = str(item.get("parentId", "") or "").strip()
+            if parent_id and parent_id in node_by_id:
+                parent_by_id[node_id] = parent_id
+                children_by_parent.setdefault(parent_id, []).append(node_id)
+            elif parent_id:
+                parent_by_id[node_id] = parent_id
+
+        for link in links:
+            if str(link.get("type", "")).strip() != "parent":
+                continue
+            source_id = str(link.get("source", "")).strip()
+            target_id = str(link.get("target", "")).strip()
+            if not source_id or not target_id:
+                continue
+            if source_id not in node_by_id or target_id not in node_by_id:
+                continue
+            parent_by_id[target_id] = source_id
+            children_by_parent.setdefault(source_id, [])
+            if target_id not in children_by_parent[source_id]:
+                children_by_parent[source_id].append(target_id)
+
+        def _node_sort_key(node_id: str) -> Tuple[int, str, str]:
+            row = node_by_id.get(node_id, {})
+            return (
+                max(0, int(row.get("sort", 0) or 0)),
+                str(row.get("createTime", "") or ""),
+                str(node_id),
+            )
+
+        for parent_id in list(children_by_parent.keys()):
+            children_by_parent[parent_id] = sorted(children_by_parent[parent_id], key=_node_sort_key)
+
+        roots = sorted(
+            [
+                node_id
+                for node_id in node_by_id
+                if not str(parent_by_id.get(node_id, "")).strip() or str(parent_by_id.get(node_id, "")).strip() not in node_by_id
+            ],
+            key=_node_sort_key,
+        )
+        if not roots:
+            roots = sorted(list(node_by_id.keys()), key=_node_sort_key)
+
+        root_by_id: Dict[str, str] = {}
+        second_by_id: Dict[str, str] = {}
+
+        def _build_path_to_root(node_id: str) -> List[str]:
+            path: List[str] = []
+            seen: set[str] = set()
+            cursor = str(node_id or "").strip()
+            while cursor and cursor not in seen and cursor in node_by_id:
+                path.append(cursor)
+                seen.add(cursor)
+                cursor = str(parent_by_id.get(cursor, "")).strip()
+            path.reverse()
+            return path
+
+        for node_id in node_by_id:
+            path = _build_path_to_root(node_id)
+            if not path:
+                continue
+            root_id = path[0]
+            root_by_id[node_id] = root_id
+            if len(path) <= 1:
+                continue
+            second_id = ""
+            for candidate_id in path[1:]:
+                candidate_node = node_by_id.get(candidate_id, {})
+                if not self._is_generic_knowledge_label(candidate_node.get("label", "")):
+                    second_id = candidate_id
+                    break
+            if not second_id:
+                second_id = path[1]
+            second_by_id[node_id] = second_id
+
+        collapsed_nodes: Dict[str, Dict[str, object]] = {}
+        collapsed_parent_links: set[Tuple[str, str]] = set()
+        second_to_root: Dict[str, str] = {}
+
+        for root_id in roots:
+            root_node = node_by_id.get(root_id, {})
+            if not root_node:
+                continue
+            collapsed_nodes[root_id] = {
+                **root_node,
+                "id": root_id,
+                "parentId": None,
+                "level": 4,
+                "questionCount": 0,
+                "wrongCount": 0,
+                "mastery": 0.0,
+                "size": self._knowledge_node_size(0),
+            }
+
+        for node_id, second_id in second_by_id.items():
+            root_id = root_by_id.get(node_id, "")
+            if not second_id or not root_id or second_id == root_id:
+                continue
+            second_node = node_by_id.get(second_id, {})
+            if not second_node:
+                continue
+            second_to_root[second_id] = root_id
+            if second_id not in collapsed_nodes:
+                collapsed_nodes[second_id] = {
+                    **second_node,
+                    "id": second_id,
+                    "parentId": root_id,
+                    "level": 5,
+                    "questionCount": 0,
+                    "wrongCount": 0,
+                    "mastery": 0.0,
+                    "size": self._knowledge_node_size(0),
+                }
+            collapsed_parent_links.add((root_id, second_id))
+
+        mastery_sum_by_collapsed_id: Dict[str, float] = {}
+        mastery_weight_by_collapsed_id: Dict[str, float] = {}
+
+        def _accumulate_metrics(target_id: str, source_node: Dict[str, object]) -> None:
+            if target_id not in collapsed_nodes:
+                return
+            question_count = max(0, int(source_node.get("questionCount", 0) or 0))
+            wrong_count = max(0, int(source_node.get("wrongCount", 0) or 0))
+            try:
+                mastery_value = float(source_node.get("mastery", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                mastery_value = 0.0
+            mastery_value = min(1.0, max(0.0, mastery_value))
+            weight = float(question_count if question_count > 0 else 1)
+            collapsed_nodes[target_id]["questionCount"] = int(collapsed_nodes[target_id].get("questionCount", 0) or 0) + question_count
+            collapsed_nodes[target_id]["wrongCount"] = int(collapsed_nodes[target_id].get("wrongCount", 0) or 0) + wrong_count
+            mastery_sum_by_collapsed_id[target_id] = mastery_sum_by_collapsed_id.get(target_id, 0.0) + (mastery_value * weight)
+            mastery_weight_by_collapsed_id[target_id] = mastery_weight_by_collapsed_id.get(target_id, 0.0) + weight
+
+        for node_id, source_node in node_by_id.items():
+            root_id = root_by_id.get(node_id, "")
+            if root_id:
+                _accumulate_metrics(root_id, source_node)
+            second_id = second_by_id.get(node_id, "")
+            if second_id and second_id != root_id:
+                _accumulate_metrics(second_id, source_node)
+
+        for collapsed_id, collapsed_node in collapsed_nodes.items():
+            total_weight = mastery_weight_by_collapsed_id.get(collapsed_id, 0.0)
+            collapsed_node["mastery"] = round(
+                (mastery_sum_by_collapsed_id.get(collapsed_id, 0.0) / total_weight) if total_weight > 0 else 0.0,
+                4,
+            )
+            question_count = max(0, int(collapsed_node.get("questionCount", 0) or 0))
+            collapsed_node["size"] = self._knowledge_node_size(question_count)
+
+        collapsed_links: List[Dict[str, object]] = [
+            {"source": source_id, "target": target_id, "type": "parent"}
+            for source_id, target_id in sorted(
+                list(collapsed_parent_links),
+                key=lambda item: (_node_sort_key(item[0]), _node_sort_key(item[1])),
+            )
+        ]
+
+        prerequisite_seen: set[Tuple[str, str]] = set()
+        for link in links:
+            if str(link.get("type", "")).strip() != "prerequisite":
+                continue
+            source_id = str(link.get("source", "")).strip()
+            target_id = str(link.get("target", "")).strip()
+            if not source_id or not target_id:
+                continue
+            collapsed_source = second_by_id.get(source_id) or root_by_id.get(source_id, "")
+            collapsed_target = second_by_id.get(target_id) or root_by_id.get(target_id, "")
+            if not collapsed_source or not collapsed_target or collapsed_source == collapsed_target:
+                continue
+            if (collapsed_source, collapsed_target) in collapsed_parent_links:
+                continue
+            prerequisite_key = (collapsed_source, collapsed_target)
+            if prerequisite_key in prerequisite_seen:
+                continue
+            prerequisite_seen.add(prerequisite_key)
+            collapsed_links.append({"source": collapsed_source, "target": collapsed_target, "type": "prerequisite"})
+
+        ordered_collapsed_nodes = sorted(
+            collapsed_nodes.values(),
+            key=lambda row: (
+                max(0, int(row.get("level", 0) or 0)),
+                max(0, int(row.get("sort", 0) or 0)),
+                str(row.get("createTime", "") or ""),
+                str(row.get("id", "") or ""),
+            ),
+        )
+        return ordered_collapsed_nodes, collapsed_links
 
     def _resolve_knowledge_graph_scope_filters(
         self,
@@ -952,14 +1178,22 @@ class KnowledgeServiceMixin:
     ) -> Dict[str, object]:
         parsed = self._parse_question_block(block)
         alignment = self._align_question_block_to_semantic_pool(parsed, semantic_pool)
+        aligned_knowledge_id = str(alignment.get("knowledgeId") or "").strip()
         point_code = str(alignment.get("pointCode") or "").strip()
         candidate = semantic_pool_by_code.get(point_code) if point_code else None
-        knowledge_id = str(candidate.get("knowledgeId", "")).strip() if candidate else ""
+        knowledge_id = aligned_knowledge_id or (str(candidate.get("knowledgeId", "")).strip() if candidate else "")
         module_code = str(candidate.get("module_code", "")).strip() if candidate else ""
         chapter_code = str(alignment.get("chapterCode") or "").strip()
-        path_level_rows = alignment.get("path_levels", [])
-        if not isinstance(path_level_rows, list):
-            path_level_rows = []
+        raw_path_level_rows = alignment.get("path_levels", [])
+        if not isinstance(raw_path_level_rows, list):
+            raw_path_level_rows = []
+        path_level_rows = self._collapse_path_levels_to_two_layers(raw_path_level_rows)
+        if path_level_rows:
+            knowledge_id = str(path_level_rows[-1].get("id", "")).strip() or knowledge_id
+        knowledge_tags = self._build_two_level_knowledge_tags(path_level_rows)
+        path_label = " / ".join(knowledge_tags) if knowledge_tags else " / ".join(
+            [str(item.get("label", "")).strip() for item in path_level_rows if str(item.get("label", "")).strip()]
+        )
 
         preview_item = {
             "preview_id": f"word-question-{index}",
@@ -976,6 +1210,7 @@ class KnowledgeServiceMixin:
             "policy_version": scope_filters["policy_version"],
             "knowledge_points": [knowledge_id] if knowledge_id else list(parsed.get("knowledge_points", [])),
             "knowledge_path": [str(item.get("id", "")).strip() for item in path_level_rows if str(item.get("id", "")).strip()],
+            "knowledge_tags": knowledge_tags,
             "scope_path": [
                 scope_filters["exam_category_code"],
                 scope_filters["joint_exam_group_code"],
@@ -985,9 +1220,7 @@ class KnowledgeServiceMixin:
             "pointCode": point_code or None,
             "module_code": module_code,
             "path_levels": path_level_rows,
-            "path_label": " / ".join(
-                [str(item.get("label", "")).strip() for item in path_level_rows if str(item.get("label", "")).strip()]
-            ),
+            "path_label": path_label,
             "confidence": round(float(alignment.get("confidence", 0.0) or 0.0), 4),
             "manual_review_required": bool(alignment.get("manual_review_required", False)),
             "review_message": str(alignment.get("review_message", "")).strip(),
@@ -996,14 +1229,79 @@ class KnowledgeServiceMixin:
                 "chapterCode": chapter_code or "",
                 "pointCode": point_code or "",
                 "path_levels": path_level_rows,
-                "path_label": " / ".join(
-                    [str(item.get("label", "")).strip() for item in path_level_rows if str(item.get("label", "")).strip()]
-                ),
+                "path_label": path_label,
+                "knowledgeTags": knowledge_tags,
             },
         }
         if knowledge_id:
             preview_item["ext_json"]["knowledgePointIds"] = [knowledge_id]
         return preview_item
+
+    def _normalize_path_level_rows(self, rows: object) -> List[Dict[str, str]]:
+        normalized_rows: List[Dict[str, str]] = []
+        for item in rows if isinstance(rows, list) else []:
+            if not isinstance(item, dict):
+                continue
+            node_id = str(item.get("id", "")).strip()
+            label = str(item.get("label", "")).strip()
+            if not node_id or not label:
+                continue
+            normalized_rows.append(
+                {
+                    "level": str(item.get("level", "")).strip(),
+                    "id": node_id,
+                    "code": str(item.get("code", "")).strip(),
+                    "label": label,
+                }
+            )
+        return normalized_rows
+
+    def _is_generic_knowledge_path_label(self, label: str) -> bool:
+        normalized_label = str(label or "").strip()
+        if not normalized_label:
+            return True
+        return normalized_label in GENERIC_KNOWLEDGE_PATH_LABELS
+
+    def _collapse_path_levels_to_two_layers(self, rows: object) -> List[Dict[str, str]]:
+        normalized_rows = self._normalize_path_level_rows(rows)
+        if not normalized_rows:
+            return []
+        if len(normalized_rows) <= 2:
+            return normalized_rows
+        root_row = normalized_rows[0]
+        second_row = None
+        for candidate in normalized_rows[1:]:
+            if not self._is_generic_knowledge_path_label(str(candidate.get("label", ""))):
+                second_row = candidate
+                break
+        if second_row is None:
+            second_row = normalized_rows[1]
+        if str(second_row.get("id", "")) == str(root_row.get("id", "")):
+            return [root_row]
+        return [root_row, second_row]
+
+    def _build_two_level_knowledge_tags(self, rows: object) -> List[str]:
+        tags: List[str] = []
+        for item in self._collapse_path_levels_to_two_layers(rows):
+            label = str(item.get("label", "")).strip()
+            if label and label not in tags:
+                tags.append(label)
+        return tags[:2]
+
+    def _select_question_batch_alignment_candidates(
+        self,
+        semantic_pool: List[Dict[str, object]],
+    ) -> List[Dict[str, object]]:
+        candidates: List[Dict[str, object]] = []
+        for item in semantic_pool:
+            knowledge_id = str(item.get("knowledgeId", "")).strip()
+            if not knowledge_id:
+                continue
+            level = int(item.get("level", 0) or 0)
+            if level < 2:
+                continue
+            candidates.append(item)
+        return candidates
 
     def _parse_question_block(self, block: str) -> Dict[str, object]:
         text = str(block or "").strip()
@@ -1102,6 +1400,28 @@ class KnowledgeServiceMixin:
 
         content = self._normalize_question_block_text("\n".join(stem_lines).strip()) or text[:500]
         answer = self._normalize_question_block_text("\n".join(answer_lines).strip())
+        if not answer:
+            answer = self._extract_marker_value_from_block(
+                text,
+                marker_aliases=("答案", "参考答案", "answer"),
+                multiline=False,
+            )
+            answer = self._normalize_question_block_text(answer)
+        analysis_text = self._normalize_question_block_text("\n".join(analysis_lines).strip())
+        if not analysis_text:
+            analysis_text = self._extract_marker_value_from_block(
+                text,
+                marker_aliases=("解析", "答案解析", "analysis", "explanation"),
+                multiline=True,
+            )
+            analysis_text = self._normalize_question_block_text(analysis_text)
+        knowledge_hint_text = "\n".join(knowledge_lines)
+        if not str(knowledge_hint_text or "").strip():
+            knowledge_hint_text = self._extract_marker_value_from_block(
+                text,
+                marker_aliases=("知识点", "knowledge"),
+                multiline=True,
+            )
         inferred_type = self._infer_question_type("", options, answer)
         return {
             "title": content.splitlines()[0][:60],
@@ -1109,9 +1429,32 @@ class KnowledgeServiceMixin:
             "type": inferred_type,
             "options": options,
             "answer": answer.strip(),
-            "analysis": self._normalize_question_block_text("\n".join(analysis_lines).strip()),
-            "knowledge_points": self._parse_batch_knowledge_point_hints("\n".join(knowledge_lines)),
+            "analysis": analysis_text,
+            "knowledge_points": self._parse_batch_knowledge_point_hints(knowledge_hint_text),
         }
+
+    def _extract_marker_value_from_block(
+        self,
+        block_text: str,
+        marker_aliases: Tuple[str, ...],
+        multiline: bool = False,
+    ) -> str:
+        text = str(block_text or "")
+        if not text:
+            return ""
+        aliases = [re.escape(str(item or "").strip()) for item in marker_aliases if str(item or "").strip()]
+        if not aliases:
+            return ""
+        marker_pattern = "|".join(aliases)
+        bracket_pattern = rf"(?:【\s*(?:{marker_pattern})\s*】|\[\s*(?:{marker_pattern})\s*\]|(?:{marker_pattern})\s*[:：])"
+        if multiline:
+            pattern = re.compile(rf"{bracket_pattern}\s*(.+?)(?=\n\s*(?:【|\[|(?:{marker_pattern})\s*[:：])|\Z)", re.IGNORECASE | re.DOTALL)
+        else:
+            pattern = re.compile(rf"{bracket_pattern}\s*([^\r\n]+)", re.IGNORECASE)
+        matched = pattern.search(text)
+        if not matched:
+            return ""
+        return str(matched.group(1) or "").strip()
 
     def _parse_batch_knowledge_point_hints(self, raw_text: str) -> List[str]:
         normalized_text = str(raw_text or "").replace("\r\n", "\n").strip()
@@ -1208,11 +1551,7 @@ class KnowledgeServiceMixin:
         if not isinstance(raw_hints, list):
             return None
 
-        point_candidates = [
-            item
-            for item in semantic_pool
-            if int(item.get("level", 0) or 0) >= 5 and str(item.get("pointCode", "")).strip()
-        ]
+        point_candidates = self._select_question_batch_alignment_candidates(semantic_pool)
         if not point_candidates:
             return None
 
@@ -1289,6 +1628,7 @@ class KnowledgeServiceMixin:
         if not isinstance(path_levels, list):
             path_levels = []
         return {
+            "knowledgeId": str(best_candidate.get("knowledgeId", "")).strip() or None,
             "chapterCode": str(best_candidate.get("chapterCode", "")).strip() or None,
             "pointCode": str(best_candidate.get("pointCode", "")).strip() or None,
             "confidence": round(float(confidence), 4),
@@ -1325,14 +1665,11 @@ class KnowledgeServiceMixin:
         content = str(parsed_question.get("content", "")).strip()
         analysis = str(parsed_question.get("analysis", "")).strip()
         semantic_text = f"{content}\n{analysis}".strip()
-        point_candidates = [
-            item
-            for item in semantic_pool
-            if int(item.get("level", 0) or 0) >= 5 and str(item.get("pointCode", "")).strip()
-        ]
+        point_candidates = self._select_question_batch_alignment_candidates(semantic_pool)
         best_candidate = self._best_outline_semantic_candidate(semantic_text, point_candidates)
         if not best_candidate or float(best_candidate.get("similarity", 0.0) or 0.0) < QUESTION_BATCH_ALIGNMENT_THRESHOLD:
             return {
+                "knowledgeId": None,
                 "chapterCode": None,
                 "pointCode": None,
                 "confidence": round(float(best_candidate.get("similarity", 0.0) or 0.0), 4) if best_candidate else 0.0,
@@ -1342,6 +1679,7 @@ class KnowledgeServiceMixin:
             }
 
         return {
+            "knowledgeId": str(best_candidate.get("knowledgeId", "")).strip() or None,
             "chapterCode": str(best_candidate.get("chapterCode", "")).strip() or None,
             "pointCode": str(best_candidate.get("pointCode", "")).strip() or None,
             "confidence": round(float(best_candidate.get("similarity", 0.0) or 0.0), 4),
@@ -1446,7 +1784,7 @@ class KnowledgeServiceMixin:
         semantic_pool: List[Dict[str, object]] = []
         for node_id, row in node_map.items():
             level = int(row.get("level", 0) or 0)
-            if level not in {4, 5}:
+            if level < 2:
                 continue
             full_path_ids = build_path(node_id)
             full_path_rows = [node_map[path_id] for path_id in full_path_ids if path_id in node_map]

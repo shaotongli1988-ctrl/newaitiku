@@ -330,14 +330,44 @@ class PaperQuestionServiceMixin:
         actor: Actor,
         source_task_id: str = "",
     ) -> Dict[str, object]:
+        normalized_source_task_id = str(source_task_id or "").strip()
         created_items: List[Dict[str, str]] = []
         failures: List[Dict[str, object]] = []
+        semantic_pool_cache: Dict[str, List[Dict[str, object]]] = {}
         for index, payload in enumerate(payloads or [], start=1):
             raw_payload = dict(payload or {})
+            raw_payload = self._resolve_batch_question_payload_knowledge(raw_payload, actor, semantic_pool_cache)
             ext_json = self._load_json_object(raw_payload.get("extJson", "{}"))
-            preview_id = str(ext_json.get("batch_preview_id", "")).strip()
+            preview_id = str(ext_json.get("batchPreviewId") or ext_json.get("batch_preview_id") or "").strip()
+            effective_source_task_id = normalized_source_task_id
+            if not effective_source_task_id and preview_id:
+                fingerprint_parts = [
+                    actor.user_id,
+                    preview_id,
+                    str(raw_payload.get("stem", "")).strip(),
+                    str(raw_payload.get("answer", "")).strip(),
+                    str(raw_payload.get("knowledgeId", "")).strip(),
+                ]
+                fingerprint = hashlib.sha1("|".join(fingerprint_parts).encode("utf-8")).hexdigest()[:24]
+                effective_source_task_id = f"implicit-batch-{fingerprint}"
+            if preview_id:
+                ext_json["batchPreviewId"] = preview_id
+                ext_json["batch_preview_id"] = preview_id
+            if effective_source_task_id:
+                ext_json["sourceTaskId"] = effective_source_task_id
+                ext_json["source_task_id"] = effective_source_task_id
+            raw_payload["extJson"] = self._dump_json(ext_json)
             title = str(ext_json.get("title", "")).strip() or str(raw_payload.get("stem", "")).strip()[:60]
             try:
+                if effective_source_task_id and preview_id:
+                    existing_question = self.repository.get_question_by_batch_source_preview(
+                        effective_source_task_id,
+                        preview_id,
+                    )
+                    if existing_question:
+                        self._assert_question_visible(existing_question, actor)
+                        created_items.append(self._public_question(existing_question))
+                        continue
                 created_question = self.create_question(raw_payload, actor)
                 created_items.append(created_question)
             except Exception as exc:
@@ -351,7 +381,7 @@ class PaperQuestionServiceMixin:
                 )
         created_question_ids = [str(item.get("id", "")).strip() for item in created_items if str(item.get("id", "")).strip()]
         result = {
-            "sourceTaskId": str(source_task_id or "").strip(),
+            "sourceTaskId": normalized_source_task_id,
             "createdCount": len(created_items),
             "failedCount": len(failures),
             "items": created_items,
@@ -363,8 +393,281 @@ class PaperQuestionServiceMixin:
                 "message": "如需回滚，可使用批量删除这些新建题目。",
             },
         }
-        self._attach_batch_create_result_to_task(str(source_task_id or "").strip(), result, actor)
+        self._attach_batch_create_result_to_task(normalized_source_task_id, result, actor)
         return result
+
+    def _resolve_batch_question_payload_knowledge(
+        self,
+        raw_payload: Dict[str, object],
+        actor: Actor,
+        semantic_pool_cache: Optional[Dict[str, List[Dict[str, object]]]] = None,
+    ) -> Dict[str, object]:
+        normalized_payload = dict(raw_payload or {})
+        ext_json = self._load_json_object(normalized_payload.get("extJson", "{}"))
+        scope_filters = self._extract_batch_question_scope_filters(ext_json)
+        candidate_values: List[object] = [normalized_payload.get("knowledgeId"), ext_json.get("knowledgePointIds")]
+        resolved_knowledge_id = self._resolve_batch_knowledge_id_from_candidates(candidate_values, scope_filters)
+
+        hints = self._collect_batch_question_knowledge_hints(ext_json)
+        if not resolved_knowledge_id and hints and str(scope_filters.get("subjectCode", "")).strip():
+            resolved_knowledge_id = self._match_batch_knowledge_hint_to_existing(
+                hints,
+                scope_filters,
+                semantic_pool_cache or {},
+            )
+
+        auto_created_path: List[str] = []
+        if not resolved_knowledge_id and str(scope_filters.get("subjectCode", "")).strip():
+            resolved_knowledge_id, auto_created_path = self._create_batch_knowledge_from_hints(
+                scope_filters,
+                hints,
+                normalized_payload,
+                ext_json,
+                actor,
+            )
+
+        if not resolved_knowledge_id:
+            raise validation_failed("题目缺少可用知识点，请在文档中补充【知识点】或在纠偏列手动选择。")
+
+        normalized_payload["knowledgeId"] = resolved_knowledge_id
+        ext_json["knowledgePointIds"] = [resolved_knowledge_id]
+        ext_json["knowledge_points"] = [resolved_knowledge_id]
+        if hints and not isinstance(ext_json.get("batchKnowledgeHints"), list):
+            ext_json["batchKnowledgeHints"] = list(hints)
+        if auto_created_path:
+            ext_json["autoCreatedKnowledgePath"] = auto_created_path
+            ext_json["autoResolvedKnowledge"] = True
+            normalize_tags = getattr(self, "_normalize_two_level_knowledge_tags", None)
+            if callable(normalize_tags):
+                normalized_tags = normalize_tags(auto_created_path)
+                if normalized_tags:
+                    ext_json["knowledgeTags"] = normalized_tags
+        normalized_payload["extJson"] = self._dump_json(ext_json)
+        return normalized_payload
+
+    def _extract_batch_question_scope_filters(self, ext_json: Dict[str, object]) -> Dict[str, str]:
+        exam_category_code = str(
+            ext_json.get("examCategoryCode")
+            or ext_json.get("exam_category_code")
+            or ""
+        ).strip()
+        joint_exam_group_code = str(
+            ext_json.get("jointExamGroupCode")
+            or ext_json.get("joint_exam_group_code")
+            or ""
+        ).strip()
+        subject_code = str(
+            ext_json.get("subjectCode")
+            or ext_json.get("subject_code")
+            or ""
+        ).strip()
+        policy_version_code = str(
+            ext_json.get("policyVersionCode")
+            or ext_json.get("policy_version")
+            or POLICY_VERSION_CODE
+        ).strip() or POLICY_VERSION_CODE
+        return {
+            "examCategoryCode": exam_category_code,
+            "jointExamGroupCode": joint_exam_group_code,
+            "subjectCode": subject_code,
+            "policyVersionCode": policy_version_code,
+        }
+
+    def _resolve_batch_knowledge_id_from_candidates(
+        self,
+        candidates: List[object],
+        scope_filters: Dict[str, str],
+    ) -> str:
+        scope_matcher = getattr(self, "_knowledge_item_matches_scope", None)
+        for item in candidates:
+            raw_values = item if isinstance(item, list) else [item]
+            for raw_value in raw_values:
+                candidate_id = str(raw_value or "").strip()
+                if not candidate_id:
+                    continue
+                knowledge = self.repository.get_knowledge(candidate_id)
+                if not knowledge:
+                    continue
+                if str(knowledge.get("status", "")).strip() != "ENABLED":
+                    continue
+                if (
+                    callable(scope_matcher)
+                    and str(scope_filters.get("subjectCode", "")).strip()
+                    and not scope_matcher(knowledge, scope_filters)
+                ):
+                    continue
+                return candidate_id
+        return ""
+
+    def _collect_batch_question_knowledge_hints(
+        self,
+        ext_json: Dict[str, object],
+    ) -> List[str]:
+        candidates: List[object] = [
+            ext_json.get("batchKnowledgeHints"),
+            ext_json.get("batch_knowledge_hints"),
+            ext_json.get("knowledgePointHints"),
+            ext_json.get("knowledge_point_hints"),
+            ext_json.get("knowledgePoints"),
+            ext_json.get("knowledge_points"),
+            ext_json.get("knowledgePointIds"),
+            ext_json.get("knowledgeTags"),
+            ext_json.get("pathLabel"),
+            ext_json.get("path_label"),
+        ]
+        path_levels = ext_json.get("path_levels")
+        if not isinstance(path_levels, list):
+            path_levels = ext_json.get("pathLevels")
+        for row in path_levels if isinstance(path_levels, list) else []:
+            if not isinstance(row, dict):
+                continue
+            candidates.append(row.get("label"))
+
+        normalized_hints: List[str] = []
+        seen: set[str] = set()
+        for item in candidates:
+            raw_values = item if isinstance(item, list) else [item]
+            for raw_value in raw_values:
+                hint = self._normalize_batch_knowledge_hint_segment(raw_value)
+                if not hint:
+                    continue
+                if hint in seen:
+                    continue
+                seen.add(hint)
+                normalized_hints.append(hint)
+        return normalized_hints[:20]
+
+    def _normalize_batch_knowledge_hint_segment(self, value: object) -> str:
+        text = str(value or "").strip()
+        if not text:
+            return ""
+        text = text.replace("→", "->").replace("➜", "->").replace("⟶", "->")
+        text = re.sub(r"^\s*(?:知识点|知识点标签|knowledge)\s*[:：]\s*", "", text, flags=re.IGNORECASE).strip()
+        if text in {"建议手动标注", "手动标注", "none", "null", "-"}:
+            return ""
+        if re.match(r"^knowledge-[a-zA-Z0-9_-]+$", text) and not self.repository.get_knowledge(text):
+            return ""
+        return text[:120]
+
+    def _match_batch_knowledge_hint_to_existing(
+        self,
+        hints: List[str],
+        scope_filters: Dict[str, str],
+        semantic_pool_cache: Dict[str, List[Dict[str, object]]],
+    ) -> str:
+        if not hints:
+            return ""
+        cache_key = "|".join(
+            [
+                str(scope_filters.get("policyVersionCode", "")).strip(),
+                str(scope_filters.get("examCategoryCode", "")).strip(),
+                str(scope_filters.get("jointExamGroupCode", "")).strip(),
+                str(scope_filters.get("subjectCode", "")).strip(),
+            ]
+        )
+        semantic_pool = semantic_pool_cache.get(cache_key)
+        if semantic_pool is None:
+            semantic_pool = self._build_question_semantic_pool(scope_filters)
+            semantic_pool_cache[cache_key] = semantic_pool
+        alignment = self._align_question_block_by_knowledge_hints({"knowledge_points": list(hints)}, semantic_pool)
+        if not isinstance(alignment, dict):
+            return ""
+        return self._resolve_batch_knowledge_id_from_candidates([alignment.get("knowledgeId")], scope_filters)
+
+    def _create_batch_knowledge_from_hints(
+        self,
+        scope_filters: Dict[str, str],
+        hints: List[str],
+        raw_payload: Dict[str, object],
+        ext_json: Dict[str, object],
+        actor: Actor,
+    ) -> Tuple[str, List[str]]:
+        subject_code = str(scope_filters.get("subjectCode", "")).strip()
+        if not subject_code:
+            return "", []
+        self._assert_actor_scope_write_access(
+            actor,
+            str(scope_filters.get("examCategoryCode", "")).strip(),
+            str(scope_filters.get("jointExamGroupCode", "")).strip(),
+        )
+        path_candidates = self._extract_batch_knowledge_path_candidates(hints)
+        selected_path = path_candidates[0] if path_candidates else []
+        if not selected_path:
+            selected_path = ["自动补录知识点", "未识别知识点"]
+        selected_path = [item for item in selected_path[:4] if item]
+        if not selected_path:
+            selected_path = ["未识别知识点"]
+
+        subject_name_resolver = getattr(self, "_resolve_subject_display_name", None)
+        if callable(subject_name_resolver):
+            subject_name = str(
+                subject_name_resolver(
+                    subject_code,
+                    str(scope_filters.get("jointExamGroupCode", "")).strip(),
+                )
+                or subject_code
+            ).strip() or subject_code
+        else:
+            subject_name = subject_code
+
+        root_id, _ = self._ensure_subject_root_node(scope_filters, subject_name)
+        parent_id = root_id
+        module_code = str(ext_json.get("moduleCode") or raw_payload.get("moduleCode") or "").strip()
+        created_path: List[str] = []
+        for index, segment in enumerate(selected_path):
+            node_module_code = module_code if index == len(selected_path) - 1 else ""
+            parent_id, _ = self._ensure_scoped_knowledge_node(
+                parent_id=parent_id,
+                name=segment,
+                scope_filters=scope_filters,
+                status="ENABLED",
+                module_code=node_module_code,
+            )
+            created_path.append(segment)
+        return str(parent_id or "").strip(), created_path
+
+    def _extract_batch_knowledge_path_candidates(self, hints: List[str]) -> List[List[str]]:
+        path_candidates: List[List[str]] = []
+        single_segment_candidates: List[str] = []
+        for hint in hints:
+            normalized_hint = str(hint or "").strip()
+            if not normalized_hint:
+                continue
+            split_segments = self._split_batch_knowledge_hint_segments(normalized_hint)
+            if len(split_segments) > 1:
+                path_candidates.append(split_segments[:4])
+            elif len(split_segments) == 1:
+                single_segment_candidates.append(split_segments[0])
+        if not path_candidates and single_segment_candidates:
+            if len(single_segment_candidates) >= 2:
+                path_candidates.append(single_segment_candidates[:4])
+            else:
+                path_candidates.append([single_segment_candidates[0]])
+        return path_candidates
+
+    def _split_batch_knowledge_hint_segments(self, raw_hint: str) -> List[str]:
+        normalizer = getattr(self, "_split_knowledge_hint_segments", None)
+        if callable(normalizer):
+            candidate_segments = normalizer(raw_hint)
+            if candidate_segments:
+                return [segment for segment in [str(item or "").strip() for item in candidate_segments] if segment]
+        normalized_hint = (
+            str(raw_hint or "")
+            .replace("→", "->")
+            .replace("➜", "->")
+            .replace("⟶", "->")
+            .replace("｜", "|")
+            .strip()
+        )
+        if not normalized_hint:
+            return []
+        has_path_separator = any(token in normalized_hint for token in ("->", "=>", ">", "/", "\\", "|"))
+        if has_path_separator:
+            segments = re.split(r"\s*(?:->|=>|>|/|\\|\|)\s*", normalized_hint)
+        else:
+            segments = [normalized_hint]
+        normalized_segments = [self._normalize_batch_knowledge_hint_segment(item) for item in segments]
+        return [item for item in normalized_segments if item]
 
     def _attach_batch_create_result_to_task(
         self,
@@ -858,6 +1161,94 @@ class PaperQuestionServiceMixin:
                 matched.append(question)
         return self._paginate_questions(matched, page, size)
 
+    def list_paper_question_filter_options(self, filters: Dict[str, str], actor: Actor) -> Dict[str, object]:
+        scoped_filters = self._apply_required_list_scope(
+            {
+                "keyword": str(filters.get("keyword", "")).strip(),
+                "type": str(filters.get("type", "")).strip(),
+                "difficulty": str(filters.get("difficulty", "")).strip(),
+                "examCategoryCode": str(filters.get("examCategoryCode", "")).strip(),
+                "jointExamGroupCode": str(filters.get("jointExamGroupCode", "")).strip(),
+                "subjectCode": str(filters.get("subjectCode", "")).strip(),
+                "policyVersion": str(filters.get("policyVersion", "")).strip(),
+            },
+            actor.role,
+            actor.user_id,
+            injected_joint_group_code=actor.assigned_joint_group_code,
+        )
+        option_rows = self.repository.list_visible_published_question_filter_options(
+            scoped_filters,
+            actor.role,
+            actor.user_id,
+        )
+        subject_bucket: Dict[str, Dict[str, object]] = {}
+        chapter_bucket: Dict[str, int] = {}
+        chapter_bucket_by_subject: Dict[str, Dict[str, int]] = {}
+
+        for row in option_rows:
+            subject_id = str(row.get("subjectId", "")).strip()
+            subject_code = str(row.get("subjectCode", "")).strip()
+            chapter = str(row.get("chapter", "")).strip()
+            question_count = int(row.get("questionCount", 0) or 0)
+            if subject_id:
+                bucket = subject_bucket.setdefault(
+                    subject_id,
+                    {
+                        "value": subject_id,
+                        "label": subject_id,
+                        "subjectCode": subject_code,
+                        "questionCount": 0,
+                        "chapters": set(),
+                    },
+                )
+                bucket["questionCount"] = int(bucket.get("questionCount", 0) or 0) + question_count
+                if chapter:
+                    chapters = bucket.get("chapters")
+                    if isinstance(chapters, set):
+                        chapters.add(chapter)
+                    chapter_bucket_by_subject.setdefault(subject_id, {})
+                    chapter_bucket_by_subject[subject_id][chapter] = chapter_bucket_by_subject[subject_id].get(chapter, 0) + question_count
+            if chapter:
+                chapter_bucket[chapter] = chapter_bucket.get(chapter, 0) + question_count
+
+        subject_options = []
+        for subject_id, bucket in subject_bucket.items():
+            chapters = bucket.get("chapters")
+            chapter_count = len(chapters) if isinstance(chapters, set) else 0
+            subject_options.append(
+                {
+                    "value": subject_id,
+                    "label": str(bucket.get("label", subject_id)).strip() or subject_id,
+                    "subjectCode": str(bucket.get("subjectCode", "")).strip(),
+                    "questionCount": int(bucket.get("questionCount", 0) or 0),
+                    "chapterCount": chapter_count,
+                }
+            )
+        subject_options.sort(key=lambda item: str(item.get("value", "")))
+
+        chapter_options = [
+            {"value": chapter, "label": chapter, "questionCount": int(count)}
+            for chapter, count in chapter_bucket.items()
+            if chapter
+        ]
+        chapter_options.sort(key=lambda item: str(item.get("value", "")))
+
+        chapter_options_by_subject = {}
+        for subject_id, chapter_map in chapter_bucket_by_subject.items():
+            rows = [
+                {"value": chapter, "label": chapter, "questionCount": int(count)}
+                for chapter, count in chapter_map.items()
+                if chapter
+            ]
+            rows.sort(key=lambda item: str(item.get("value", "")))
+            chapter_options_by_subject[subject_id] = rows
+
+        return {
+            "subjectOptions": subject_options,
+            "chapterOptions": chapter_options,
+            "chapterOptionsBySubject": chapter_options_by_subject,
+        }
+
     def save_manual_paper(self, payload: Dict[str, object], actor: Actor) -> Dict[str, object]:
         paper = parse_paper_manual_model(payload)
         self._assert_paper_status_allowed(paper.paperStatus)
@@ -944,6 +1335,72 @@ class PaperQuestionServiceMixin:
         )
         return {"paperId": paper_id, "questionIds": selected_ids}
 
+    def _build_ai_generated_template_type_rules(
+        self,
+        selected_ids: List[str],
+        selected_question_map: Dict[str, Dict[str, object]],
+        question_score: int,
+    ) -> List[Dict[str, object]]:
+        selected_set = {str(item or "").strip() for item in selected_ids if str(item or "").strip()}
+        type_counts: Dict[str, int] = {}
+        for question_id in selected_ids:
+            question = selected_question_map.get(str(question_id or "").strip(), {})
+            question_type = str(question.get("type", "")).strip()
+            if not question_type:
+                continue
+            type_counts[question_type] = type_counts.get(question_type, 0) + 1
+        if not type_counts:
+            fallback_count = max(1, len(selected_set))
+            type_counts = {"single_choice": fallback_count}
+        score = max(1, int(question_score))
+        return [
+            {
+                "type": question_type,
+                "count": count,
+                "questionScore": score,
+            }
+            for question_type, count in sorted(type_counts.items())
+        ]
+
+    def _save_ai_generated_paper_template(
+        self,
+        paper_name: str,
+        paper_id: str,
+        selected_ids: List[str],
+        selected_question_map: Dict[str, Dict[str, object]],
+        final_subject_id: str,
+        final_subject_code: str,
+        exam_category_code: str,
+        joint_exam_group_code: str,
+        difficulty_label: str,
+        total_score: int,
+        duration_minutes: int,
+        policy_version: str,
+        actor: Actor,
+    ) -> Dict[str, object]:
+        selected_count = max(1, len([item for item in selected_ids if str(item or "").strip()]))
+        question_score = max(1, int(round(float(total_score) / float(selected_count))))
+        template_payload: Dict[str, object] = {
+            "templateId": f"template-{paper_id}",
+            "templateName": paper_name,
+            "paperType": "simulation",
+            "subjectId": final_subject_id,
+            "chapter": "",
+            "difficulty": difficulty_label,
+            "totalScore": total_score,
+            "durationMinutes": duration_minutes,
+            "examCategoryCode": exam_category_code,
+            "jointExamGroupCode": joint_exam_group_code,
+            "subjectCode": final_subject_code,
+            "policyVersion": policy_version,
+            "typeRules": self._build_ai_generated_template_type_rules(
+                selected_ids,
+                selected_question_map,
+                question_score,
+            ),
+        }
+        return self.save_paper_template(template_payload, actor)
+
     def list_teacher_paper_classes(self, actor: Actor) -> List[Dict[str, str]]:
         class_options: List[Dict[str, str]] = []
         seen_values: set[str] = set()
@@ -1007,8 +1464,14 @@ class PaperQuestionServiceMixin:
         exam_category_code = str(payload.get("examCategoryCode") or "").strip()
         joint_exam_group_code = str(payload.get("jointExamGroupCode") or "").strip()
         requested_subject_code = str(payload.get("subjectCode") or "").strip()
-        if not subject_id and requested_subject_code:
-            subject_id = subject_id_from_subject_code(requested_subject_code)
+        policy_version = str(payload.get("policyVersion") or payload.get("policy_version") or POLICY_VERSION_CODE).strip() or POLICY_VERSION_CODE
+        if requested_subject_code:
+            resolved_subject_id = subject_id_from_subject_code(requested_subject_code)
+            if not subject_id:
+                subject_id = resolved_subject_id
+            elif subject_id.upper() == requested_subject_code.upper():
+                # Backward compatibility: some clients pass subjectCode in subjectId.
+                subject_id = resolved_subject_id
         if not subject_id and not joint_exam_group_code:
             raise validation_failed("subjectId 或 jointExamGroupCode 至少提供一个。")
         self._assert_actor_scope_write_access(actor, exam_category_code, joint_exam_group_code)
@@ -1074,7 +1537,7 @@ class PaperQuestionServiceMixin:
                 "subjectCode": requested_subject_code,
             },
             actor.role,
-            actor.user_id,
+            "" if actor.role == "teacher" else actor.user_id,
             injected_joint_group_code=actor.assigned_joint_group_code,
         )
         if knowledge_scope:
@@ -1128,9 +1591,26 @@ class PaperQuestionServiceMixin:
 
         generated = self.save_manual_paper(manual_payload, actor)
         paper_id = str(generated.get("paperId", "")).strip()
+        saved_template = self._save_ai_generated_paper_template(
+            paper_name=paper_name,
+            paper_id=paper_id,
+            selected_ids=selected_ids,
+            selected_question_map=selected_question_map,
+            final_subject_id=final_subject_id,
+            final_subject_code=final_subject_code,
+            exam_category_code=exam_category_code,
+            joint_exam_group_code=joint_exam_group_code,
+            difficulty_label=difficulty_label,
+            total_score=total_score,
+            duration_minutes=45,
+            policy_version=policy_version,
+            actor=actor,
+        )
         return {
             "paperId": paper_id,
             "paper_id": paper_id,
+            "templateId": str(saved_template.get("templateId", "")).strip(),
+            "template_id": str(saved_template.get("templateId", "")).strip(),
             "questionIds": selected_ids,
             "subject_id": final_subject_id,
             "exam_category_code": exam_category_code,

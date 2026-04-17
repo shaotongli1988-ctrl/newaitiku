@@ -5195,30 +5195,38 @@ class QuestionRepository:
         return payload
 
     def list_subjects(self) -> List[Dict[str, Optional[str]]]:
-        with get_connection(self.db_path) as connection:
-            rows = connection.execute(
-                """
-                SELECT id, parentId, name, extJson
-                FROM knowledge
-                ORDER BY sort, createTime, id
-                """
-            ).fetchall()
-        knowledge_map = {row["id"]: row for row in rows}
-        items: List[Dict[str, Optional[str]]] = []
-        seen_subject_ids = set()
-        for row in rows:
-            ext_json = load_json_object(row["extJson"])
-            level = int(ext_json.get("level", 0) or 0)
-            subject_id = str(ext_json.get("subjectId", ""))
-            if level == 1 and subject_id and subject_id not in seen_subject_ids:
-                items.append({"id": subject_id, "name": row["name"], "parentId": None, "extJson": row["extJson"]})
-                seen_subject_ids.add(subject_id)
-            elif level == 2 and row["parentId"] in knowledge_map:
-                parent_ext = load_json_object(knowledge_map[row["parentId"]]["extJson"])
-                parent_subject_id = str(parent_ext.get("subjectId", ""))
-                if parent_subject_id:
-                    items.append({"id": row["id"], "name": row["name"], "parentId": parent_subject_id, "extJson": row["extJson"]})
-        return items
+        # 从内容基线中获取所有科目
+        from app.content_baseline import PUBLIC_SUBJECTS
+        
+        # 创建科目字典，用于去重
+        subject_map = {}
+        
+        # 添加公共科目
+        for subject in PUBLIC_SUBJECTS:
+            subject_code = str(subject.get("subjectCode", "")).strip()
+            subject_name = str(subject.get("subjectName", subject_code)).strip()
+            if subject_code:
+                subject_map[subject_code] = {
+                    "subjectCode": subject_code,
+                    "subjectName": subject_name
+                }
+        
+        # 从 joint_exam_groups 中获取专业科目
+        from app.content_baseline import list_joint_exam_groups
+        
+        for group in list_joint_exam_groups():
+            professional_subjects = group.get("professionalSubjects", []) if isinstance(group, dict) else []
+            for subject in professional_subjects:
+                subject_code = str(subject.get("subjectCode", "")).strip()
+                subject_name = str(subject.get("subjectName", subject_code)).strip()
+                if subject_code:
+                    subject_map[subject_code] = {
+                        "subjectCode": subject_code,
+                        "subjectName": subject_name
+                    }
+        
+        # 转换为列表并排序
+        return sorted(subject_map.values(), key=lambda x: x["subjectName"])
 
     def list_knowledge(self, status: str = "", filters: Optional[Dict[str, str]] = None) -> List[Dict[str, object]]:
         normalized_filters = dict(filters or {})
@@ -5539,6 +5547,40 @@ class QuestionRepository:
             ).fetchone()
         return row_to_question(row) if row else None
 
+    def get_question_by_batch_source_preview(
+        self,
+        source_task_id: str,
+        preview_id: str,
+    ) -> Optional[Dict[str, str]]:
+        normalized_source_task_id = str(source_task_id or "").strip()
+        normalized_preview_id = str(preview_id or "").strip()
+        if not normalized_source_task_id or not normalized_preview_id:
+            return None
+        with get_connection(self.db_path) as connection:
+            row = connection.execute(
+                f"""
+                SELECT {QUESTION_SELECT_SQL}
+                FROM question
+                WHERE COALESCE(json_extract(extJson, '$.policyVersionCode'), '') = :policy_version
+                  AND COALESCE(
+                    NULLIF(json_extract(extJson, '$.sourceTaskId'), ''),
+                    NULLIF(json_extract(extJson, '$.source_task_id'), '')
+                  ) = :source_task_id
+                  AND COALESCE(
+                    NULLIF(json_extract(extJson, '$.batchPreviewId'), ''),
+                    NULLIF(json_extract(extJson, '$.batch_preview_id'), '')
+                  ) = :preview_id
+                ORDER BY updateTime DESC, createTime DESC, id DESC
+                LIMIT 1
+                """,
+                {
+                    "policy_version": POLICY_VERSION_CODE,
+                    "source_task_id": normalized_source_task_id,
+                    "preview_id": normalized_preview_id,
+                },
+            ).fetchone()
+        return row_to_question(row) if row else None
+
     def list_questions_by_ids(self, question_ids: List[str]) -> List[Dict[str, str]]:
         if not question_ids:
             return []
@@ -5629,14 +5671,11 @@ class QuestionRepository:
                     params[placeholder] = group_code
                 clauses.append(
                     "("
-                    "(COALESCE(json_extract(q.extJson, '$.subjectType'), '') != 'PUBLIC' "
-                    "AND COALESCE(json_extract(q.extJson, '$.examCategoryCode'), '') = :exam_category_code)"
-                    " OR "
-                    "(COALESCE(json_extract(q.extJson, '$.subjectType'), '') = 'PUBLIC' "
-                    "AND EXISTS ("
+                    "EXISTS ("
                     "SELECT 1 FROM json_each(q.extJson, '$.applicableGroups') AS applicable_group "
                     f"WHERE applicable_group.value IN ({','.join(allowed_group_placeholders)})"
-                    "))"
+                    ")"
+                    " OR COALESCE(json_extract(q.extJson, '$.examCategoryCode'), '') = :exam_category_code"
                     ")"
                 )
             else:
@@ -5668,7 +5707,7 @@ class QuestionRepository:
             clauses.append("COALESCE(json_extract(q.extJson, '$.pointCode'), '') = :point_code")
             params["point_code"] = point_code
 
-        if actor_role == "teacher":
+        if actor_role == "teacher" and actor_user_id:
             clauses.append("q.userId = :user_id")
             params["user_id"] = actor_user_id
         where_clause = " AND ".join(clauses)
@@ -5683,6 +5722,115 @@ class QuestionRepository:
                 params,
             ).fetchall()
         return [row_to_question(row) for row in rows]
+
+    def list_visible_published_question_filter_options(
+        self,
+        filters: Dict[str, str],
+        actor_role: str,
+        actor_user_id: str,
+    ) -> List[Dict[str, object]]:
+        clauses = ["q.status = 'PUBLISHED'"]
+        params: Dict[str, object] = {}
+        question_type = str(filters.get("type", "")).strip()
+        if question_type:
+            clauses.append("q.type = :question_type")
+            params["question_type"] = question_type
+        keyword = str(filters.get("keyword", "")).strip()
+        if keyword:
+            clauses.append("(q.stem LIKE :keyword OR q.extJson LIKE :keyword)")
+            params["keyword"] = f"%{keyword}%"
+        difficulty = str(filters.get("difficulty", "")).strip()
+        if difficulty:
+            clauses.append("COALESCE(json_extract(q.extJson, '$.difficulty'), '') = :difficulty")
+            params["difficulty"] = difficulty
+
+        policy_version = (
+            str(
+                filters.get("policyVersion")
+                or filters.get("policyVersionCode")
+                or ""
+            ).strip()
+            or POLICY_VERSION_CODE
+        )
+        clauses.append("COALESCE(json_extract(q.extJson, '$.policyVersionCode'), '') = :policy_version")
+        params["policy_version"] = policy_version
+
+        exam_category_code = str(filters.get("examCategoryCode") or "").strip()
+        if exam_category_code:
+            allowed_group_codes = [
+                str(item.get("jointExamGroupCode", "")).strip()
+                for item in list_joint_exam_groups(exam_category_code)
+                if str(item.get("jointExamGroupCode", "")).strip()
+            ]
+            params["exam_category_code"] = exam_category_code
+            if allowed_group_codes:
+                allowed_group_placeholders: List[str] = []
+                for index, group_code in enumerate(allowed_group_codes):
+                    placeholder = f"allowed_group_code_{index}"
+                    allowed_group_placeholders.append(f":{placeholder}")
+                    params[placeholder] = group_code
+                clauses.append(
+                    "("
+                    "EXISTS ("
+                    "SELECT 1 FROM json_each(q.extJson, '$.applicableGroups') AS applicable_group "
+                    f"WHERE applicable_group.value IN ({','.join(allowed_group_placeholders)})"
+                    ")"
+                    " OR COALESCE(json_extract(q.extJson, '$.examCategoryCode'), '') = :exam_category_code"
+                    ")"
+                )
+            else:
+                clauses.append("COALESCE(json_extract(q.extJson, '$.examCategoryCode'), '') = :exam_category_code")
+
+        joint_exam_group_code = str(filters.get("jointExamGroupCode") or "").strip()
+        if joint_exam_group_code:
+            clauses.append(
+                "("
+                "EXISTS ("
+                "SELECT 1 FROM json_each(q.extJson, '$.applicableGroups') AS applicable_group "
+                "WHERE applicable_group.value = :joint_exam_group_code"
+                ") "
+                "OR COALESCE(json_extract(q.extJson, '$.jointExamGroupCode'), '') = :joint_exam_group_code "
+                ")"
+            )
+            params["joint_exam_group_code"] = joint_exam_group_code
+
+        subject_code = str(filters.get("subjectCode") or "").strip()
+        if subject_code:
+            clauses.append("COALESCE(json_extract(q.extJson, '$.subjectCode'), '') = :subject_code")
+            params["subject_code"] = subject_code
+
+        if actor_role == "teacher" and actor_user_id:
+            clauses.append("q.userId = :user_id")
+            params["user_id"] = actor_user_id
+
+        where_clause = " AND ".join(clauses)
+        with get_connection(self.db_path) as connection:
+            rows = connection.execute(
+                f"""
+                SELECT
+                  COALESCE(json_extract(q.extJson, '$.subjectId'), '') AS subjectId,
+                  COALESCE(json_extract(q.extJson, '$.subjectCode'), '') AS subjectCode,
+                  COALESCE(json_extract(q.extJson, '$.chapter'), '') AS chapter,
+                  COUNT(*) AS questionCount
+                FROM question AS q
+                WHERE {where_clause}
+                GROUP BY
+                  COALESCE(json_extract(q.extJson, '$.subjectId'), ''),
+                  COALESCE(json_extract(q.extJson, '$.subjectCode'), ''),
+                  COALESCE(json_extract(q.extJson, '$.chapter'), '')
+                ORDER BY subjectId, chapter
+                """,
+                params,
+            ).fetchall()
+        return [
+            {
+                "subjectId": str(row["subjectId"] or "").strip(),
+                "subjectCode": str(row["subjectCode"] or "").strip(),
+                "chapter": str(row["chapter"] or "").strip(),
+                "questionCount": int(row["questionCount"] or 0),
+            }
+            for row in rows
+        ]
 
     def create_question(self, payload: dict[str, str]) -> dict[str, str]:
         with get_connection(self.db_path) as connection:

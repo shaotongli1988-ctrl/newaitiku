@@ -175,6 +175,29 @@ function parseEnvelopeData(response) {
   return response
 }
 
+async function ensureBatchUploadIdentityReady() {
+  const identityResult = await userStore.verifyTokenIdentityConsistency?.()
+  if (identityResult?.ok) {
+    return true
+  }
+  if (identityResult?.reason === 'mismatch') {
+    const localUserId = String(identityResult.localUserId || userStore.userId || '').trim()
+    const serverUserId = String(identityResult.serverUserId || '').trim()
+    ElMessage.error(`登录身份不一致：本地为 ${localUserId || '-'}，服务端为 ${serverUserId || '-'}。请重新登录后再上传。`)
+    return false
+  }
+  if (identityResult?.reason === 'unauthorized' || identityResult?.reason === 'no_token') {
+    ElMessage.error('登录状态已失效，请重新登录后再上传。')
+    return false
+  }
+  if (identityResult?.reason === 'invalid_profile') {
+    ElMessage.error('无法校验当前账号身份，请重新登录后再试。')
+    return false
+  }
+  ElMessage.error('上传前身份校验失败，请稍后重试。')
+  return false
+}
+
 function applyProfessionalScopeOptions(treePayload) {
   const { options, scopeMetaMap } = createProfessionalScopeOptions(treePayload, {
     assignedJointGroupCode: isScopeLocked.value ? assignedJointGroupCode.value : '',
@@ -345,6 +368,24 @@ const batchParserSummary = computed(() => {
   return parts.join('；')
 })
 
+const latestTaskSnapshot = computed(() => {
+  const taskId = String(batchTaskId.value || '').trim()
+  if (!taskId) {
+    return null
+  }
+  return {
+    taskId,
+    status: String(batchTaskStatus.value || '').trim(),
+    progress: Number(batchTaskProgress.value || 0),
+    resultSummary: String(batchTaskSummary.value || '').trim(),
+    result: {
+      items: batchRows.value,
+      errors: batchErrors.value,
+      parserReport: batchParserReport.value,
+    },
+  }
+})
+
 async function pollBatchTaskUntilDone(taskId) {
   const normalizedTaskId = String(taskId || '').trim()
   if (!normalizedTaskId) {
@@ -373,7 +414,11 @@ async function pollBatchTaskUntilDone(taskId) {
     batchTaskSummary.value = String(taskExt?.resultSummary || '').trim()
     if (taskStatus === 'COMPLETED') {
       updateBatchRows(taskExt?.result || {})
-      taskCenterRef.value?.reload?.()
+      if (typeof taskCenterRef.value?.reloadByTask === 'function') {
+        await taskCenterRef.value.reloadByTask(normalizedTaskId)
+      } else {
+        await taskCenterRef.value?.reload?.()
+      }
       return
     }
     if (taskStatus === 'FAILED' || taskStatus === 'CANCELLED') {
@@ -473,8 +518,16 @@ async function resolveSelectedKnowledgeModuleCode(knowledgeId) {
 function queryL5KnowledgeSuggestions(queryString, callback) {
   const keyword = String(queryString || '').trim().toLowerCase()
   const candidates = l5SearchOptions.value.filter((item) => {
-    const value = String(item?.value || '').toLowerCase()
-    const pathLabel = String(item?.pathLabel || '').toLowerCase()
+    const rawValue = String(item?.value || '').trim()
+    const rawPathLabel = String(item?.pathLabel || '').trim()
+    if (!rawValue || !rawPathLabel) {
+      return false
+    }
+    if (/^[?？�]+$/.test(rawValue) || /^[?？�]+$/.test(rawPathLabel)) {
+      return false
+    }
+    const value = rawValue.toLowerCase()
+    const pathLabel = rawPathLabel.toLowerCase()
     if (!keyword) {
       return true
     }
@@ -605,6 +658,10 @@ async function handleBatchFileChange(uploadFile) {
     ElMessage.warning('请先选择专业属性后再进行批量上传。')
     return
   }
+  const identityReady = await ensureBatchUploadIdentityReady()
+  if (!identityReady) {
+    return
+  }
   batchParsing.value = true
   batchFileName.value = String(file?.name || '').trim()
   resetBatchState()
@@ -617,7 +674,15 @@ async function handleBatchFileChange(uploadFile) {
     })
     
     if (response?.deferred && response?.taskId) {
-      await pollBatchTaskUntilDone(response.taskId)
+      const deferredTaskId = String(response.taskId || '').trim()
+      batchTaskId.value = deferredTaskId
+      batchTaskStatus.value = 'QUEUED'
+      batchTaskProgress.value = 0
+      batchTaskSummary.value = '后台解析任务已创建，正在排队执行。'
+      if (deferredTaskId && typeof taskCenterRef.value?.reloadByTask === 'function') {
+        await taskCenterRef.value.reloadByTask(deferredTaskId)
+      }
+      await pollBatchTaskUntilDone(deferredTaskId)
       ElMessage.success('批量题目解析完成，请确认后入库。')
       return
     }
@@ -633,7 +698,7 @@ async function handleBatchFileChange(uploadFile) {
       await loadKnowledgeTreeOptions(subjectCode, { force: true })
     }
     
-    ElMessage.success(`已识别 ${batchRows.value.length} 道题目，请确认标签后入库。`)
+    ElMessage.success(`已识别 ${batchRows.value.length} 道题目，可直接入库，必要时再手动纠偏。`)
   } catch (error) {
     resetBatchState()
     ElMessage.error(String(error?.response?.data?.message || error?.message || '批量解析失败'))
@@ -661,17 +726,24 @@ async function handleBatchCreate() {
     })
   })
   
+  const hasRowKnowledge = (row) => {
+    const hasKnowledgePath = Array.isArray(row?.knowledgePath) && row.knowledgePath.length > 0
+    const hasKnowledgeHints = Array.isArray(row?.knowledgePoints)
+      && row.knowledgePoints.some((value) => String(value || '').trim())
+    return hasKnowledgePath || hasKnowledgeHints
+  }
+
   const validRows = batchRows.value.filter((row) => {
     const hasScope = Array.isArray(row.scopePath) && row.scopePath.length === 3
     const hasContent = !!row.content
     const hasAnswer = !!row.answer
-    const hasKnowledge = Array.isArray(row.knowledgePath) && row.knowledgePath.length > 0
+    const hasKnowledge = hasRowKnowledge(row)
     return hasScope && hasContent && hasAnswer && hasKnowledge
   })
   
   const missingScopeCount = batchRows.value.filter((row) => !Array.isArray(row.scopePath) || row.scopePath.length !== 3).length
   const missingAnswerCount = batchRows.value.filter((row) => !row.answer).length
-  const missingKnowledgeCount = batchRows.value.filter((row) => !Array.isArray(row.knowledgePath) || row.knowledgePath.length === 0).length
+  const missingKnowledgeCount = batchRows.value.filter((row) => !hasRowKnowledge(row)).length
   
   console.log('通过校验的题目数:', validRows.length)
   console.log('缺少专业属性:', missingScopeCount)
@@ -681,11 +753,14 @@ async function handleBatchCreate() {
   const payloadItems = batchRows.value
     .filter((row) => Array.isArray(row.scopePath) && row.scopePath.length === 3)
     .filter((row) => !!row.content && !!row.answer)
-    .filter((row) => Array.isArray(row.knowledgePath) && row.knowledgePath.length > 0)
-    .map((row) => {
+    .filter((row) => hasRowKnowledge(row))
+    .map((row, index) => {
       const scopeKey = buildScopeKey(row.scopePath)
       const scopeMeta = subjectScopeMap.value[scopeKey] || {}
       const knowledgeId = String(row.knowledgePath[row.knowledgePath.length - 1] || '').trim()
+      const normalizedKnowledgeHints = Array.isArray(row.knowledgePoints)
+        ? row.knowledgePoints.map((value) => String(value || '').trim()).filter((value) => value)
+        : []
       return {
         title: String(row.title || '').trim() || String(row.content || '').trim().slice(0, 60),
         content: String(row.content || '').trim(),
@@ -695,7 +770,7 @@ async function handleBatchCreate() {
         subjectCode: String(scopeMeta.subjectCode || row.scopePath[2] || '').trim(),
         subjectType: String(row.subjectType || scopeMeta.subjectSlot || scopeMeta.subjectType || '').trim(),
         moduleCode: String(row.moduleCode || '').trim(),
-        knowledgePoints: knowledgeId ? [knowledgeId] : [],
+        knowledgePoints: knowledgeId ? [knowledgeId] : normalizedKnowledgeHints,
         options: Array.isArray(row.options) ? row.options : [],
         answer: String(row.answer || '').trim(),
         analysis: String(row.analysis || '').trim(),
@@ -706,6 +781,9 @@ async function handleBatchCreate() {
           pointCode: String(row.pointCode || '').trim(),
           pathLabel: String(row.pathLabel || '').trim(),
           batchPreviewId: String(row.previewId || '').trim(),
+          batchCreateIndex: index + 1,
+          batchKnowledgeHints: normalizedKnowledgeHints,
+          knowledgePointHints: normalizedKnowledgeHints,
         },
       }
     })
@@ -723,7 +801,7 @@ async function handleBatchCreate() {
       missingParts.push(`${missingAnswerCount}道题缺少答案`)
     }
     const hintMessage = missingParts.length > 0 
-      ? `请先在"3+2 标签纠偏"列中选择知识点标签。当前有${missingParts.join('，')}。`
+      ? `当前有${missingParts.join('，')}。系统会优先使用文档中的【知识点】自动匹配/建点；若仍缺失，请在“3+2 标签纠偏”列补充。`
       : '当前没有通过校验的题目，请先修正标签和答案。'
     ElMessage.warning(hintMessage)
     return
@@ -739,6 +817,7 @@ async function handleBatchCreate() {
     const createdItems = Array.isArray(result?.items) ? result.items : []
     const failureRows = Array.isArray(result?.failures) ? result.failures : []
     const createdByPreviewId = {}
+    const createdByBatchIndex = {}
     createdItems.forEach((item) => {
       let extJson = item?.extJson
       if (typeof extJson === 'string') {
@@ -752,21 +831,37 @@ async function handleBatchCreate() {
       if (previewId) {
         createdByPreviewId[previewId] = item
       }
+      const batchCreateIndex = Number(extJson?.batch_create_index || extJson?.batchCreateIndex || 0)
+      if (Number.isFinite(batchCreateIndex) && batchCreateIndex > 0) {
+        createdByBatchIndex[batchCreateIndex] = item
+      }
     })
     const failureByPreviewId = {}
+    const failureByIndex = {}
     failureRows.forEach((item) => {
       const previewId = String(item?.previewId || '').trim()
       if (previewId) {
         failureByPreviewId[previewId] = item
       }
+      const rowIndex = Number(item?.index || 0)
+      if (Number.isFinite(rowIndex) && rowIndex > 0) {
+        failureByIndex[rowIndex] = item
+      }
     })
-    batchRows.value.forEach((row) => {
+    batchRows.value.forEach((row, index) => {
       const created = createdByPreviewId[row.previewId]
-      const failed = failureByPreviewId[row.previewId]
+      const createdByIndex = createdByBatchIndex[index + 1]
+      const failed = failureByPreviewId[row.previewId] || failureByIndex[index + 1]
       if (created) {
         row.createStatus = 'success'
         row.createMessage = '已入库'
         row.createdQuestionId = String(created?.id || '').trim()
+        return
+      }
+      if (createdByIndex) {
+        row.createStatus = 'success'
+        row.createMessage = '已入库'
+        row.createdQuestionId = String(createdByIndex?.id || '').trim()
         return
       }
       if (failed) {
@@ -780,7 +875,14 @@ async function handleBatchCreate() {
     })
     const rollbackMessage = String(result?.rollbackStrategy?.message || '').trim()
     taskCenterRef.value?.reload?.()
-    ElMessage.success(`批量入库完成：成功 ${Number(result?.createdCount || 0)} 道题。${rollbackMessage ? ` ${rollbackMessage}` : ''}`)
+    const createdCount = Number(result?.createdCount || 0)
+    const failedCount = Number(result?.failedCount || failureRows.length || 0)
+    const summaryMessage = `批量入库完成：成功 ${createdCount} 道题，失败 ${failedCount} 道。${rollbackMessage ? ` ${rollbackMessage}` : ''}`
+    if (failedCount > 0) {
+      ElMessage.warning(summaryMessage)
+    } else {
+      ElMessage.success(summaryMessage)
+    }
     emit('created', result)
   } catch (error) {
     ElMessage.error(String(error?.response?.data?.message || error?.message || '批量入库失败'))
@@ -1174,8 +1276,8 @@ watch(
                 :loading="loadingKnowledgeTree"
                 clearable
                 filterable
-                :class="{ 'cascader-warning': !Array.isArray(scope.row.knowledgePath) || scope.row.knowledgePath.length === 0 }"
-                placeholder="请选择知识点标签（必填）"
+                :class="{ 'cascader-warning': ((!Array.isArray(scope.row.knowledgePath) || scope.row.knowledgePath.length === 0) && !(Array.isArray(scope.row.knowledgePoints) && scope.row.knowledgePoints.some((value) => String(value || '').trim()))) }"
+                placeholder="可选：自动匹配失败时在此手动选择知识点"
                 @visible-change="(visible) => visible && ensureBatchKnowledgeOptions(scope.row)"
                 @change="(value) => handleBatchKnowledgePathChange(scope.row, value)"
               />
@@ -1212,6 +1314,9 @@ watch(
       <QuestionBatchTaskCenter
         ref="taskCenterRef"
         embedded
+        :latest-task-id="batchTaskId"
+        :latest-task-snapshot="latestTaskSnapshot"
+        :current-user-id="userStore.userId"
         @restore-result="restoreBatchTaskResult"
       />
     </section>

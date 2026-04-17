@@ -355,13 +355,19 @@ export const useUserStore = defineStore('user', {
     },
     currentScope: (state) => {
       const normalizedRole = normalizeRole(state.role) || ''
-      const examCategoryCode = String(state.examCategoryCode || '').trim()
+      let examCategoryCode = String(state.examCategoryCode || '').trim()
       const assignedJointGroupCode = String(state.assigned_joint_group_code || '').trim()
       const selectedJointGroupCode = String(state.jointExamGroupCode || '').trim()
       const activeScope = String(state.activeScope || '').trim()
       const effectiveJointGroupCode = normalizedRole === 'student'
         ? (activeScope || assignedJointGroupCode || selectedJointGroupCode)
         : (selectedJointGroupCode || assignedJointGroupCode || activeScope)
+      
+      // 如果 examCategoryCode 为空，尝试根据 effectiveJointGroupCode 推导
+      if (!examCategoryCode && effectiveJointGroupCode) {
+        examCategoryCode = deriveExamCategoryCodeByJointGroup(state.availableExamCategories, effectiveJointGroupCode)
+      }
+      
       return {
         role: normalizedRole,
         examCategoryCode,
@@ -686,9 +692,13 @@ export const useUserStore = defineStore('user', {
           )
           this.jointExamGroupCode = this.assigned_joint_group_code
         } else {
-          this.examCategoryCode = ''
-          this.jointExamGroupCode = ''
-          this.availableJointExamGroups = []
+          // 为超级管理员和没有分配专业组的用户设置默认值
+          this.examCategoryCode = this.availableExamCategories[0]?.examCategoryCode || ''
+          this.availableJointExamGroups = deriveJointExamGroups(
+            this.availableExamCategories,
+            this.examCategoryCode,
+          )
+          this.jointExamGroupCode = this.availableJointExamGroups[0]?.jointExamGroupCode || ''
         }
         this.syncActiveScope()
         return true
@@ -786,6 +796,54 @@ export const useUserStore = defineStore('user', {
         return true
       } catch (error) {
         return false
+      }
+    },
+
+    async verifyTokenIdentityConsistency() {
+      const token = String(getAccessToken() || '').trim()
+      if (!token) {
+        return { ok: false, reason: 'no_token' }
+      }
+
+      try {
+        const profileResponse = await fetchManagementProfile()
+        const profileData = unwrapResponseData(profileResponse)
+        const serverRole = normalizeRole(profileData.role)
+        const serverUserId = String(profileData.userId || '').trim()
+        if (!serverRole || !serverUserId) {
+          return { ok: false, reason: 'invalid_profile' }
+        }
+
+        const localRole = normalizeRole(localStorage.getItem(ROLE_STORAGE_KEY) || this.role)
+        const localUserId = String(localStorage.getItem(USER_ID_STORAGE_KEY) || this.userId || '').trim()
+        const roleMismatch = Boolean(localRole && localRole !== serverRole)
+        const userMismatch = Boolean(localUserId && localUserId !== serverUserId)
+        if (roleMismatch || userMismatch) {
+          return {
+            ok: false,
+            reason: 'mismatch',
+            localRole: localRole || '',
+            localUserId,
+            serverRole,
+            serverUserId,
+          }
+        }
+
+        this.setRole(serverRole)
+        this.setUserId(serverUserId)
+        localStorage.setItem(ROLE_STORAGE_KEY, String(this.role || ''))
+        localStorage.setItem(USER_ID_STORAGE_KEY, String(this.userId || ''))
+        return {
+          ok: true,
+          role: serverRole,
+          userId: serverUserId,
+        }
+      } catch (error) {
+        const statusCode = Number(error?.response?.status || 0)
+        if (statusCode === 401) {
+          return { ok: false, reason: 'unauthorized' }
+        }
+        return { ok: false, reason: 'request_failed' }
       }
     },
 

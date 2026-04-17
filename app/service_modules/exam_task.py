@@ -34,6 +34,15 @@ class ExamTaskServiceMixin:
         exam_category_code = str(payload.get("examCategoryCode") or "").strip()
         joint_exam_group_code = str(payload.get("jointExamGroupCode") or "").strip()
         subject_code = str(payload.get("subjectCode") or "").strip()
+        
+        # 如果exam_category_code或joint_exam_group_code为空，从用户的作用域中获取默认值
+        if not exam_category_code or not joint_exam_group_code:
+            actor_scope = self._resolve_actor_scope_filters(actor.role, actor.user_id)
+            if not exam_category_code:
+                exam_category_code = str(actor_scope.get("exam_category_code", "")).strip()
+            if not joint_exam_group_code:
+                joint_exam_group_code = str(actor_scope.get("joint_exam_group_code", "")).strip()
+        
         if not subject_id and subject_code:
             subject_id = subject_id_from_subject_code(subject_code)
         self._assert_actor_scope_write_access(actor, exam_category_code, joint_exam_group_code)

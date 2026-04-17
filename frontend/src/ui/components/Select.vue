@@ -47,6 +47,10 @@ const props = defineProps({
     type: String,
     default: '暂无匹配项',
   },
+  popperClass: {
+    type: String,
+    default: '',
+  },
 })
 
 const emit = defineEmits(['update:modelValue', 'change', 'clear', 'visible-change'])
@@ -307,7 +311,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <div v-if="isOpen" class="el-select-dropdown">
+    <div v-if="isOpen" :class="['el-select-dropdown', popperClass]">
       <div v-if="filterable" class="el-select-dropdown__search">
         <input
           ref="queryInputRef"

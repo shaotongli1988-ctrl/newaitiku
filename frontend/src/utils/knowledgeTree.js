@@ -11,6 +11,22 @@ function normalize_number(value, fallback = 0) {
   return Number.isFinite(normalized) ? normalized : fallback
 }
 
+function is_placeholder_text(value) {
+  const normalized = String(value || '').trim()
+  if (!normalized) {
+    return true
+  }
+  return /^[?？�]+$/.test(normalized)
+}
+
+function normalize_label_text(value, fallback = '') {
+  const normalized = String(value || '').trim()
+  if (is_placeholder_text(normalized)) {
+    return String(fallback || '').trim()
+  }
+  return normalized
+}
+
 function compare_knowledge_order(left_id, right_id, node_map) {
   const left = node_map[left_id] || {}
   const right = node_map[right_id] || {}
@@ -64,12 +80,13 @@ export function buildKnowledgeGraphIndex(treePayload = {}) {
     if (!id) {
       return
     }
-    const fallbackLabel = String(item?.label || item?.name || id).trim() || id
+    const rawLabel = String(item?.label || item?.name || '').trim()
+    const fallbackLabel = normalize_label_text(rawLabel, id) || id
     nodeMap[id] = {
       id,
       label: fallbackLabel,
-      fullLabel: String(item?.fullLabel || item?.full_label || item?.label || item?.name || id).trim() || id,
-      shortLabel: String(item?.shortLabel || item?.short_label || item?.label || item?.name || id).trim() || id,
+      fullLabel: normalize_label_text(item?.fullLabel || item?.full_label || item?.label || item?.name, fallbackLabel) || fallbackLabel,
+      shortLabel: normalize_label_text(item?.shortLabel || item?.short_label || item?.label || item?.name, fallbackLabel) || fallbackLabel,
       parentId: String(item?.parentId || item?.parent_id || '').trim(),
       sort: normalize_integer(item?.sort, 0),
       createTime: String(item?.createTime || item?.create_time || '').trim(),
@@ -79,6 +96,7 @@ export function buildKnowledgeGraphIndex(treePayload = {}) {
       wrongCount: Math.max(0, normalize_integer(item?.wrongCount || item?.wrong_count, 0)),
       questionCount: Math.max(0, normalize_integer(item?.questionCount || item?.question_count, 0)),
       size: Math.max(1, normalize_integer(item?.size, 1)),
+      placeholderLabel: is_placeholder_text(rawLabel),
     }
     childrenById[id] = []
   })
@@ -256,7 +274,9 @@ export function buildKnowledgeSelectorState(treePayload = {}) {
     options = sortChildIds(level4Ids).map((chapterId, chapterOffset) => {
       const chapterIndex = chapterOffset + 1
       chapterCodeMap[chapterId] = formatChapterCode(chapterIndex)
-      const l5Children = sortChildIds(childrenById[chapterId] || []).filter((childId) => Number(levelById[childId] || 0) >= 5)
+      const l5Children = sortChildIds(childrenById[chapterId] || []).filter(
+        (childId) => Number(levelById[childId] || 0) >= 5 && !Boolean(nodeMap[childId]?.placeholderLabel),
+      )
       const children = l5Children.map((pointId, pointOffset) => {
         const pointIndex = pointOffset + 1
         pathMap[pointId] = resolveL45Path(pointId)
@@ -287,6 +307,7 @@ export function buildKnowledgeSelectorState(treePayload = {}) {
   if (!searchNodeIds.length) {
     searchNodeIds = Object.keys(nodeMap).filter((id) => (childrenById[id] || []).length === 0)
   }
+  searchNodeIds = searchNodeIds.filter((id) => !Boolean(nodeMap[id]?.placeholderLabel))
 
   const searchOptions = sortChildIds(searchNodeIds).map((nodeId) => {
     const pathIds = Array.isArray(pathMap[nodeId]) ? pathMap[nodeId] : resolveL45Path(nodeId)

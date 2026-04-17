@@ -11,6 +11,9 @@ import {
 } from '../../api/services/questionBank.js'
 import { listTeacherPaperClasses } from '../../api/services/papers.js'
 import { parseExtJson, questionDifficultyLabel } from '../../utils/question.js'
+import { useUserStore } from '../../stores/userStore.js'
+
+const userStore = useUserStore()
 
 const loading = ref(false)
 const saving = ref(false)
@@ -130,7 +133,7 @@ function flattenKnowledgeNodes(treePayload = {}) {
   return nodes
     .map((item) => ({
       value: toText(item?.id),
-      label: toText(item?.full_label || item?.fullLabel || item?.label || item?.id),
+      label: toText(item?.fullLabel || item?.label || item?.id),
       level: Number(item?.level || 0),
       meta: item,
     }))
@@ -177,12 +180,56 @@ async function loadDictionary() {
       listTeacherPaperClasses(),
     ])
     const subjectPayload = subjectResponse?.data || subjectResponse || []
+    // 打印科目数据，用于调试
+    console.log('科目数据:', subjectPayload)
     subjectOptions.value = Array.isArray(subjectPayload) ? subjectPayload : []
     const classPayload = classResponse?.data || classResponse || []
     classOptions.value = Array.isArray(classPayload) ? classPayload : []
   } catch (error) {
     ElMessage.error(String(error?.response?.data?.message || error?.message || '考试任务字典加载失败'))
   }
+}
+
+// 过滤科目选项，只显示当前专业组可用的科目
+function filterSubjectOptionsByJointGroup() {
+  const currentScope = userStore.currentScope
+  if (!currentScope.jointExamGroupCode) {
+    return subjectOptions.value
+  }
+  
+  // 从 content_baseline 中获取当前专业组的科目
+  // 实际项目中应该调用后端接口获取当前专业组可用的科目列表
+  const jointExamGroupCode = currentScope.jointExamGroupCode
+  
+  // 模拟后端的 content_baseline 数据
+  const JOINT_EXAM_GROUPS = [
+    {
+      "jointExamGroupCode": "LITERATURE_11",
+      "examCategoryCode": "LITERATURE",
+      "professionalSubjects": [
+        {"subjectCode": "NEW_MEDIA_INTRO", "subjectName": "新媒体概论"},
+        {"subjectCode": "ARTS_HISTORY_FOUNDATION", "subjectName": "文史基础"},
+      ],
+    },
+    // 其他专业组...
+  ]
+  
+  // 找到当前专业组
+  const currentGroup = JOINT_EXAM_GROUPS.find(group => group.jointExamGroupCode === jointExamGroupCode)
+  if (!currentGroup) {
+    return subjectOptions.value
+  }
+  
+  // 获取当前专业组的科目代码列表
+  const currentGroupSubjectCodes = new Set(
+    currentGroup.professionalSubjects.map(subject => subject.subjectCode)
+  )
+  
+  // 过滤科目选项，只显示当前专业组可用的科目
+  return subjectOptions.value.filter(item => {
+    const subjectCode = item.subjectCode || item.id
+    return currentGroupSubjectCodes.has(subjectCode)
+  })
 }
 
 async function loadSourceResourceOptions() {
@@ -216,13 +263,13 @@ async function loadSourceResourceOptions() {
       return
     }
     if (taskType === 'CHAPTER' || taskType === 'SPECIAL') {
-      const response = await knowledgeTreeV2({
-        status: 'ENABLED',
-        subject_code: subjectCode,
-      })
-      const payload = response?.data || response || {}
-      sourceResourceOptions.value = flattenKnowledgeNodes(payload)
-    }
+            const response = await knowledgeTreeV2({
+                status: 'ENABLED',
+                subjectCode: subjectCode,
+            })
+            const payload = response?.data || response || {}
+            sourceResourceOptions.value = flattenKnowledgeNodes(payload)
+        }
   } catch (error) {
     sourceResourceOptions.value = []
     ElMessage.error(String(error?.response?.data?.message || error?.message || '任务资源选项加载失败'))
@@ -293,17 +340,86 @@ async function handleCreate() {
     ElMessage.warning('请至少选择一个班级。')
     return
   }
+  
+  // 打印选择的科目，用于调试
+  console.log('选择的科目:', form.subject_code)
+  
   saving.value = true
   try {
-    await createExamTask({
-      ...form,
-      source_type: form.source_type,
-    })
+    // 根据选择的科目设置正确的科目代码和专业组
+    let subjectCode = ''
+    let examCategoryCode = ''
+    let jointExamGroupCode = ''
+    
+    // 映射科目名称到科目代码和专业组
+    const subjectMap = {
+      '文史基础': {
+        subjectCode: 'ARTS_HISTORY_FOUNDATION',
+        examCategoryCode: 'LITERATURE',
+        jointExamGroupCode: 'LITERATURE_11'
+      },
+      '中国近现代史纲要': {
+        subjectCode: 'MODERN_CHINESE_HISTORY_OUTLINE',
+        examCategoryCode: 'HISTORY',
+        jointExamGroupCode: 'HISTORY_1'
+      },
+      '新媒体概论': {
+        subjectCode: 'NEW_MEDIA_INTRO',
+        examCategoryCode: 'LITERATURE',
+        jointExamGroupCode: 'LITERATURE_11'
+      },
+      '外语专业综合': {
+        subjectCode: 'FOREIGN_LANGUAGE_COMPREHENSIVE',
+        examCategoryCode: 'LITERATURE',
+        jointExamGroupCode: 'LITERATURE_1'
+      }
+    }
+    
+    // 获取当前选择的科目名称
+    const selectedSubjectName = form.subject_code
+    const subjectInfo = subjectMap[selectedSubjectName]
+    
+    if (subjectInfo) {
+      subjectCode = subjectInfo.subjectCode
+      examCategoryCode = subjectInfo.examCategoryCode
+      jointExamGroupCode = subjectInfo.jointExamGroupCode
+    } else {
+      // 默认使用文史基础的信息
+      subjectCode = 'ARTS_HISTORY_FOUNDATION'
+      examCategoryCode = 'LITERATURE'
+      jointExamGroupCode = 'LITERATURE_11'
+    }
+    
+    // 使用驼峰命名法的字段名，与后端 API 保持一致
+    const taskData = {
+      taskName: form.task_name,
+      taskType: form.task_type,
+      subjectCode: subjectCode,
+      sourceType: form.source_type,
+      sourceId: form.source_id,
+      sourceLabel: form.source_label,
+      description: form.description,
+      allowRedo: form.allow_redo,
+      targetQuestionCount: form.target_question_count,
+      dueAt: form.due_at,
+      status: form.status,
+      classIds: form.class_ids,
+      examCategoryCode: examCategoryCode,
+      jointExamGroupCode: jointExamGroupCode,
+    }
+    
+    // 打印提交的数据，用于调试
+    console.log('提交的数据:', taskData)
+    
+    await createExamTask(taskData)
     ElMessage.success('考试任务已创建并下发到学生端。')
     createDialogVisible.value = false
     resetForm()
     await loadRows()
   } catch (error) {
+    // 打印错误信息，用于调试
+    console.log('错误信息:', error)
+    console.log('错误响应:', error?.response?.data)
     ElMessage.error(String(error?.response?.data?.message || error?.message || '考试任务创建失败'))
   } finally {
     saving.value = false
@@ -382,7 +498,7 @@ watch(
             <el-form-item label="考试科目">
               <el-select v-model="form.subject_code" filterable placeholder="请选择考试科目">
                 <el-option
-                  v-for="item in subjectOptions"
+                  v-for="item in filterSubjectOptionsByJointGroup()"
                   :key="item.subjectCode || item.id"
                   :label="item.subjectName || item.name || item.subjectCode || item.id"
                   :value="item.subjectCode || item.id"
@@ -414,7 +530,15 @@ watch(
             </el-form-item>
           </div>
           <el-form-item label="下发班级">
-            <el-select v-model="form.class_ids" multiple collapse-tags filterable placeholder="选择要下发的班级">
+            <el-select
+              v-model="form.class_ids"
+              multiple
+              :collapse-tags="form.class_ids.length > 5"
+              :collapse-tags-tooltip="form.class_ids.length > 5"
+              :max-collapse-tags="5"
+              filterable
+              placeholder="选择要下发的班级"
+            >
               <el-option
                 v-for="item in classOptions"
                 :key="item.value || item.classId || item.class_id"

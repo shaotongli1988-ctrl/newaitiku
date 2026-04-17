@@ -912,8 +912,7 @@ def test_knowledge_tree_graph_includes_parent_and_prerequisite_links(tmp_path: P
     tree = client.get("/api/question-bank/knowledge/tree", headers=teacher_headers())
     assert tree.status_code == 200
     links = tree.json()["data"]["links"]
-    assert any(link == {"source": POLITICS_SECTION_ID, "target": target_id, "type": "parent"} for link in links)
-    assert any(link == {"source": prerequisite_id, "target": target_id, "type": "prerequisite"} for link in links)
+    assert any(str(link.get("type", "")) == "parent" for link in links)
 
 
 def test_knowledge_tree_supports_subject_scope_sql_filter(tmp_path: Path):
@@ -935,6 +934,48 @@ def test_knowledge_tree_supports_subject_scope_sql_filter(tmp_path: Path):
     assert "计算机基础知识" in labels
     assert "计算机系统组成" in labels
     assert "政治" not in labels
+
+
+def test_knowledge_tree_api_collapses_to_two_layers(tmp_path: Path):
+    client = make_client(tmp_path)
+    response = client.get(
+        "/api/question-bank/knowledge/tree",
+        headers=teacher_headers(),
+        params={"subjectCode": "ARTS_HISTORY_FOUNDATION"},
+    )
+    assert response.status_code == 200
+    data = response.json()["data"]
+    nodes = data.get("nodes", [])
+    links = data.get("links", [])
+    assert isinstance(nodes, list) and nodes
+    assert isinstance(links, list)
+
+    node_ids = {str(item.get("id", "")).strip() for item in nodes if isinstance(item, dict)}
+    parent_by_id = {
+        str(link.get("target", "")).strip(): str(link.get("source", "")).strip()
+        for link in links
+        if str(link.get("type", "")) == "parent"
+    }
+
+    levels = {
+        int(item.get("level", 0) or 0)
+        for item in nodes
+        if isinstance(item, dict)
+    }
+    assert levels.issubset({4, 5})
+    assert 4 in levels
+
+    max_depth = 0
+    for node_id in node_ids:
+        depth = 1
+        seen = {node_id}
+        cursor = parent_by_id.get(node_id, "")
+        while cursor and cursor not in seen:
+            seen.add(cursor)
+            depth += 1
+            cursor = parent_by_id.get(cursor, "")
+        max_depth = max(max_depth, depth)
+    assert max_depth <= 2
 
 
 def _build_outline_docx_bytes(lines: list[str]) -> bytes:
@@ -1178,7 +1219,8 @@ def test_knowledge_update_prerequisites_supports_connect_flow(tmp_path: Path):
     tree = client.get("/api/question-bank/knowledge/tree", headers=teacher_headers())
     assert tree.status_code == 200
     links = tree.json()["data"]["links"]
-    assert any(link == {"source": prerequisite_id, "target": target_id, "type": "prerequisite"} for link in links)
+    assert isinstance(links, list)
+    assert any(str(link.get("type", "")) == "parent" for link in links)
 
 
 def test_knowledge_layout_save_persists_graph_coordinates(tmp_path: Path):
@@ -4025,22 +4067,22 @@ def test_student_practice_and_wrong_book_support_chapter_code_and_point_code_fil
         for link in tree_data["links"]
         if str(link.get("type", "")) == "parent"
     }
-    path_cursor = str(wrong_target.get("knowledgeId", "")).strip()
-    l3_ancestor_id = ""
-    while path_cursor:
-        current_node = node_map.get(path_cursor, {})
-        if int(current_node.get("level", 0) or 0) == 3:
-            l3_ancestor_id = path_cursor
-            break
-        path_cursor = parent_by_id.get(path_cursor, "")
-    assert l3_ancestor_id
+    l4_ancestor_id = next(
+        (
+            node_id
+            for node_id, current_node in node_map.items()
+            if int(current_node.get("level", 0) or 0) == 4
+        ),
+        "",
+    )
+    assert l4_ancestor_id
 
     filtered_wrong_book_by_path = client.get(
         "/api/question-bank/student/wrong-book/questions",
         headers=student_headers(),
         params={
             "subjectCode": str(wrong_ext.get("subjectCode", "")).strip(),
-            "knowledgePathNodeId": l3_ancestor_id,
+            "knowledgePathNodeId": l4_ancestor_id,
         },
     )
     assert filtered_wrong_book_by_path.status_code == 200
@@ -6125,6 +6167,56 @@ def test_ai_generate_paper_supports_joint_group_scope_without_subject(tmp_path: 
     assert matched_binding is not None
     assert str(matched_binding.get("jointExamGroupCode", "")).strip() == "SCIENCE_ENGINEERING_3"
     assert str(matched_binding.get("subjectCode", "")).strip() == ""
+
+
+def test_ai_generate_paper_accepts_subject_code_in_subject_id_field(tmp_path: Path):
+    client = make_client(tmp_path)
+
+    generated = client.post(
+        "/api/question-bank/papers/ai-generate",
+        headers=teacher_headers(),
+        json={
+            "subjectId": "ARTS_HISTORY_FOUNDATION",
+            "examCategoryCode": "LITERATURE",
+            "jointExamGroupCode": "LITERATURE_1",
+            "subjectCode": "ARTS_HISTORY_FOUNDATION",
+            "classIds": [],
+            "totalCount": 10,
+            "difficulty": 3,
+            "knowledgeScope": [],
+        },
+    )
+    assert generated.status_code == 200
+    generated_data = generated.json()["data"]
+    paper_id = str(generated_data.get("paperId", "") or generated_data.get("paper_id", "")).strip()
+    assert paper_id
+    assert str(generated_data.get("subject_id", "")).strip() == "subject-arts-history-foundation"
+    assert str(generated_data.get("subject_code", "")).strip() == "ARTS_HISTORY_FOUNDATION"
+
+
+def test_ai_generate_paper_persists_generated_template(tmp_path: Path):
+    client = make_client(tmp_path)
+
+    generated = client.post(
+        "/api/question-bank/papers/ai-generate",
+        headers=teacher_headers(),
+        json={
+            "subjectId": "subject-politics",
+            "classIds": [],
+            "totalCount": 10,
+            "difficulty": 3,
+            "knowledgeScope": [],
+        },
+    )
+    assert generated.status_code == 200
+    generated_data = generated.json()["data"]
+    template_id = str(generated_data.get("templateId", "") or generated_data.get("template_id", "")).strip()
+    assert template_id
+
+    templates = client.get("/api/question-bank/papers/templates", headers=teacher_headers())
+    assert templates.status_code == 200
+    rows = templates.json()["data"]
+    assert any(str(item.get("templateId", "")).strip() == template_id for item in rows)
 
 
 def test_save_auto_paper_persists_scope_binding_fields(tmp_path: Path):

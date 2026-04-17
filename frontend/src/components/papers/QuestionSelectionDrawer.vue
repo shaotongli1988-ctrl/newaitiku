@@ -3,9 +3,10 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { ElMessage } from '@/ui/feedback'
 import BaseFilterPanel from '../common/BaseFilterPanel.vue'
 import BaseDrawer from '../common/BaseDrawer.vue'
-import { listPaperQuestions } from '../../api/services/papers'
+import { listPaperQuestionFilterOptions, listPaperQuestions } from '../../api/services/papers'
+import { listSubjects } from '../../api/services/questionBank'
 import { knowledgeTree } from '../../api/services/questions'
-import { questionTypeLabel } from '../../utils/question'
+import { parseExtJson, questionDifficultyLabel, questionTypeLabel } from '../../utils/question'
 import { useTable } from '../../composables/useTable'
 
 const props = defineProps({
@@ -72,7 +73,13 @@ const emit = defineEmits(['update:modelValue', 'confirm', 'cancel', 'before-clos
 const tableRef = ref(null)
 const selectedMap = ref({})
 const knowledgeNameMap = ref({})
+const subjectDisplayNameMap = ref({})
+const subjectFilterOptions = ref([])
+const chapterFilterOptionsRaw = ref([])
+const chapterFilterOptionsBySubject = ref({})
+const filterOptionLoading = ref(false)
 const analysisCollapseActiveNames = ref(['weight-analysis'])
+const hasExecutedFilterSearch = ref(false)
 const visible = computed({
   get() {
     return Boolean(props.modelValue)
@@ -103,22 +110,37 @@ function createInitialPagination() {
   }
 }
 
+function normalizeDrawerSubjectCode(value) {
+  const normalizedValue = String(value || '').trim()
+  if (!normalizedValue) {
+    return ''
+  }
+  if (normalizedValue.startsWith('subject-')) {
+    return normalizedValue.slice('subject-'.length).replace(/-/g, '_').toUpperCase()
+  }
+  return normalizedValue
+}
+
+function buildQuestionListParams(currentFilters, currentPagination, { ignoreScope = false } = {}) {
+  return {
+    page: currentPagination.page,
+    size: currentPagination.size,
+    keyword: String(currentFilters.keyword || '').trim(),
+    subjectId: String(currentFilters.subjectId || '').trim(),
+    chapter: String(currentFilters.chapter || '').trim(),
+    type: String(currentFilters.type || '').trim(),
+    difficulty: String(currentFilters.difficulty || '').trim(),
+    examCategoryCode: ignoreScope ? '' : String(props.examCategoryCode || '').trim(),
+    jointExamGroupCode: ignoreScope ? '' : String(props.jointExamGroupCode || '').trim(),
+    subjectCode: ignoreScope ? '' : normalizeDrawerSubjectCode(props.subjectCode),
+  }
+}
+
 const tableState = useTable({
   createInitialFilters,
   createInitialPagination,
   async fetchPage({ filters: currentFilters, pagination: currentPagination }) {
-    const response = await listPaperQuestions({
-      page: currentPagination.page,
-      size: currentPagination.size,
-      keyword: String(currentFilters.keyword || '').trim(),
-      subjectId: String(currentFilters.subjectId || '').trim(),
-      chapter: String(currentFilters.chapter || '').trim(),
-      type: String(currentFilters.type || '').trim(),
-      difficulty: String(currentFilters.difficulty || '').trim(),
-      examCategoryCode: String(props.examCategoryCode || '').trim(),
-      jointExamGroupCode: String(props.jointExamGroupCode || '').trim(),
-      subjectCode: String(props.subjectCode || '').trim(),
-    })
+    const response = await listPaperQuestions(buildQuestionListParams(currentFilters, currentPagination))
     return unwrapData(response) || {}
   },
   async onLoaded() {
@@ -137,9 +159,52 @@ const {
   handlePageChange,
   handlePageSizeChange,
 } = tableState
-const runFilterSearch = (...args) => tableState['handle' + 'Search'](...args)
-const runFilterReset = (...args) => tableState['handle' + 'Reset'](...args)
+function runFilterSearch(...args) {
+  hasExecutedFilterSearch.value = true
+  return tableState['handle' + 'Search'](...args)
+}
+
+function runFilterReset(...args) {
+  hasExecutedFilterSearch.value = false
+  return tableState['handle' + 'Reset'](...args)
+}
+
 const drawerBusy = computed(() => props.loading || props.loadingState || loading.value)
+function resolveChapterFilterOptions(subjectId = '') {
+  const selectedSubjectId = String(subjectId || '').trim()
+  const bySubject = chapterFilterOptionsBySubject.value && typeof chapterFilterOptionsBySubject.value === 'object'
+    ? chapterFilterOptionsBySubject.value
+    : {}
+  if (selectedSubjectId && Array.isArray(bySubject[selectedSubjectId])) {
+    return bySubject[selectedSubjectId]
+  }
+  return chapterFilterOptionsRaw.value
+}
+const chapterFilterOptions = computed(() => resolveChapterFilterOptions(filters.subjectId))
+const queryPreviewRows = computed(() =>
+  rows.value.map((questionItem, index) => {
+    const extJson = parseExtJson(questionItem?.extJson)
+    const difficulty = String(questionItem?.difficulty || extJson?.difficulty || '').trim()
+    const subjectId = String(questionItem?.subjectId || extJson?.subjectId || '').trim()
+    const subjectCode = String(questionItem?.subjectCode || extJson?.subjectCode || '').trim()
+    const subjectLabel = String(
+      subjectDisplayNameMap.value?.[subjectId]
+      || questionItem?.subjectName
+      || subjectId
+      || subjectCode
+      || '未标注科目',
+    ).trim() || '未标注科目'
+    return {
+      id: String(questionItem?.id || '').trim(),
+      seq: (Math.max(1, Number(pagination.page || 1)) - 1) * Math.max(1, Number(pagination.size || 20)) + index + 1,
+      stem: String(questionItem?.stem || '').trim(),
+      subjectLabel,
+      typeLabel: questionTypeLabel(questionItem?.type),
+      difficultyLabel: difficulty ? questionDifficultyLabel(difficulty) : '未标注难度',
+      sourceRow: questionItem,
+    }
+  }),
+)
 const filterPanelModel = computed({
   get() {
     return {
@@ -344,7 +409,7 @@ const weightDistributionInsight = computed(() => {
   if (is_evenly_distributed) {
     return {
       type: 'info',
-      message: 'ℹ️ 当前试卷考点分布均匀。',
+      message: 'ℹ️ 当前试卷考点分布较均匀。',
     }
   }
   return null
@@ -355,6 +420,268 @@ function unwrapData(response) {
     return response.data
   }
   return response
+}
+
+function normalizeFilterOptionRows(rows) {
+  if (!Array.isArray(rows)) {
+    return []
+  }
+  return rows
+    .map((item) => {
+      const value = String(item?.value || '').trim()
+      if (!value) {
+        return null
+      }
+      return {
+        value,
+        label: String(item?.label || value).trim() || value,
+        questionCount: Number(item?.questionCount || 0),
+        subjectCode: String(item?.subjectCode || '').trim(),
+        subjectName: String(item?.subjectName || '').trim(),
+      }
+    })
+    .filter((item) => Boolean(item))
+}
+
+function normalizeSubjectDisplayText(value) {
+  return String(value || '')
+    .replace(/[\r\n\t]+/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
+function decorateSubjectOptionsWithDisplayName(options) {
+  const rows = Array.isArray(options) ? options : []
+  const nameMap = subjectDisplayNameMap.value && typeof subjectDisplayNameMap.value === 'object'
+    ? subjectDisplayNameMap.value
+    : {}
+  return rows.map((item) => {
+    const value = String(item?.value || '').trim()
+    const backendName = normalizeSubjectDisplayText(item?.subjectName || '')
+    const mappedName = normalizeSubjectDisplayText(nameMap[value] || '')
+    const displayName = mappedName || backendName || normalizeSubjectDisplayText(item?.label || value) || value
+    return {
+      ...item,
+      label: displayName,
+      subjectName: displayName,
+    }
+  })
+}
+
+function normalizeSubjectDisplayNameMap(payload) {
+  const rows = Array.isArray(payload) ? payload : []
+  const nextMap = {}
+  rows.forEach((item) => {
+    const id = String(item?.id || '').trim()
+    const name = normalizeSubjectDisplayText(item?.name || '')
+    if (!id || !id.startsWith('subject-') || !name) {
+      return
+    }
+    nextMap[id] = name
+  })
+  return nextMap
+}
+
+async function loadSubjectDisplayNames() {
+  if (Object.keys(subjectDisplayNameMap.value).length) {
+    return
+  }
+  try {
+    const response = await listSubjects()
+    subjectDisplayNameMap.value = normalizeSubjectDisplayNameMap(unwrapData(response) || [])
+  } catch (error) {
+    subjectDisplayNameMap.value = {}
+  }
+}
+
+function normalizeFilterOptionMap(rawMap) {
+  if (!rawMap || typeof rawMap !== 'object') {
+    return {}
+  }
+  const normalized = {}
+  Object.keys(rawMap).forEach((subjectId) => {
+    const normalizedSubjectId = String(subjectId || '').trim()
+    if (!normalizedSubjectId) {
+      return
+    }
+    normalized[normalizedSubjectId] = normalizeFilterOptionRows(rawMap[subjectId])
+  })
+  return normalized
+}
+
+function buildFilterOptionsFromQuestionRows(questionRows) {
+  const rows = Array.isArray(questionRows) ? questionRows : []
+  const subjectMap = {}
+  const chapterMap = {}
+  const chapterMapBySubject = {}
+
+  rows.forEach((row) => {
+    const extJsonRaw = row?.extJson
+    let extJson = {}
+    if (extJsonRaw && typeof extJsonRaw === 'object') {
+      extJson = extJsonRaw
+    } else if (typeof extJsonRaw === 'string') {
+      try {
+        extJson = JSON.parse(extJsonRaw)
+      } catch {
+        extJson = {}
+      }
+    }
+    const subjectId = String(
+      row?.subjectId
+      || row?.subject_id
+      || extJson?.subjectId
+      || extJson?.subject_id
+      || '',
+    ).trim()
+    const subjectCode = String(
+      row?.subjectCode
+      || row?.subject_code
+      || extJson?.subjectCode
+      || extJson?.subject_code
+      || '',
+    ).trim()
+    const chapter = String(
+      row?.chapter
+      || extJson?.chapter
+      || '',
+    ).trim()
+    if (subjectId) {
+      if (!subjectMap[subjectId]) {
+        subjectMap[subjectId] = {
+          value: subjectId,
+          label: subjectId,
+          subjectCode,
+          questionCount: 0,
+        }
+      }
+      subjectMap[subjectId].questionCount += 1
+      if (chapter) {
+        if (!chapterMapBySubject[subjectId]) {
+          chapterMapBySubject[subjectId] = {}
+        }
+        chapterMapBySubject[subjectId][chapter] = (chapterMapBySubject[subjectId][chapter] || 0) + 1
+      }
+    }
+    if (chapter) {
+      chapterMap[chapter] = (chapterMap[chapter] || 0) + 1
+    }
+  })
+
+  const subjectOptions = Object.values(subjectMap)
+    .sort((left, right) => String(left.value || '').localeCompare(String(right.value || ''), 'zh-Hans-CN'))
+  const chapterOptions = Object.keys(chapterMap)
+    .map((chapter) => ({ value: chapter, label: chapter, questionCount: Number(chapterMap[chapter] || 0) }))
+    .sort((left, right) => String(left.value || '').localeCompare(String(right.value || ''), 'zh-Hans-CN'))
+  const chapterOptionsBySubject = {}
+  Object.keys(chapterMapBySubject).forEach((subjectId) => {
+    chapterOptionsBySubject[subjectId] = Object.keys(chapterMapBySubject[subjectId])
+      .map((chapter) => ({ value: chapter, label: chapter, questionCount: Number(chapterMapBySubject[subjectId][chapter] || 0) }))
+      .sort((left, right) => String(left.value || '').localeCompare(String(right.value || ''), 'zh-Hans-CN'))
+  })
+  return {
+    subjectOptions,
+    chapterOptions,
+    chapterOptionsBySubject,
+  }
+}
+
+function applyQuestionFilterOptions(payload) {
+  subjectFilterOptions.value = decorateSubjectOptionsWithDisplayName(
+    normalizeFilterOptionRows(payload?.subjectOptions || []),
+  )
+  chapterFilterOptionsRaw.value = normalizeFilterOptionRows(payload?.chapterOptions || [])
+  chapterFilterOptionsBySubject.value = normalizeFilterOptionMap(payload?.chapterOptionsBySubject || {})
+  ensureFilterSelectionsValid()
+}
+
+async function loadQuestionFilterOptionsByLegacyQuery({ ignoreScope = false } = {}) {
+  const pageSize = 200
+  const maxPages = 5
+  const collectedRows = []
+  let page = 1
+  let total = 0
+  while (page <= maxPages) {
+    const response = await listPaperQuestions(
+      buildQuestionListParams(
+        {
+          keyword: '',
+          subjectId: '',
+          chapter: '',
+          type: String(filters.type || '').trim(),
+          difficulty: String(filters.difficulty || '').trim(),
+        },
+        { page, size: pageSize },
+        { ignoreScope },
+      ),
+    )
+    const payload = unwrapData(response) || {}
+    const pageRows = Array.isArray(payload?.items) ? payload.items : []
+    collectedRows.push(...pageRows)
+    total = Number(payload?.total || 0)
+    if (page * pageSize >= total || pageRows.length === 0) {
+      break
+    }
+    page += 1
+  }
+  applyQuestionFilterOptions(buildFilterOptionsFromQuestionRows(collectedRows))
+}
+
+function ensureFilterSelectionsValid() {
+  const selectedSubjectId = String(filters.subjectId || '').trim()
+  const selectedChapter = String(filters.chapter || '').trim()
+  if (selectedSubjectId && !subjectFilterOptions.value.some((item) => item.value === selectedSubjectId)) {
+    filters.subjectId = ''
+    filters.chapter = ''
+    return
+  }
+  const activeChapterOptions = resolveChapterFilterOptions(selectedSubjectId)
+  if (selectedChapter && !activeChapterOptions.some((item) => item.value === selectedChapter)) {
+    filters.chapter = ''
+  }
+}
+
+function handlePanelSubjectChange(panelFilters) {
+  const activeChapterOptions = resolveChapterFilterOptions(panelFilters?.subjectId)
+  const selectedChapter = String(panelFilters?.chapter || '').trim()
+  if (selectedChapter && !activeChapterOptions.some((item) => item.value === selectedChapter)) {
+    panelFilters.chapter = ''
+  }
+}
+
+async function loadQuestionFilterOptions() {
+  filterOptionLoading.value = true
+  try {
+    const response = await listPaperQuestionFilterOptions({
+      type: String(filters.type || '').trim(),
+      difficulty: String(filters.difficulty || '').trim(),
+      examCategoryCode: String(props.examCategoryCode || '').trim(),
+      jointExamGroupCode: String(props.jointExamGroupCode || '').trim(),
+      subjectCode: normalizeDrawerSubjectCode(props.subjectCode),
+    })
+    const payload = unwrapData(response) || {}
+    applyQuestionFilterOptions(payload)
+  } catch (error) {
+    const statusCode = Number(error?.response?.status || 0)
+    if (statusCode === 404) {
+      try {
+        await loadQuestionFilterOptionsByLegacyQuery()
+        return
+      } catch (fallbackError) {
+        subjectFilterOptions.value = []
+        chapterFilterOptionsRaw.value = []
+        chapterFilterOptionsBySubject.value = {}
+        ElMessage.error(String(fallbackError?.response?.data?.message || fallbackError?.message || '题目筛选选项加载失败'))
+        return
+      }
+    }
+    subjectFilterOptions.value = []
+    chapterFilterOptionsRaw.value = []
+    chapterFilterOptionsBySubject.value = {}
+    ElMessage.error(String(error?.response?.data?.message || error?.message || '题目筛选选项加载失败'))
+  } finally {
+    filterOptionLoading.value = false
+  }
 }
 
 function normalizeKnowledgeId(row) {
@@ -451,6 +778,40 @@ function handleSelectionChange(selected_rows) {
   selectedMap.value = nextMap
 }
 
+function isPreviewItemSelected(item) {
+  const id = String(item?.id || '').trim()
+  return Boolean(id && selectedMap.value[id])
+}
+
+function handlePreviewItemCheckChange(item, checked) {
+  const id = String(item?.id || '').trim()
+  if (!id) {
+    return
+  }
+  const checkedState = Boolean(checked)
+  const sourceRow = item?.sourceRow && typeof item.sourceRow === 'object' ? item.sourceRow : null
+  const table = tableRef.value
+  if (table && sourceRow && typeof table.toggleRowSelection === 'function') {
+    table.toggleRowSelection(sourceRow, checkedState)
+    return
+  }
+  const nextMap = { ...selectedMap.value }
+  if (!checkedState) {
+    delete nextMap[id]
+    selectedMap.value = nextMap
+    return
+  }
+  const previousScore = Number(nextMap[id]?.score || 5)
+  nextMap[id] = {
+    id,
+    stem: String(sourceRow?.stem || item?.stem || ''),
+    type: String(sourceRow?.type || ''),
+    knowledgeId: normalizeKnowledgeId(sourceRow),
+    score: Number.isFinite(previousScore) ? previousScore : 5,
+  }
+  selectedMap.value = nextMap
+}
+
 function handleConfirm() {
   emit('confirm', Object.values(selectedMap.value))
   close()
@@ -519,22 +880,49 @@ watch(
   async (next_visible) => {
     if (next_visible) {
       selectedMap.value = normalizeSelectedRows(props.initialRows)
-      await Promise.all([loadRows(), loadKnowledgeNameMap()])
+      hasExecutedFilterSearch.value = false
+      await Promise.all([loadRows(), loadKnowledgeNameMap(), loadSubjectDisplayNames(), loadQuestionFilterOptions()])
       return
     }
+    hasExecutedFilterSearch.value = false
     rows.value = []
   },
 )
 
 watch(
   () => [props.examCategoryCode, props.jointExamGroupCode, props.subjectCode],
-  () => {
+  async () => {
     if (!visible.value) {
       return
     }
     pagination.page = 1
-    loadRows()
+    await Promise.all([loadRows(), loadQuestionFilterOptions()])
   },
+)
+
+watch(
+  () => [filters.type, filters.difficulty],
+  () => {
+    if (!visible.value) {
+      return
+    }
+    loadQuestionFilterOptions()
+  },
+)
+
+watch(
+  () => filters.subjectId,
+  () => {
+    ensureFilterSelectionsValid()
+  },
+)
+
+watch(
+  () => subjectDisplayNameMap.value,
+  () => {
+    subjectFilterOptions.value = decorateSubjectOptionsWithDisplayName(subjectFilterOptions.value)
+  },
+  { deep: true },
 )
 </script>
 
@@ -671,8 +1059,30 @@ watch(
         <template #fields="{ filters: panelFilters }">
           <div class="filter-grid">
             <el-input v-model="panelFilters.keyword" clearable placeholder="关键词（题干）" />
-            <el-input v-model="panelFilters.subjectId" clearable placeholder="科目ID" />
-            <el-input v-model="panelFilters.chapter" clearable placeholder="章节" />
+            <el-select
+              v-model="panelFilters.subjectId"
+              clearable
+              filterable
+              placeholder="科目ID"
+              :loading="filterOptionLoading"
+              popper-class="subject-filter-dropdown"
+              @change="handlePanelSubjectChange(panelFilters)"
+            >
+              <el-option
+                v-for="option in subjectFilterOptions"
+                :key="`subject-filter-${option.value}`"
+                :label="option.label"
+                :value="option.value"
+              />
+            </el-select>
+            <el-select v-model="panelFilters.chapter" clearable filterable placeholder="章节" :loading="filterOptionLoading" popper-class="chapter-filter-dropdown">
+              <el-option
+                v-for="option in resolveChapterFilterOptions(panelFilters.subjectId)"
+                :key="`chapter-filter-${option.value}`"
+                :label="option.label"
+                :value="option.value"
+              />
+            </el-select>
             <el-select v-model="panelFilters.type" clearable placeholder="题型">
               <el-option label="单选题" value="single_choice" />
               <el-option label="多选题" value="multiple_choice" />
@@ -684,6 +1094,39 @@ watch(
               <el-option label="中等" value="medium" />
               <el-option label="困难" value="hard" />
             </el-select>
+          </div>
+        </template>
+        <template #advanced>
+          <div class="query-preview-wrap">
+            <template v-if="hasExecutedFilterSearch">
+              <div v-if="queryPreviewRows.length" class="query-preview-list">
+                <div class="query-preview-title">本次查询命中（当前页）</div>
+                <div
+                  v-for="item in queryPreviewRows"
+                  :key="`query-preview-${item.id || item.seq}`"
+                  class="query-preview-item"
+                >
+                  <div class="query-preview-left">
+                    <el-checkbox
+                      class="query-preview-checkbox"
+                      :model-value="isPreviewItemSelected(item)"
+                      :disabled="!item.id"
+                      @change="(checked) => handlePreviewItemCheckChange(item, checked)"
+                    />
+                    <div class="query-preview-main">
+                      <span class="query-preview-subject">{{ item.subjectLabel }}</span>
+                      <span class="query-preview-seq">{{ item.seq }}.</span>
+                      <span class="query-preview-stem">{{ item.stem || '（无题干）' }}</span>
+                    </div>
+                  </div>
+                  <div class="query-preview-meta">
+                    <span class="query-preview-tag">{{ item.typeLabel }}</span>
+                    <span class="query-preview-tag">{{ item.difficultyLabel }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="query-preview-empty">当前筛选暂无数据</div>
+            </template>
           </div>
         </template>
       </BaseFilterPanel>
@@ -812,6 +1255,96 @@ watch(
   grid-template-columns: repeat(5, minmax(140px, 1fr));
 }
 
+.query-preview-wrap {
+  display: grid;
+  gap: 8px;
+}
+
+.query-preview-list {
+  display: grid;
+  gap: 6px;
+}
+
+.query-preview-title {
+  font-size: 12px;
+  color: var(--qb-text-subtle-8);
+}
+
+.query-preview-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.query-preview-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.query-preview-checkbox {
+  flex: 0 0 auto;
+}
+
+.query-preview-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.query-preview-seq {
+  color: var(--qb-text-subtle-8);
+  min-width: 28px;
+  text-align: right;
+  flex: 0 0 auto;
+}
+
+.query-preview-subject {
+  color: var(--qb-text-subtle-8);
+  background: var(--qb-primary-soft-bg);
+  border: 1px solid var(--qb-primary-soft-border);
+  border-radius: 999px;
+  padding: 1px 8px;
+  flex: 0 0 auto;
+}
+
+.query-preview-stem {
+  color: var(--qb-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.query-preview-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.query-preview-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border: 1px solid var(--qb-primary-soft-border);
+  border-radius: 999px;
+  background: var(--qb-primary-soft-bg);
+  color: var(--qb-text-subtle-8);
+  line-height: 1.4;
+}
+
+.query-preview-empty {
+  font-size: 12px;
+  color: var(--qb-text-subtle-8);
+}
+
 .pagination-wrap {
   display: flex;
   justify-content: flex-end;
@@ -833,4 +1366,31 @@ watch(
   color: var(--qb-text-subtle-8);
   font-size: 12px;
 }
+
+:deep(.subject-filter-dropdown) {
+  width: 360px !important;
+  max-width: min(360px, calc(100vw - 32px)) !important;
+}
+
+:deep(.chapter-filter-dropdown) {
+  width: 420px !important;
+  max-width: min(420px, calc(100vw - 32px)) !important;
+}
+
+:deep(.subject-filter-dropdown .el-select-dropdown__item),
+:deep(.chapter-filter-dropdown .el-select-dropdown__item) {
+  white-space: nowrap;
+}
+
+:deep(.subject-filter-dropdown .el-select-dropdown__item > span:first-child),
+:deep(.chapter-filter-dropdown .el-select-dropdown__item > span:first-child) {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 </style>
+
+

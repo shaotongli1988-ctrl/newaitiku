@@ -1804,6 +1804,35 @@ def create_app(db_path: Union[Path, str] = DEFAULT_DB_PATH) -> FastAPI:
         )
         return success(pagination(items, page, size, total))
 
+    @app.get("/api/question-bank/papers/questions/filter-options", response_model=BaseResponse)
+    async def list_paper_question_filter_options(
+        keyword: str = Query(default=""),
+        type: str = Query(default=""),
+        difficulty: str = Query(default=""),
+        exam_category_code: str = Query(default="", alias="examCategoryCode"),
+        joint_exam_group_code: str = Query(default="", alias="jointExamGroupCode"),
+        subject_code: str = Query(default="", alias="subjectCode"),
+        policy_version: str = Query(default="", alias="policyVersion"),
+        actor: Actor = Depends(get_actor),
+        svc: QuestionBankService = Depends(service),
+    ):
+        require_paper_operator(actor)
+        ensure_actor_ready(actor, svc, "paper:manage")
+        return success(
+            svc.list_paper_question_filter_options(
+                {
+                    "keyword": keyword.strip(),
+                    "type": type.strip(),
+                    "difficulty": difficulty.strip(),
+                    "examCategoryCode": exam_category_code.strip(),
+                    "jointExamGroupCode": joint_exam_group_code.strip(),
+                    "subjectCode": subject_code.strip(),
+                    "policyVersion": policy_version.strip() or "HB_ZSB_2026",
+                },
+                actor,
+            )
+        )
+
     @app.post("/api/question-bank/papers/manual", response_model=BaseResponse)
     async def save_manual_paper(
         payload: ManualPaperCreateRequest,

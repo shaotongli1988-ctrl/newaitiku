@@ -211,6 +211,19 @@ class InternalSystemAdminServiceMixin:
         saved = dict(user)
         saved["updateTime"] = self._now_iso()
         saved["createTime"] = existing.get("createTime", saved["updateTime"]) if existing else saved["updateTime"]
+        
+        # 自动生成用户ID（当用户ID为空时）
+        if not str(saved.get("userId", "")).strip():
+            role = normalize_role(str(saved.get("role", "")).strip())
+            if role == ROLE_TEACHER:
+                # 生成教师ID：teacher-{序号}
+                teacher_count = len([u for u in self._managed_users() if u.get("role") == ROLE_TEACHER])
+                saved["userId"] = f"teacher-{teacher_count + 1:03d}"
+            elif role == ROLE_STUDENT:
+                # 生成学生ID：student-{序号}
+                student_count = len([u for u in self._managed_users() if u.get("role") == ROLE_STUDENT])
+                saved["userId"] = f"student-{student_count + 1:03d}"
+        
         return saved
 
     def _managed_user_storage_payload(self, user: Dict[str, object]) -> Dict[str, object]:

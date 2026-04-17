@@ -462,9 +462,6 @@ function applyTeacherPermissionTemplate() {
 }
 
 function validateManagedUserForm() {
-  if (!String(managedUserForm.userId || '').trim()) {
-    throw new Error('请填写用户ID。')
-  }
   if (!String(managedUserForm.name || '').trim()) {
     throw new Error('请填写姓名。')
   }
@@ -841,8 +838,8 @@ onMounted(() => {
         <el-form label-position="top">
           <el-row :gutter="12">
             <el-col :span="12">
-              <el-form-item label="用户ID">
-                <el-input v-model="managedUserForm.userId" :disabled="Boolean(editingUserId)" />
+              <el-form-item label="用户ID（非必填）">
+                <el-input v-model="managedUserForm.userId" :disabled="Boolean(editingUserId)" placeholder="不填写时系统会自动生成" />
               </el-form-item>
             </el-col>
             <el-col :span="12">

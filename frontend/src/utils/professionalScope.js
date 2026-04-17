@@ -2,6 +2,22 @@ function normalizeString(value) {
   return String(value || '').trim()
 }
 
+function isPlaceholderName(value) {
+  const normalized = normalizeString(value)
+  if (!normalized) {
+    return true
+  }
+  return /^[?？�]+$/.test(normalized)
+}
+
+function normalizeDisplayName(value, fallback = '') {
+  const normalized = normalizeString(value)
+  if (isPlaceholderName(normalized)) {
+    return normalizeString(fallback)
+  }
+  return normalized
+}
+
 export function normalizeScopePath(pathValue) {
   const rows = Array.isArray(pathValue) ? pathValue : []
   return rows
@@ -33,7 +49,7 @@ export function buildProfessionalScopeOptions(treeNodes, { assignedJointGroupCod
   const fullOptions = examCategories
     .map((categoryItem) => {
       const categoryCode = normalizeString(categoryItem?.code)
-      const categoryName = normalizeString(categoryItem?.name || categoryCode)
+      const categoryName = normalizeDisplayName(categoryItem?.name, categoryCode)
       const groupRows = Array.isArray(categoryItem?.children) ? categoryItem.children : []
 
       return {
@@ -41,7 +57,7 @@ export function buildProfessionalScopeOptions(treeNodes, { assignedJointGroupCod
         name: categoryName || categoryCode,
         children: groupRows.map((groupItem) => {
           const groupCode = normalizeString(groupItem?.code)
-          const groupName = normalizeString(groupItem?.name || groupCode)
+          const groupName = normalizeDisplayName(groupItem?.name, groupCode)
           const rawSubjects = Array.isArray(groupItem?.children) ? groupItem.children : []
           const subjectChildren = []
           const seenSubjectCodes = new Set()
@@ -53,7 +69,7 @@ export function buildProfessionalScopeOptions(treeNodes, { assignedJointGroupCod
             }
 
             seenSubjectCodes.add(subjectCode)
-            const subjectName = normalizeString(subjectItem?.name || subjectCode) || subjectCode
+            const subjectName = normalizeDisplayName(subjectItem?.name, subjectCode) || subjectCode
             const leafKey = `${categoryCode}::${groupCode}::${subjectCode}`
             fullScopeMetaMap[leafKey] = {
               categoryCode,

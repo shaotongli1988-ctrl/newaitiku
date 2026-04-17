@@ -4,7 +4,6 @@ import { ElMessage, ElMessageBox } from '@/ui/feedback'
 import { useRoute, useRouter } from 'vue-router'
 import { resolveApiErrorMessage } from '../../api/request'
 import BaseFilterPanel from '../../components/common/BaseFilterPanel.vue'
-import QuestionBatchTaskCenter from '../../components/questions/QuestionBatchTaskCenter.vue'
 import QuestionUpload from '../../components/questions/QuestionUpload.vue'
 import {
   deleteQuestion,
@@ -38,6 +37,7 @@ const transitioningQuestionId = ref('')
 const questionTableRef = ref(null)
 const selectedQuestionMap = ref({})
 const selectionTargetWeightMap = ref({})
+const syncingTableSelection = ref(false)
 
 const editDialogVisible = ref(false)
 const editSaving = ref(false)
@@ -68,8 +68,105 @@ const deletingQuestionId = ref('')
 const batchActing = ref(false)
 const lastDeletedQuestionSnapshotId = ref('')
 const lastDeletedQuestionId = ref('')
+const lastDeletedQuestionExpireAt = ref(0)
 const lastDeletedBatchSnapshotId = ref('')
 const lastDeletedBatchCount = ref(0)
+const lastDeletedBatchExpireAt = ref(0)
+
+const UNDO_HINT_STORAGE_PREFIX = 'qb-question-management-undo-hint'
+const UNDO_DEFAULT_EXPIRE_SEC = 600
+
+const undoHintStorageKey = computed(() => {
+  const userId = String(userStore.userId || '').trim() || 'anonymous'
+  return `${UNDO_HINT_STORAGE_PREFIX}:${userId}`
+})
+
+function toPositiveInteger(value, fallback = 0) {
+  const normalized = Number(value)
+  if (!Number.isFinite(normalized)) {
+    return fallback
+  }
+  return Math.max(0, Math.trunc(normalized))
+}
+
+function isExpired(expireAt) {
+  const normalizedExpireAt = toPositiveInteger(expireAt, 0)
+  if (!normalizedExpireAt) {
+    return false
+  }
+  return normalizedExpireAt <= Date.now()
+}
+
+function persistUndoHintState() {
+  const payload = {}
+
+  if (lastDeletedQuestionSnapshotId.value && !isExpired(lastDeletedQuestionExpireAt.value)) {
+    payload.single = {
+      snapshotId: String(lastDeletedQuestionSnapshotId.value || '').trim(),
+      questionId: String(lastDeletedQuestionId.value || '').trim(),
+      expireAt: toPositiveInteger(lastDeletedQuestionExpireAt.value, 0),
+    }
+  }
+
+  if (lastDeletedBatchSnapshotId.value && !isExpired(lastDeletedBatchExpireAt.value)) {
+    payload.batch = {
+      snapshotId: String(lastDeletedBatchSnapshotId.value || '').trim(),
+      count: toPositiveInteger(lastDeletedBatchCount.value, 0),
+      expireAt: toPositiveInteger(lastDeletedBatchExpireAt.value, 0),
+    }
+  }
+
+  try {
+    if (Object.keys(payload).length > 0) {
+      window.sessionStorage.setItem(undoHintStorageKey.value, JSON.stringify(payload))
+      return
+    }
+    window.sessionStorage.removeItem(undoHintStorageKey.value)
+  } catch (error) {
+    // ignore storage errors
+  }
+}
+
+function restoreUndoHintState() {
+  let parsed = {}
+  try {
+    const raw = window.sessionStorage.getItem(undoHintStorageKey.value)
+    const next = raw ? JSON.parse(raw) : {}
+    parsed = next && typeof next === 'object' && !Array.isArray(next) ? next : {}
+  } catch (error) {
+    parsed = {}
+  }
+
+  const single = parsed.single && typeof parsed.single === 'object' ? parsed.single : {}
+  const singleSnapshotId = String(single.snapshotId || '').trim()
+  const singleQuestionId = String(single.questionId || '').trim()
+  const singleExpireAt = toPositiveInteger(single.expireAt, 0)
+  if (singleSnapshotId && !isExpired(singleExpireAt)) {
+    lastDeletedQuestionSnapshotId.value = singleSnapshotId
+    lastDeletedQuestionId.value = singleQuestionId
+    lastDeletedQuestionExpireAt.value = singleExpireAt
+  } else {
+    lastDeletedQuestionSnapshotId.value = ''
+    lastDeletedQuestionId.value = ''
+    lastDeletedQuestionExpireAt.value = 0
+  }
+
+  const batch = parsed.batch && typeof parsed.batch === 'object' ? parsed.batch : {}
+  const batchSnapshotId = String(batch.snapshotId || '').trim()
+  const batchCount = toPositiveInteger(batch.count, 0)
+  const batchExpireAt = toPositiveInteger(batch.expireAt, 0)
+  if (batchSnapshotId && !isExpired(batchExpireAt)) {
+    lastDeletedBatchSnapshotId.value = batchSnapshotId
+    lastDeletedBatchCount.value = batchCount
+    lastDeletedBatchExpireAt.value = batchExpireAt
+  } else {
+    lastDeletedBatchSnapshotId.value = ''
+    lastDeletedBatchCount.value = 0
+    lastDeletedBatchExpireAt.value = 0
+  }
+
+  persistUndoHintState()
+}
 
 function createQuestionFilters() {
   return {
@@ -77,6 +174,7 @@ function createQuestionFilters() {
     examCategoryCode: '',
     jointExamGroupCode: '',
     subjectCode: '',
+    status: '',
   }
 }
 
@@ -95,8 +193,8 @@ const {
   pagination,
   loadRows: loadQuestionList,
   resetFilters,
-  handlePageChange,
-  handlePageSizeChange,
+  handlePageChange: tableHandlePageChange,
+  handlePageSizeChange: tableHandlePageSizeChange,
 } = useTable({
   createInitialFilters: createQuestionFilters,
   createInitialPagination: createQuestionPagination,
@@ -109,6 +207,7 @@ const {
       examCategoryCode: String(currentFilters.examCategoryCode || '').trim(),
       jointExamGroupCode: String(currentFilters.jointExamGroupCode || '').trim(),
       subjectCode: String(currentFilters.subjectCode || '').trim(),
+      status: String(currentFilters.status || '').trim(),
     }
     const primaryPage = await fetchQuestionList(requestPayload)
     const primaryItems = Array.isArray(primaryPage?.items) ? primaryPage.items : []
@@ -153,6 +252,8 @@ const {
   },
 })
 
+const hasExecutedFilterSearch = ref(false)
+
 const filterModel = computed({
   get() {
     return {
@@ -160,6 +261,7 @@ const filterModel = computed({
       examCategoryCode: filters.examCategoryCode,
       jointExamGroupCode: filters.jointExamGroupCode,
       subjectCode: filters.subjectCode,
+      status: filters.status,
     }
   },
   set(value) {
@@ -167,14 +269,34 @@ const filterModel = computed({
     filters.examCategoryCode = String(value?.examCategoryCode || '')
     filters.jointExamGroupCode = String(value?.jointExamGroupCode || '')
     filters.subjectCode = String(value?.subjectCode || '')
+    filters.status = String(value?.status || '')
   },
 })
+
+function hasFilterCondition(value) {
+  const model = value && typeof value === 'object' ? value : {}
+  return [
+    String(model.keyword || '').trim(),
+    String(model.examCategoryCode || '').trim(),
+    String(model.jointExamGroupCode || '').trim(),
+    String(model.subjectCode || '').trim(),
+    String(model.status || '').trim(),
+  ].some((item) => Boolean(item))
+}
+
+function clearQuestionResults() {
+  questionRows.value = []
+  pagination.total = 0
+}
 
 const examCategoryOptions = computed(() => userStore.availableExamCategories)
 const scopeLabelMaps = computed(() => buildContentLabelMaps(userStore.availableExamCategories))
 const resolveExamCategoryLabel = (code) => resolveContentLabel(scopeLabelMaps.value.examCategoryNameMap, code)
 const resolveJointExamGroupLabel = (code) => resolveContentLabel(scopeLabelMaps.value.jointExamGroupNameMap, code)
 const isSelectionMode = computed(() => String(route.query.mode || '').trim() === 'selection')
+const shouldDisplayQueryResults = computed(() =>
+  isSelectionMode.value || scopedQuestionIds.value.length > 0 || hasExecutedFilterSearch.value,
+)
 const selectedQuestionIds = computed(() => Object.keys(selectedQuestionMap.value))
 const selectedQuestionCount = computed(() => selectedQuestionIds.value.length)
 const selectedQuestionRows = computed(() =>
@@ -361,12 +483,42 @@ const tableRows = computed(() =>
   }),
 )
 
+function buildSelectedQuestionEntry(row) {
+  return {
+    id: String(row?.id || '').trim(),
+    stem: String(row?.stem || ''),
+    type: String(row?.type || ''),
+    knowledgeId: String(row?.knowledgeId || ''),
+    latestStatus: String(row?.latestStatus || row?.status || ''),
+    userId: String(row?.userId || ''),
+    examCategoryCode: String(row?.examCategoryCode || ''),
+    jointExamGroupCode: String(row?.jointExamGroupCode || ''),
+    subjectCode: String(row?.subjectCode || ''),
+    updateTime: String(row?.updateTime || ''),
+  }
+}
+
 const queryResultRows = computed(() =>
   tableRows.value.map((row, index) => ({
+    id: String(row?.id || '').trim(),
     seq: (Math.max(1, Number(pagination.page || 1)) - 1) * Math.max(1, Number(pagination.size || 10)) + index + 1,
     stem: String(row?.stem || '').trim(),
     answer: String(row?.answer || '').trim() || '-',
+    checked: Boolean(selectedQuestionMap.value[String(row?.id || '').trim()]),
+    row,
   })),
+)
+
+const queryResultCheckedCount = computed(() =>
+  queryResultRows.value.filter((item) => item.checked).length,
+)
+
+const queryResultAllChecked = computed(() =>
+  queryResultRows.value.length > 0 && queryResultCheckedCount.value === queryResultRows.value.length,
+)
+
+const queryResultIndeterminate = computed(() =>
+  queryResultCheckedCount.value > 0 && queryResultCheckedCount.value < queryResultRows.value.length,
 )
 
 const detailExtJson = computed(() => parseExtJson(detailQuestion.value?.extJson))
@@ -485,6 +637,14 @@ function statusTagType(status) {
   return questionStatusMeta(status).type
 }
 
+function quickFilterPendingReview() {
+  filterModel.value = {
+    ...filterModel.value,
+    status: 'REVIEW_PENDING',
+  }
+  handleSearch(filterModel.value)
+}
+
 function syncSelectionForVisibleRows() {
   nextTick(() => {
     const tableRef = questionTableRef.value
@@ -492,54 +652,98 @@ function syncSelectionForVisibleRows() {
       return
     }
 
+    syncingTableSelection.value = true
     tableRef.clearSelection()
     tableRows.value.forEach((row) => {
       if (selectedQuestionMap.value[row.id]) {
         tableRef.toggleRowSelection(row, true)
       }
     })
+    nextTick(() => {
+      syncingTableSelection.value = false
+    })
   })
 }
 
 function handleSelectionChange(selectedRows) {
-  const nextSelectedMap = { ...selectedQuestionMap.value }
-  const currentPageIds = new Set(
-    tableRows.value
-      .map((row) => String(row?.id || '').trim())
-      .filter((id) => Boolean(id)),
-  )
-  const selectedIds = new Set(
-    (Array.isArray(selectedRows) ? selectedRows : [])
-      .map((row) => String(row?.id || '').trim())
-      .filter((id) => Boolean(id)),
-  )
+  if (syncingTableSelection.value) {
+    return
+  }
+  const normalizedRows = Array.isArray(selectedRows) ? selectedRows : []
+  if (isSelectionMode.value) {
+    const nextSelectedMap = { ...selectedQuestionMap.value }
+    const currentPageIds = new Set(
+      tableRows.value
+        .map((row) => String(row?.id || '').trim())
+        .filter((id) => Boolean(id)),
+    )
+    const selectedIds = new Set(
+      normalizedRows
+        .map((row) => String(row?.id || '').trim())
+        .filter((id) => Boolean(id)),
+    )
+    currentPageIds.forEach((id) => {
+      if (!selectedIds.has(id)) {
+        delete nextSelectedMap[id]
+      }
+    })
+    normalizedRows.forEach((row) => {
+      const id = String(row?.id || '').trim()
+      if (!id) {
+        return
+      }
+      nextSelectedMap[id] = buildSelectedQuestionEntry(row)
+    })
+    selectedQuestionMap.value = nextSelectedMap
+    return
+  }
 
-  currentPageIds.forEach((id) => {
-    if (!selectedIds.has(id)) {
-      delete nextSelectedMap[id]
-    }
-  })
-
-  ;(Array.isArray(selectedRows) ? selectedRows : []).forEach((row) => {
+  const nextSelectedMap = {}
+  normalizedRows.forEach((row) => {
     const id = String(row?.id || '').trim()
     if (!id) {
       return
     }
-    nextSelectedMap[id] = {
-      id,
-      stem: String(row?.stem || ''),
-      type: String(row?.type || ''),
-      knowledgeId: String(row?.knowledgeId || ''),
-      latestStatus: String(row?.latestStatus || row?.status || ''),
-      userId: String(row?.userId || ''),
-      examCategoryCode: String(row?.examCategoryCode || ''),
-      jointExamGroupCode: String(row?.jointExamGroupCode || ''),
-      subjectCode: String(row?.subjectCode || ''),
-      updateTime: String(row?.updateTime || ''),
-    }
+    nextSelectedMap[id] = buildSelectedQuestionEntry(row)
   })
-
   selectedQuestionMap.value = nextSelectedMap
+}
+
+function handleQueryResultSelectAllChange(checked) {
+  const shouldSelect = Boolean(checked)
+  const nextSelectedMap = {}
+  if (shouldSelect) {
+    queryResultRows.value.forEach((item) => {
+      const id = String(item?.id || '').trim()
+      if (!id) {
+        return
+      }
+      nextSelectedMap[id] = buildSelectedQuestionEntry(item.row)
+    })
+  }
+  selectedQuestionMap.value = nextSelectedMap
+  syncSelectionForVisibleRows()
+}
+
+function handleQueryResultRowCheckedChange(item, checked) {
+  const id = String(item?.id || '').trim()
+  if (!id) {
+    return
+  }
+  const nextSelectedMap = {}
+  queryResultRows.value.forEach((rowItem) => {
+    const rowId = String(rowItem?.id || '').trim()
+    if (!rowId) {
+      return
+    }
+    const shouldKeepChecked = rowId === id ? Boolean(checked) : Boolean(rowItem?.checked)
+    if (!shouldKeepChecked) {
+      return
+    }
+    nextSelectedMap[rowId] = buildSelectedQuestionEntry(rowItem?.row)
+  })
+  selectedQuestionMap.value = nextSelectedMap
+  syncSelectionForVisibleRows()
 }
 
 function clearSelectedQuestions() {
@@ -692,21 +896,68 @@ function clearScopedQuestionFilter() {
 
 function handleSearch(nextFilter) {
   filterModel.value = nextFilter || {}
+  if (!isSelectionMode.value && !scopedQuestionIds.value.length && !hasFilterCondition(filterModel.value)) {
+    hasExecutedFilterSearch.value = false
+    fallbackSearchNotice.value = ''
+    clearQuestionResults()
+    ElMessage.warning('请至少选择一个筛选条件后再查询。')
+    return
+  }
+  hasExecutedFilterSearch.value = true
   pagination.page = 1
   fallbackSearchNotice.value = ''
+  if (!isSelectionMode.value) {
+    clearSelectedQuestions()
+  }
   loadQuestionList()
 }
 
 function handleReset() {
   resetFilters()
+  hasExecutedFilterSearch.value = false
   pagination.page = 1
   fallbackSearchNotice.value = ''
-  loadQuestionList()
+  clearQuestionResults()
+}
+
+function handleClearQueryResultList() {
+  clearSelectedQuestions()
+  fallbackSearchNotice.value = ''
+  pagination.page = 1
+  hasExecutedFilterSearch.value = false
+  clearQuestionResults()
+  if (!isSelectionMode.value && scopedQuestionIds.value.length > 0) {
+    clearScopedQuestionFilter()
+  }
+  ElMessage.success('查询结果列表已清空。')
 }
 
 function handleQuestionCreated() {
+  if (!shouldDisplayQueryResults.value) {
+    return
+  }
   pagination.page = 1
   loadQuestionList()
+}
+
+function handleResultPageChange(nextPage) {
+  if (!shouldDisplayQueryResults.value) {
+    return
+  }
+  if (!isSelectionMode.value) {
+    clearSelectedQuestions()
+  }
+  tableHandlePageChange(nextPage)
+}
+
+function handleResultPageSizeChange(nextSize) {
+  if (!shouldDisplayQueryResults.value) {
+    return
+  }
+  if (!isSelectionMode.value) {
+    clearSelectedQuestions()
+  }
+  tableHandlePageSizeChange(nextSize)
 }
 
 function resolveTransitionActions(row) {
@@ -880,6 +1131,9 @@ async function handleDeleteQuestion(row) {
     const result = unwrapData(await deleteQuestion(questionId)) || {}
     lastDeletedQuestionSnapshotId.value = String(result?.undoSnapshotId || '').trim()
     lastDeletedQuestionId.value = questionId
+    lastDeletedQuestionExpireAt.value =
+      Date.now() + toPositiveInteger(result?.undoExpireSec, UNDO_DEFAULT_EXPIRE_SEC) * 1000
+    persistUndoHintState()
     ElMessage.success('题目已删除，可在 10 分钟内恢复。')
     clearSelectedQuestions()
     if (detailDrawerVisible.value && String(detailQuestion.value?.id || '') === questionId) {
@@ -904,6 +1158,8 @@ async function handleRestoreDeletedQuestion() {
     ElMessage.success('题目已恢复。')
     lastDeletedQuestionSnapshotId.value = ''
     lastDeletedQuestionId.value = ''
+    lastDeletedQuestionExpireAt.value = 0
+    persistUndoHintState()
     await loadQuestionList()
   } catch (error) {
     ElMessage.error(resolveApiErrorMessage(error, '恢复题目失败'))
@@ -937,6 +1193,9 @@ async function handleBatchDelete() {
     const result = unwrapData(await deleteQuestionsBatch({ questionIds })) || {}
     lastDeletedBatchSnapshotId.value = String(result?.undoSnapshotId || '').trim()
     lastDeletedBatchCount.value = questionIds.length
+    lastDeletedBatchExpireAt.value =
+      Date.now() + toPositiveInteger(result?.undoExpireSec, UNDO_DEFAULT_EXPIRE_SEC) * 1000
+    persistUndoHintState()
     ElMessage.success(`已批量删除 ${questionIds.length} 道题目，可在 10 分钟内恢复。`)
     clearSelectedQuestions()
     await loadQuestionList()
@@ -957,6 +1216,8 @@ async function handleRestoreDeletedBatch() {
     ElMessage.success(`已恢复 ${Number(result?.restoredCount || 0)} 道题目。`)
     lastDeletedBatchSnapshotId.value = ''
     lastDeletedBatchCount.value = 0
+    lastDeletedBatchExpireAt.value = 0
+    persistUndoHintState()
     await loadQuestionList()
   } catch (error) {
     ElMessage.error(resolveApiErrorMessage(error, '批量恢复失败'))
@@ -1070,10 +1331,23 @@ async function saveQuestionEdit() {
 }
 
 onMounted(async () => {
+  restoreUndoHintState()
   await loadSelectionTargetWeightMap()
   await loadContentBaselineOptions()
-  await loadQuestionList()
+  if (scopedQuestionIds.value.length > 0 || isSelectionMode.value) {
+    hasExecutedFilterSearch.value = true
+    await loadQuestionList()
+    return
+  }
+  clearQuestionResults()
 })
+
+watch(
+  () => undoHintStorageKey.value,
+  () => {
+    restoreUndoHintState()
+  },
+)
 
 watch(
   tableRows,
@@ -1096,8 +1370,20 @@ watch(
 watch(
   () => [route.query.questionIds, route.query.question_ids, route.query.sourceTaskId].join('|'),
   () => {
-    pagination.page = 1
-    loadQuestionList()
+    if (scopedQuestionIds.value.length > 0) {
+      hasExecutedFilterSearch.value = true
+      pagination.page = 1
+      loadQuestionList()
+      return
+    }
+    if (isSelectionMode.value) {
+      pagination.page = 1
+      loadQuestionList()
+      return
+    }
+    hasExecutedFilterSearch.value = false
+    fallbackSearchNotice.value = ''
+    clearQuestionResults()
   },
 )
 </script>
@@ -1167,13 +1453,6 @@ watch(
     </el-alert>
 
     <QuestionUpload v-if="!isSelectionMode" @created="handleQuestionCreated" />
-    <section v-if="!isSelectionMode" id="import-history" class="import-history-panel">
-      <header class="import-history-panel__header">
-        <h4>批量导入历史</h4>
-        <p>导入历史已并入题库管理，可直接查看任务状态、恢复解析结果与进入任务详情。</p>
-      </header>
-      <QuestionBatchTaskCenter />
-    </section>
 
     <el-card v-if="!isSelectionMode" class="batch-toolbar" shadow="never">
       <div class="batch-toolbar__content">
@@ -1196,7 +1475,7 @@ watch(
           <el-button
             size="small"
             type="danger"
-            plain
+            :plain="selectedQuestionCount <= 0"
             :disabled="selectedQuestionCount <= 0"
             :loading="batchActing"
             @click="handleBatchDelete"
@@ -1219,7 +1498,71 @@ watch(
       :initially-collapsed="false"
       @search="handleSearch"
       @reset="handleReset"
-    />
+    >
+      <template #fields="{ filters: panelFilters, examCategoryOptions: panelExamCategoryOptions, jointExamGroupOptions: panelJointExamGroupOptions, subjectCodeOptions: panelSubjectCodeOptions }">
+        <el-input
+          v-model="panelFilters.keyword"
+          clearable
+          placeholder="输入关键词"
+        />
+        <el-select
+          v-model="panelFilters.examCategoryCode"
+          clearable
+          filterable
+          placeholder="学科门类"
+        >
+          <el-option
+            v-for="option in panelExamCategoryOptions"
+            :key="option.examCategoryCode"
+            :label="option.examCategoryName"
+            :value="option.examCategoryCode"
+          />
+        </el-select>
+        <el-select
+          v-model="panelFilters.jointExamGroupCode"
+          clearable
+          filterable
+          :disabled="!panelFilters.examCategoryCode"
+          placeholder="专业组"
+        >
+          <el-option
+            v-for="option in panelJointExamGroupOptions"
+            :key="option.jointExamGroupCode"
+            :label="option.jointExamGroupName"
+            :value="option.jointExamGroupCode"
+          />
+        </el-select>
+        <el-select
+          v-model="panelFilters.subjectCode"
+          clearable
+          filterable
+          placeholder="考试科目"
+        >
+          <el-option
+            v-for="option in panelSubjectCodeOptions"
+            :key="option.subjectCode"
+            :label="option.subjectName"
+            :value="option.subjectCode"
+          />
+        </el-select>
+        <el-select
+          v-model="panelFilters.status"
+          clearable
+          placeholder="题目状态"
+        >
+          <el-option label="草稿" value="DRAFT" />
+          <el-option label="QA 互审中" value="QA_IN_PROGRESS" />
+          <el-option label="待终审" value="REVIEW_PENDING" />
+          <el-option label="已发布" value="PUBLISHED" />
+          <el-option label="已驳回" value="REJECTED" />
+        </el-select>
+      </template>
+      <template #actions="{ search, reset }">
+        <el-button type="info" plain @click="quickFilterPendingReview">待终审题目</el-button>
+        <el-button type="primary" @click="search">查询</el-button>
+        <el-button @click="reset">重置</el-button>
+      </template>
+    </BaseFilterPanel>
 
     <el-alert
       v-if="fallbackSearchNotice"
@@ -1231,20 +1574,44 @@ watch(
 
     <section class="query-result-list-panel">
       <header class="query-result-list-panel__header">
-        <strong>查询结果列表</strong>
-        <span class="helper-text">按序号展示题目与正确答案</span>
+        <div class="query-result-list-panel__meta">
+          <strong>查询结果列表</strong>
+          <span class="helper-text">按序号展示题目与正确答案</span>
+        </div>
+        <el-button
+          size="small"
+          text
+          :disabled="!shouldDisplayQueryResults && !queryResultRows.length"
+          @click="handleClearQueryResultList"
+        >
+          清空列表
+        </el-button>
       </header>
-      <div v-if="queryResultRows.length" class="query-result-list-panel__list">
+      <div v-if="!shouldDisplayQueryResults" class="query-result-list-panel__empty">请先选择筛选条件并点击查询</div>
+      <div v-else-if="queryResultRows.length" class="query-result-list-panel__list">
         <div class="query-result-list-panel__row query-result-list-panel__row--head">
+          <span class="query-result-list-panel__selector">
+            <el-checkbox
+              :model-value="queryResultAllChecked"
+              :indeterminate="queryResultIndeterminate"
+              @change="handleQueryResultSelectAllChange"
+            />
+          </span>
           <span>序号</span>
           <span>题目</span>
           <span>正确答案</span>
         </div>
         <div
           v-for="item in queryResultRows"
-          :key="`query-result-${item.seq}`"
+          :key="`query-result-${item.id || item.seq}`"
           class="query-result-list-panel__row"
         >
+          <span class="query-result-list-panel__selector">
+            <el-checkbox
+              :model-value="item.checked"
+              @change="(checked) => handleQueryResultRowCheckedChange(item, checked)"
+            />
+          </span>
           <span>{{ item.seq }}</span>
           <span>{{ item.stem }}</span>
           <span>{{ item.answer }}</span>
@@ -1254,6 +1621,7 @@ watch(
     </section>
 
     <el-table
+      v-if="shouldDisplayQueryResults"
       ref="questionTableRef"
       v-loading="loading"
       :data="tableRows"
@@ -1320,7 +1688,7 @@ watch(
       </template>
     </el-table>
 
-    <div class="pagination-wrap">
+    <div v-if="shouldDisplayQueryResults" class="pagination-wrap">
       <el-pagination
         background
         layout="total, sizes, prev, pager, next, jumper"
@@ -1328,8 +1696,8 @@ watch(
         :page-size="pagination.size"
         :total="pagination.total"
         :page-sizes="[10, 20, 50, 100]"
-        @current-change="(nextPage) => handlePageChange(nextPage)"
-        @size-change="(nextSize) => handlePageSizeChange(nextSize)"
+        @current-change="(nextPage) => handleResultPageChange(nextPage)"
+        @size-change="(nextSize) => handleResultPageSizeChange(nextSize)"
       />
     </div>
 
@@ -1575,23 +1943,6 @@ watch(
   gap: 14px;
 }
 
-.import-history-panel {
-  border: 1px solid var(--qb-primary-soft-border);
-  border-radius: 12px;
-  background: var(--qb-bg-card);
-  padding: 12px;
-}
-
-.import-history-panel__header h4,
-.import-history-panel__header p {
-  margin: 0;
-}
-
-.import-history-panel__header p {
-  margin-top: 6px;
-  color: var(--qb-text-subtle-8);
-}
-
 .batch-toolbar {
   border: 1px solid var(--qb-primary-soft-border);
   background: linear-gradient(180deg, var(--qb-bg-card), var(--qb-primary-soft-bg));
@@ -1658,6 +2009,11 @@ p {
   gap: 8px;
 }
 
+.query-result-list-panel__meta {
+  display: grid;
+  gap: 2px;
+}
+
 .query-result-list-panel__list {
   border: 1px solid var(--qb-border-muted);
   border-radius: 8px;
@@ -1666,7 +2022,7 @@ p {
 
 .query-result-list-panel__row {
   display: grid;
-  grid-template-columns: 96px 1fr 160px;
+  grid-template-columns: 52px 96px 1fr 160px;
   gap: 8px;
   align-items: start;
   padding: 10px 12px;
@@ -1681,6 +2037,12 @@ p {
 .query-result-list-panel__row--head {
   background: var(--qb-primary-soft-bg);
   font-weight: 600;
+}
+
+.query-result-list-panel__selector {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .query-result-list-panel__empty {

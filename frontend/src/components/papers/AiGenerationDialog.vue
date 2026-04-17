@@ -59,7 +59,7 @@ const professionalCascaderProps = {
   value: 'code',
   label: 'name',
   children: 'children',
-  checkStrictly: true,
+  checkStrictly: false,
 }
 function createInitialAiForm() {
   return {
@@ -321,7 +321,7 @@ watch(
           clearable
           :teleported="false"
           expand-trigger="hover"
-          :show-all-levels="false"
+          :show-all-levels="true"
           :disabled="loading || generating"
           placeholder="请选择：学科门类 / 联考专业组，可继续下钻到考试科目"
         />
@@ -332,8 +332,9 @@ watch(
           multiple
           filterable
           clearable
-          collapse-tags
-          collapse-tags-tooltip
+          :collapse-tags="aiForm.class_ids.length > 5"
+          :collapse-tags-tooltip="aiForm.class_ids.length > 5"
+          :max-collapse-tags="5"
           :disabled="loading || generating"
           placeholder="请选择教师关联班级"
         >

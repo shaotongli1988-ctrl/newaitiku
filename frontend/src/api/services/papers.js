@@ -219,6 +219,14 @@ export function listPaperQuestions(params = {}) {
   })
 }
 
+export function listPaperQuestionFilterOptions(params = {}) {
+  return request({
+    method: 'get',
+    url: '/api/question-bank/papers/questions/filter-options',
+    params,
+  })
+}
+
 export function saveManualPaper(data) {
   const normalized_data = normalize_manual_paper_payload(data)
   return request({

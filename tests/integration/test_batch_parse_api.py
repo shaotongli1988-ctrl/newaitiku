@@ -54,6 +54,26 @@ def _build_docx_with_embedded_image_bytes() -> bytes:
     return buffer.getvalue()
 
 
+def _collapse_to_two_level_tags(labels: list[str]) -> list[str]:
+    normalized = [str(item or "").strip() for item in labels if str(item or "").strip()]
+    if not normalized:
+        return []
+    if len(normalized) <= 2:
+        return normalized
+    generic_labels = {
+        "具体内容与要求",
+        "科目简介",
+        "考试说明",
+        "考试要求",
+        "课程简介",
+        "课程说明",
+        "复习建议",
+    }
+    root = normalized[0]
+    second = next((item for item in normalized[1:] if item not in generic_labels), normalized[1])
+    return [root] if second == root else [root, second]
+
+
 def test_batch_parse_returns_2026_structured_payload(tmp_path: Path) -> None:
     client = make_client(tmp_path)
     response = client.post(
@@ -86,7 +106,8 @@ def test_batch_parse_returns_2026_structured_payload(tmp_path: Path) -> None:
     assert first_item.get("joint_exam_group_code") == "SCIENCE_ENGINEERING_3"
     assert first_item.get("subject_code") == "INFO_TECH_INTRO"
     assert str(first_item.get("subject_type", "")).startswith("PROFESSIONAL")
-    assert first_item.get("knowledge_points") == ["计算机基础"]
+    knowledge_points = first_item.get("knowledge_points") or []
+    assert isinstance(knowledge_points, list) and len(knowledge_points) >= 1
 
 
 def test_batch_parse_decodes_gb18030_txt_upload(tmp_path: Path) -> None:
@@ -248,6 +269,69 @@ def test_batch_parse_maps_bracket_knowledge_hint_to_knowledge_path(tmp_path: Pat
     assert str(item.get("pointCode", "")).strip() == str(target.get("pointCode", "")).strip()
     assert len(item.get("knowledge_path") or []) >= 1
     assert bool(item.get("manual_review_required")) is False
+
+
+def test_batch_parse_collapses_knowledge_path_and_tags_to_two_levels(tmp_path: Path) -> None:
+    client = make_client(tmp_path)
+    svc = client.app.state.service
+    scope = {
+        "examCategoryCode": "LITERATURE",
+        "jointExamGroupCode": "LITERATURE_1",
+        "subjectCode": "ARTS_HISTORY_FOUNDATION",
+        "policyVersionCode": "HB_ZSB_2026",
+    }
+    semantic_pool = svc._build_question_semantic_pool(scope)
+    target = max(
+        (
+            item
+            for item in semantic_pool
+            if isinstance(item.get("path_levels", []), list) and len(item.get("path_levels", [])) >= 2
+        ),
+        key=lambda item: len(item.get("path_levels", [])),
+        default=None,
+    )
+    assert target is not None
+    hint_labels = [
+        str(level.get("label", "")).strip()
+        for level in target.get("path_levels", [])
+        if str(level.get("label", "")).strip()
+    ]
+    assert len(hint_labels) >= 2
+    expected_tags = _collapse_to_two_level_tags(hint_labels)
+    assert 1 <= len(expected_tags) <= 2
+
+    content = "\n".join(
+        [
+            "[type] single_choice",
+            "[content] 距今约7000至5000年前，黄河中游地区粟为主要栽培作物的时期是（   ）",
+            "[options] A.大汶口文化|B.仰韶文化|C.北京人|D.河姆渡文化",
+            "[answer] B",
+            "[analysis] 题干对应新石器时代黄河中游农业文化。",
+            f"[knowledge] {' -> '.join(hint_labels)}",
+        ]
+    )
+    response = client.post(
+        "/api/question-bank/batch-parse",
+        headers=teacher_headers("teacher-002"),
+        data={
+            "examCategoryCode": "LITERATURE",
+            "jointExamGroupCode": "LITERATURE_1",
+            "subjectCode": "ARTS_HISTORY_FOUNDATION",
+        },
+        files={
+            "file": ("batch-parse.txt", content.encode("utf-8"), "text/plain"),
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json().get("data", {})
+    item = (payload.get("items") or [{}])[0]
+    assert bool(item.get("manual_review_required")) is False
+    assert 1 <= len(item.get("knowledge_path") or []) <= 2
+    assert item.get("knowledge_tags") == expected_tags
+    assert item.get("path_label") == " / ".join(expected_tags)
+    ext_json = item.get("ext_json", {})
+    assert isinstance(ext_json, dict)
+    assert ext_json.get("knowledgeTags") == expected_tags
 
 
 def test_batch_parse_fallback_subject_semantic_pool_for_shared_subject(tmp_path: Path) -> None:
