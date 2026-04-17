@@ -501,7 +501,7 @@ class SyllabusWeightsSaveModel(BaseModel):
 class ManagedUserModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    userId: str = Field(min_length=1)
+    userId: Optional[str] = Field(default=None)
     role: str = Field(min_length=1)
     name: str = Field(min_length=1)
     mobile: str = Field(min_length=11, max_length=11)
@@ -516,7 +516,6 @@ class ManagedUserModel(BaseModel):
     managedJointExamGroupCodes: List[str] = Field(default_factory=list)
 
     @field_validator(
-        "userId",
         "name",
         "mobile",
         "examCategoryCode",
@@ -525,8 +524,21 @@ class ManagedUserModel(BaseModel):
         "prepStage",
     )
     @classmethod
-    def trim_text_fields(cls, value: str) -> str:
+    def trim_text_fields(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
         return value.strip()
+    
+    @field_validator("userId")
+    @classmethod
+    def trim_user_id(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        # 对于 userId 字段，如果修剪后为空字符串，则返回 None
+        if trimmed == "":
+            return None
+        return trimmed
 
     @field_validator("role")
     @classmethod

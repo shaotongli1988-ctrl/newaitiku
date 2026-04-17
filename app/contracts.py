@@ -1248,7 +1248,7 @@ class AdminSystemSettingsSaveRequest(BaseModel):
 class AdminManagedUserSaveRequest(BaseModel):
     model_config = REQUEST_MODEL_CONFIG
 
-    userId: str = Field(min_length=1)
+    userId: Optional[str] = Field(default=None)
     role: str = Field(min_length=1)
     name: str = Field(min_length=1)
     mobile: str = Field(min_length=11, max_length=11)

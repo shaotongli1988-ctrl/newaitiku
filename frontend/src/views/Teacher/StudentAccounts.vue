@@ -23,6 +23,7 @@ const exportPreview = ref('')
 const exportFormat = ref('csv')
 const managedUsers = ref([])
 const managedUsersTotal = ref(0)
+const totalStudentsCount = ref(0)
 
 const managedUserForm = reactive(createManagedUserForm())
 const managedUserQuery = reactive({
@@ -49,7 +50,29 @@ const scopeDescription = computed(() =>
     ? `当前账号已绑定专业组 ${resolveJointExamGroupLabel(assignedJointGroupCode.value)}，学生账号开通仅对该范围生效。`
     : '当前账号未绑定单一专业组，学生账号开通按你当前可管理范围执行。',
 )
+
+const availableExamCategories = computed(() => {
+  return Array.isArray(userStore.availableExamCategories) ? userStore.availableExamCategories : []
+})
+
+const availableJointExamGroups = computed(() => {
+  const selectedCategory = managedUserForm.examCategoryCode
+  if (!selectedCategory) {
+    const groups = []
+    availableExamCategories.value.forEach(category => {
+      if (Array.isArray(category.jointExamGroups)) {
+        groups.push(...category.jointExamGroups)
+      }
+    })
+    return groups
+  } else {
+    const category = availableExamCategories.value.find(c => c.examCategoryCode === selectedCategory)
+    return category && Array.isArray(category.jointExamGroups) ? category.jointExamGroups : []
+  }
+})
 const totalManagedUserPages = computed(() => Math.max(1, Math.ceil(managedUsersTotal.value / managedUserQuery.size)))
+const hasSearchKeyword = computed(() => Boolean(String(managedUserQuery.keyword || '').trim()))
+const searchedStudentSummary = computed(() => `第 ${managedUserQuery.page} / ${totalManagedUserPages.value} 页，共 ${managedUsersTotal.value} 条`)
 
 function createManagedUserForm() {
   return {
@@ -84,9 +107,6 @@ function populateManagedUserForm(user) {
 }
 
 function validateManagedUserForm() {
-  if (!String(managedUserForm.userId || '').trim()) {
-    throw new Error('请填写学生用户ID。')
-  }
   if (!String(managedUserForm.name || '').trim()) {
     throw new Error('请填写学生姓名。')
   }
@@ -103,7 +123,7 @@ async function loadManagedUsers() {
   try {
     const pageData = await fetchManagedUsersPage({
       role: 'student',
-      keyword: managedUserQuery.keyword,
+      keyword: String(managedUserQuery.keyword || '').trim(),
       page: managedUserQuery.page,
       size: managedUserQuery.size,
     })
@@ -112,15 +132,31 @@ async function loadManagedUsers() {
     managedUserQuery.page = Number(pageData.page || managedUserQuery.page)
     managedUserQuery.size = Number(pageData.size || managedUserQuery.size)
   } catch (error) {
+    console.error('加载学生账号失败:', error)
     ElMessage.error(String(error?.response?.data?.message || error?.message || '学生账号列表加载失败'))
   } finally {
     managedUsersLoading.value = false
   }
 }
 
+async function loadTotalStudentsCount() {
+  try {
+    const pageData = await fetchManagedUsersPage({
+      role: 'student',
+      keyword: '',
+      page: 1,
+      size: 1,
+    })
+    totalStudentsCount.value = Number(pageData.total || 0)
+  } catch (error) {
+    console.error('获取学生总数失败:', error)
+  }
+}
+
 async function loadPage() {
   loading.value = true
   try {
+    await loadTotalStudentsCount()
     await loadManagedUsers()
   } finally {
     loading.value = false
@@ -153,6 +189,8 @@ async function submitManagedUser() {
     })
     resetManagedUserForm()
     managedUserQuery.page = 1
+    managedUserQuery.keyword = ''
+    await loadTotalStudentsCount()
     await loadManagedUsers()
     ElMessage.success('学生账号已更新。')
   } catch (error) {
@@ -200,6 +238,7 @@ async function handleExport() {
 }
 
 async function refreshManagedUsers() {
+  managedUserQuery.keyword = String(managedUserQuery.keyword || '').trim()
   managedUserQuery.page = 1
   await loadManagedUsers()
 }
@@ -229,12 +268,11 @@ onMounted(() => {
           <h3>学生账号开通</h3>
           <p class="hero-copy">{{ scopeDescription }}</p>
         </div>
-        <el-button @click="refreshManagedUsers">刷新列表</el-button>
       </div>
       <div class="hero-meta">
         <article>
           <span>当前学生总数</span>
-          <strong>{{ managedUsersTotal }}</strong>
+          <strong>{{ totalStudentsCount }}</strong>
         </article>
         <article>
           <span>当前页记录</span>
@@ -263,18 +301,18 @@ onMounted(() => {
         <el-form label-position="top">
           <el-row :gutter="12">
             <el-col :span="12">
-              <el-form-item label="用户ID">
-                <el-input v-model="managedUserForm.userId" :disabled="Boolean(editingUserId)" />
+              <el-form-item label="用户ID（非必填）">
+                <el-input v-model="managedUserForm.userId" :disabled="Boolean(editingUserId)" style="background-color: #f5f7fa;" placeholder="不填写时系统会自动生成" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="手机号">
-                <el-input v-model="managedUserForm.mobile" maxlength="11" />
+                <el-input v-model="managedUserForm.mobile" maxlength="11" style="background-color: #f5f7fa;" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="姓名">
-                <el-input v-model="managedUserForm.name" />
+                <el-input v-model="managedUserForm.name" style="background-color: #f5f7fa;" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -289,22 +327,36 @@ onMounted(() => {
             </el-col>
             <el-col :span="12">
               <el-form-item label="学科门类">
-                <el-input v-model="managedUserForm.examCategoryCode" />
+                <el-select v-model="managedUserForm.examCategoryCode" style="width: 100%; background-color: #f5f7fa;" placeholder="请选择学科门类">
+                  <el-option
+                    v-for="category in availableExamCategories"
+                    :key="category.examCategoryCode"
+                    :label="category.examCategoryName"
+                    :value="category.examCategoryCode"
+                  />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="联考专业组">
-                <el-input v-model="managedUserForm.jointExamGroupCode" />
+                <el-select v-model="managedUserForm.jointExamGroupCode" style="width: 100%; background-color: #f5f7fa;" placeholder="请选择联考专业组">
+                  <el-option
+                    v-for="group in availableJointExamGroups"
+                    :key="group.jointExamGroupCode"
+                    :label="group.jointExamGroupName"
+                    :value="group.jointExamGroupCode"
+                  />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="高职专业">
-                <el-input v-model="managedUserForm.vocationalMajor" />
+                <el-input v-model="managedUserForm.vocationalMajor" style="background-color: #f5f7fa;" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="备考阶段">
-                <el-input v-model="managedUserForm.prepStage" />
+                <el-input v-model="managedUserForm.prepStage" style="background-color: #f5f7fa;" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -326,7 +378,7 @@ onMounted(() => {
         </template>
         <el-form label-position="top">
           <el-form-item label="导入模板">
-            <el-input v-model="importForm.csvText" type="textarea" :rows="8" />
+            <el-input v-model="importForm.csvText" type="textarea" :rows="8" style="background-color: #f5f7fa;" />
           </el-form-item>
           <div class="inline-actions">
             <el-button type="primary" :loading="importing" @click="submitImport">批量导入学生</el-button>
@@ -350,16 +402,61 @@ onMounted(() => {
         <div class="card-header">
           <span>学生账号目录</span>
           <div class="inline-actions">
-            <el-input
-              v-model="managedUserQuery.keyword"
-              clearable
-              placeholder="搜索 userId / 姓名 / 手机号"
-              @keyup.enter="refreshManagedUsers"
-            />
-            <el-button :loading="managedUsersLoading" @click="refreshManagedUsers">刷新列表</el-button>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <el-input
+                v-model="managedUserQuery.keyword"
+                clearable
+                placeholder="搜索学生姓名/手机号"
+                @keyup.enter="refreshManagedUsers"
+                style="flex: 1;"
+              />
+              <el-button type="primary" :loading="managedUsersLoading" @click="refreshManagedUsers">查询</el-button>
+            </div>
           </div>
         </div>
       </template>
+
+      <div v-if="hasSearchKeyword" class="query-result-panel">
+        <div v-if="managedUsers.length" class="query-result-list">
+          <article v-for="student in managedUsers" :key="student.userId" class="query-result-item">
+            <div class="query-result-grid">
+              <div class="query-field">
+                <span class="query-label">学生ID</span>
+                <strong class="query-value">{{ student.userId || '-' }}</strong>
+              </div>
+              <div class="query-field">
+                <span class="query-label">学生手机号</span>
+                <strong class="query-value">{{ student.mobile || '-' }}</strong>
+              </div>
+              <div class="query-field">
+                <span class="query-label">学生姓名</span>
+                <strong class="query-value">{{ student.name || '-' }}</strong>
+              </div>
+              <div class="query-field">
+                <span class="query-label">账号状态</span>
+                <strong class="query-value">{{ student.enabled ? '启用' : '停用' }}</strong>
+              </div>
+              <div class="query-field">
+                <span class="query-label">学科门类</span>
+                <strong class="query-value">{{ resolveExamCategoryLabel(student.examCategoryCode) }}</strong>
+              </div>
+              <div class="query-field">
+                <span class="query-label">联考专业组</span>
+                <strong class="query-value">{{ resolveJointExamGroupLabel(student.jointExamGroupCode) }}</strong>
+              </div>
+              <div class="query-field">
+                <span class="query-label">高职专业</span>
+                <strong class="query-value">{{ student.vocationalMajor || '-' }}</strong>
+              </div>
+              <div class="query-field">
+                <span class="query-label">备考阶段</span>
+                <strong class="query-value">{{ student.prepStage || '-' }}</strong>
+              </div>
+            </div>
+          </article>
+        </div>
+        <div v-else class="query-empty-state">未查询到相关学生信息。</div>
+      </div>
 
       <el-table :data="managedUsers" border v-loading="managedUsersLoading">
         <el-table-column prop="userId" label="用户ID" min-width="140" />
@@ -387,7 +484,7 @@ onMounted(() => {
       </el-table>
 
       <div class="pagination-row">
-        <span class="helper-text">第 {{ managedUserQuery.page }} / {{ totalManagedUserPages }} 页，共 {{ managedUsersTotal }} 条</span>
+        <span class="helper-text">{{ searchedStudentSummary }}</span>
         <el-pagination
           background
           layout="total, sizes, prev, pager, next"
@@ -405,8 +502,8 @@ onMounted(() => {
 
 <style scoped>
 .page-shell {
-  display: grid;
-  gap: 16px;
+  display: block;
+  margin-bottom: 16px;
 }
 
 .hero-card {
@@ -512,6 +609,53 @@ h3 {
   overflow: auto;
 }
 
+.query-result-panel {
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid var(--qb-border-muted);
+  border-radius: 10px;
+  background: #fcfdff;
+}
+
+.query-result-list {
+  display: grid;
+  gap: 10px;
+}
+
+.query-result-item {
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff;
+}
+
+.query-result-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 8px 12px;
+}
+
+.query-field {
+  display: grid;
+  gap: 2px;
+}
+
+.query-label {
+  color: var(--qb-text-subtle-6);
+  font-size: 12px;
+}
+
+.query-value {
+  color: var(--qb-text-heading);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.query-empty-state {
+  color: var(--qb-text-subtle-6);
+  font-size: 13px;
+}
+
 .pagination-row {
   margin-top: 14px;
   display: flex;
@@ -527,6 +671,10 @@ h3 {
 }
 
 @media (max-width: 900px) {
+  .query-result-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+
   .hero-top,
   .card-header,
   .pagination-row {
@@ -537,5 +685,12 @@ h3 {
   .content-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* 自定义按钮悬停效果 */
+:deep(.el-button--primary:hover) {
+  background-color: #f5f7fa !important;
+  border-color: #dcdfe6 !important;
+  color: #606266 !important;
 }
 </style>

@@ -107,7 +107,7 @@ class InternalSystemAdminServiceMixin:
             users = [
                 item
                 for item in users
-                if keyword in item["userId"] or keyword in item["name"] or keyword in item.get("mobile", "")
+                if keyword in item["name"] or keyword in item.get("mobile", "")
             ]
         return users
 
@@ -212,8 +212,9 @@ class InternalSystemAdminServiceMixin:
         saved["updateTime"] = self._now_iso()
         saved["createTime"] = existing.get("createTime", saved["updateTime"]) if existing else saved["updateTime"]
         
-        # 自动生成用户ID（当用户ID为空时）
-        if not str(saved.get("userId", "")).strip():
+        # 自动生成用户ID（当用户ID为空或为None时）
+        user_id = saved.get("userId")
+        if user_id is None or not str(user_id).strip():
             role = normalize_role(str(saved.get("role", "")).strip())
             if role == ROLE_TEACHER:
                 # 生成教师ID：teacher-{序号}
@@ -233,9 +234,7 @@ class InternalSystemAdminServiceMixin:
             saved["postTags"] = []
             saved["managedStudentIds"] = []
             saved["managedJointExamGroupCodes"] = []
-        if role == ROLE_STUDENT:
-            saved["examCategoryCode"] = ""
-            saved["jointExamGroupCode"] = ""
+        # 不再清空学生的 examCategoryCode 和 jointExamGroupCode
         return saved
 
     def _upsert_managed_user_list(
@@ -836,6 +835,8 @@ class InternalSystemAdminServiceMixin:
             if role not in ALL_ROLES:
                 continue
             item["role"] = role
+            item.setdefault("name", "")
+            item.setdefault("mobile", "")
             item.setdefault("enabled", True)
             item.setdefault("examCategoryCode", "")
             item.setdefault("jointExamGroupCode", "")

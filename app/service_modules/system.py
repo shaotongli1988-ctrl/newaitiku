@@ -5,6 +5,22 @@ from app.service_shared import *
 
 
 class SystemServiceMixin:
+    def _filter_managed_users(
+        self,
+        users: List[Dict[str, object]],
+        filters: Dict[str, str],
+    ) -> List[Dict[str, object]]:
+        role = normalize_role(filters.get("role", "").strip())
+        keyword = filters.get("keyword", "").strip()
+        if role:
+            users = [item for item in users if item["role"] == role]
+        if keyword:
+            users = [
+                item
+                for item in users
+                if keyword in str(item.get("name", "")) or keyword in str(item.get("mobile", "")) or keyword in str(item.get("userId", ""))
+            ]
+        return users
     def _resolve_teacher_managed_scope(self, actor_user_id: str) -> Dict[str, set[str]]:
         managed_user = self._get_managed_user(actor_user_id) if hasattr(self, "_get_managed_user") else None
         if not isinstance(managed_user, dict):
@@ -362,25 +378,39 @@ class SystemServiceMixin:
         }
 
     def list_managed_users(self, filters: Dict[str, str], page: int, size: int, actor: Optional[Actor] = None) -> Tuple[List[Dict[str, object]], int]:
-        users = self._filter_managed_users(self._managed_users(), filters)
+        users = self._managed_users()
         if actor and actor.role != ROLE_SUPER_ADMIN:
             users = [item for item in users if str(item.get("role", "")) == ROLE_STUDENT]
             scope_filters = self._resolve_actor_scope_filters(actor.role, actor.user_id)
             scoped_exam_category_code = str(scope_filters.get("exam_category_code", "")).strip()
             scoped_joint_exam_group_code = str(scope_filters.get("joint_exam_group_code", "")).strip()
-            if scoped_exam_category_code:
-                users = [item for item in users if str(item.get("examCategoryCode", "")).strip() == scoped_exam_category_code]
-            if scoped_joint_exam_group_code:
-                users = [item for item in users if str(item.get("jointExamGroupCode", "")).strip() == scoped_joint_exam_group_code]
             teacher_scope = self._resolve_teacher_managed_scope(actor.user_id)
-            if teacher_scope["joint_group_codes"]:
-                users = [
-                    item
-                    for item in users
-                    if str(item.get("jointExamGroupCode", "")).strip() in teacher_scope["joint_group_codes"]
-                ]
-            if teacher_scope["student_ids"]:
-                users = [item for item in users if str(item.get("userId", "")).strip() in teacher_scope["student_ids"]]
+            
+            # 先获取教师管理的学生ID列表
+            managed_student_ids = teacher_scope["student_ids"]
+            
+            # 过滤用户：如果学生ID在教师管理的列表中，或者满足其他过滤条件
+            filtered_users = []
+            for item in users:
+                item_user_id = str(item.get("userId", "")).strip()
+                item_exam_category = str(item.get("examCategoryCode", "")).strip()
+                item_joint_group = str(item.get("jointExamGroupCode", "")).strip()
+                
+                # 如果学生ID在教师管理的列表中，直接保留
+                if managed_student_ids and item_user_id in managed_student_ids:
+                    filtered_users.append(item)
+                else:
+                    # 否则，应用其他过滤条件
+                    if scoped_exam_category_code and item_exam_category != scoped_exam_category_code:
+                        continue
+                    if scoped_joint_exam_group_code and item_joint_group != scoped_joint_exam_group_code:
+                        continue
+                    if teacher_scope["joint_group_codes"] and item_joint_group not in teacher_scope["joint_group_codes"]:
+                        continue
+                    filtered_users.append(item)
+            
+            users = filtered_users
+        users = self._filter_managed_users(users, filters)
         users = sorted(users, key=lambda item: (item["role"], item["userId"]))
         paged, total = self._paginate_items(users, page, size)
         return paged, total
