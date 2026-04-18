@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.db
+.DS_Store
+.shared-deps/
+tmp/
+tools/logs/
+data/question_bank.db
+data/question_bank.db-shm
+data/question_bank.db-wal
+data/question_bank.db-journal
