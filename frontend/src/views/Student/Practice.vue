@@ -4247,6 +4247,34 @@ watch(
   line-height: 1.7;
 }
 
+/* 修改单选框未选中状态，显示浅灰色圈而不是白色 */
+.option-card :deep(.el-radio__inner) {
+  border-color: #6b7280 !important;  /* 进一步加深的灰色边框 */
+  background-color: #e5e7eb !important;  /* 进一步加深的浅灰背景 */
+}
+
+.option-card :deep(.el-radio:hover .el-radio__inner) {
+  border-color: #4b5563 !important;
+}
+
+.option-card :deep(.el-radio.is-checked .el-radio__inner) {
+  border-color: var(--el-color-primary) !important;
+  background-color: var(--el-color-primary) !important;
+}
+
+/* 单选框边框模式的样式调整 */
+.option-card :deep(.el-radio.is-bordered) {
+  border-color: #d1d5db !important;
+}
+
+.option-card :deep(.el-radio.is-bordered:hover) {
+  border-color: #9ca3af !important;
+}
+
+.option-card :deep(.el-radio.is-bordered.is-checked) {
+  border-color: var(--el-color-primary) !important;
+}
+
 .practice-actions {
   display: flex;
   flex-wrap: wrap;
