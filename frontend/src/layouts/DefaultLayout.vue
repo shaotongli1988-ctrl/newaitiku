@@ -24,8 +24,18 @@ const subjectContextStore = useSubjectContextStore()
 const mobileMenuVisible = ref(false)
 const currentEntryType = computed(() => (String(window.__QB_ENTRY_TYPE__ || '').trim() === 'teacher' ? 'teacher' : 'student'))
 const isStudentEntry = computed(() => currentEntryType.value === 'student')
-const entryLabel = computed(() => (currentEntryType.value === 'teacher' ? '教师端' : '学生端'))
-const sideConsoleLabel = computed(() => (currentEntryType.value === 'teacher' ? 'Teacher Console' : 'Student Console'))
+const entryLabel = computed(() => {
+  if (userStore.role === 'super_admin') {
+    return '管理员'
+  }
+  return currentEntryType.value === 'teacher' ? '教师端' : '学生端'
+})
+const sideConsoleLabel = computed(() => {
+  if (userStore.role === 'super_admin') {
+    return 'Admin Console'
+  }
+  return currentEntryType.value === 'teacher' ? 'Teacher Console' : 'Student Console'
+})
 
 const routeIconMap = {
   '/student/home': House,

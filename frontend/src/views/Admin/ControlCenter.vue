@@ -238,8 +238,8 @@ const managedUserQuery = reactive({
 })
 const importForm = reactive({
   csvText: [
-    'userId,name,mobile,examCategoryCode,jointExamGroupCode,vocationalMajor,prepStage',
-    'student-003,管理考生,13800000007,MANAGEMENT,MANAGEMENT_1,财经商贸类,基础阶段',
+    'name,mobile,examCategoryCode,jointExamGroupCode,vocationalMajor,prepStage',
+    '管理考生,13800000007,MANAGEMENT,MANAGEMENT_1,财经商贸类,基础阶段',
   ].join('\n'),
 })
 const exportFormat = ref('csv')
@@ -252,6 +252,28 @@ const resolveExamCategoryLabel = (code) => resolveContentLabel(scopeLabelMaps.va
 const resolveJointExamGroupLabel = (code) => resolveContentLabel(scopeLabelMaps.value.jointExamGroupNameMap, code)
 const isStudentRole = computed(() => managedUserForm.role === 'student')
 const isTeacherRole = computed(() => managedUserForm.role === 'teacher')
+
+const availableExamCategories = computed(() => {
+  return Array.isArray(userStore.availableExamCategories) ? userStore.availableExamCategories : []
+})
+
+const availableJointExamGroups = computed(() => {
+  const selectedCategory = managedUserForm.examCategoryCode
+  if (!selectedCategory) {
+    const groups = []
+    availableExamCategories.value.forEach(category => {
+      if (Array.isArray(category.jointExamGroups)) {
+        groups.push(...category.jointExamGroups)
+      }
+    })
+    return groups
+  } else {
+    const category = availableExamCategories.value.find(c => c.examCategoryCode === selectedCategory)
+    return category && Array.isArray(category.jointExamGroups) ? category.jointExamGroups : []
+  }
+})
+
+
 const availablePermissionOptions = computed(() => permissionOptionsByRole[managedUserForm.role] || [])
 const summaryCards = computed(() =>
   summaryKeyOrder.map((key) => ({
@@ -538,6 +560,15 @@ async function loadManagedUsers() {
     managedUsersLoading.value = false
   }
 }
+
+watch(() => managedUserForm.examCategoryCode, () => {
+  if (managedUserForm.jointExamGroupCode) {
+    const group = availableJointExamGroups.value.find(g => g.jointExamGroupCode === managedUserForm.jointExamGroupCode)
+    if (!group) {
+      managedUserForm.jointExamGroupCode = ''
+    }
+  }
+})
 
 async function loadControlCenter() {
   loading.value = true
@@ -908,17 +939,31 @@ onMounted(() => {
             </el-col>
             <el-col :span="12">
               <el-form-item label="学科门类">
-                <el-input v-model="managedUserForm.examCategoryCode" />
+                <el-select v-model="managedUserForm.examCategoryCode" style="width: 100%" placeholder="请选择学科门类" clearable>
+                  <el-option
+                    v-for="category in availableExamCategories"
+                    :key="category.examCategoryCode"
+                    :label="category.examCategoryName"
+                    :value="category.examCategoryCode"
+                  />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="联考专业组">
-                <el-input v-model="managedUserForm.jointExamGroupCode" />
+                <el-select v-model="managedUserForm.jointExamGroupCode" style="width: 100%" placeholder="请选择联考专业组" clearable>
+                  <el-option
+                    v-for="group in availableJointExamGroups"
+                    :key="group.jointExamGroupCode"
+                    :label="group.jointExamGroupName"
+                    :value="group.jointExamGroupCode"
+                  />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="高职专业">
-                <el-input v-model="managedUserForm.vocationalMajor" />
+                <el-input v-model="managedUserForm.vocationalMajor" placeholder="请输入高职专业" />
               </el-form-item>
             </el-col>
             <el-col :span="12">

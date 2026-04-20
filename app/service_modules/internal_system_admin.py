@@ -78,7 +78,7 @@ class InternalSystemAdminServiceMixin:
             "teacherCount": len([item for item in directory if item["role"] == ROLE_TEACHER]),
             "disabledCount": len([item for item in directory if not item.get("enabled", True)]),
             "messageCount": len(self._system_messages()),
-            "templateCount": len(self._paper_templates()),
+            "templateCount": len(self._syllabus_versions()),
         }
 
     def _save_system_settings_value(self, settings: Dict[str, object]) -> None:
@@ -260,7 +260,6 @@ class InternalSystemAdminServiceMixin:
 
     def _student_import_header(self) -> List[str]:
         return [
-            "userId",
             "name",
             "mobile",
             "examCategoryCode",
@@ -280,8 +279,10 @@ class InternalSystemAdminServiceMixin:
         if len(parsed_rows) < 2:
             raise validation_failed("批量导入至少需要表头和一行数据。")
         header = parsed_rows[0]
-        if header != self._student_import_header():
-            raise validation_failed("导入模板字段必须为 userId,name,mobile,examCategoryCode,jointExamGroupCode,vocationalMajor,prepStage。")
+        # 支持两种格式：旧格式（带userId）和新格式（不带userId）
+        expected_with_userid = ["userId"] + self._student_import_header()
+        if header != self._student_import_header() and header != expected_with_userid:
+            raise validation_failed("导入模板字段必须为 name,mobile,examCategoryCode,jointExamGroupCode,vocationalMajor,prepStage（或旧格式带userId）。")
         return parsed_rows
 
     def _parse_student_import_row(
@@ -292,11 +293,20 @@ class InternalSystemAdminServiceMixin:
         batch_user_ids: set[str],
         batch_mobiles: set[str],
     ) -> Tuple[Optional[Dict[str, str]], Optional[Dict[str, object]]]:
-        if len(values) != len(expected):
+        # 支持两种格式：旧格式（带userId）和新格式（不带userId）
+        expected_with_userid = ["userId"] + expected
+        if len(values) != len(expected) and len(values) != len(expected_with_userid):
             return None, self._build_import_error_detail(index, "FIELD_COUNT_INVALID", f"第 {index} 行字段数不正确。")
-        row = dict(zip(expected, values))
-        if row["userId"] in batch_user_ids:
-            return None, self._build_import_error_detail(index, "USER_ID_DUPLICATED", f"第 {index} 行导入失败：userId 重复。")
+        
+        # 判断是哪种格式
+        if len(values) == len(expected_with_userid):
+            row = dict(zip(expected_with_userid, values))
+            if row["userId"] in batch_user_ids:
+                return None, self._build_import_error_detail(index, "USER_ID_DUPLICATED", f"第 {index} 行导入失败：userId 重复。")
+        else:
+            row = dict(zip(expected, values))
+            # 新格式不提供userId，后续会自动生成
+        
         if row["mobile"] in batch_mobiles:
             return None, self._build_import_error_detail(index, "MOBILE_DUPLICATED", f"第 {index} 行导入失败：mobile 重复。")
         return row, None

@@ -544,11 +544,13 @@ class SystemServiceMixin:
                 ).model_dump()
                 self._assert_student_account_scope(user, actor)
                 self._validate_managed_user_payload(user)
-                existing = next((item for item in managed_users if item["userId"] == user["userId"]), None)
+                existing = None
+                if "userId" in row and row["userId"]:
+                    existing = next((item for item in managed_users if item["userId"] == user["userId"]), None)
                 self._assert_managed_user_mobile_unique(managed_users, user)
                 saved_user = self._prepare_managed_user_for_save(user, existing)
                 managed_users = self._upsert_managed_user_list(managed_users, saved_user, existing)
-                batch_user_ids.add(row["userId"])
+                batch_user_ids.add(saved_user["userId"])
                 batch_mobiles.add(row["mobile"])
                 imported_users.append(saved_user)
             except Exception as exc:

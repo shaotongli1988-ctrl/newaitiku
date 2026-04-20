@@ -33,8 +33,8 @@ const managedUserQuery = reactive({
 })
 const importForm = reactive({
   csvText: [
-    'userId,name,mobile,examCategoryCode,jointExamGroupCode,vocationalMajor,prepStage',
-    'student-003,管理考生,13800000007,MANAGEMENT,MANAGEMENT_1,财经商贸类,基础阶段',
+    'name,mobile,examCategoryCode,jointExamGroupCode,vocationalMajor,prepStage',
+    '管理考生,13800000007,MANAGEMENT,MANAGEMENT_1,财经商贸类,基础阶段',
   ].join('\n'),
 })
 
