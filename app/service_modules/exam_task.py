@@ -57,12 +57,12 @@ class ExamTaskServiceMixin:
         students_by_id: Dict[str, Dict[str, object]] = {}
         for class_id in class_ids:
             for student in self._list_teacher_students_for_class(class_id, actor):
-                student_user_id = str(student.get("userId", "")).strip()
+                student_user_id = str(student.get("studentUserId", student.get("userId", ""))).strip()
                 if not student_user_id:
                     continue
                 students_by_id[student_user_id] = {
                     "studentUserId": student_user_id,
-                    "studentName": str(student.get("name", "")).strip() or str(student.get("studentName", "")).strip() or student_user_id,
+                    "studentName": str(student.get("studentName", student.get("name", ""))).strip() or student_user_id,
                     "classId": str(student.get("classId", "")).strip(),
                     "className": str(student.get("className", "")).strip(),
                 }
