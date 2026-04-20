@@ -240,6 +240,22 @@ const sessionState = reactive({
 
 const aiMarking = useAiMarking()
 
+// 立即重置所有loading状态，防止转圈按钮卡死
+savingAnswer.value = false
+submittingPractice.value = false
+mockExamSubmittingPaper.value = false
+aiMarking.loading.value = false
+aiMarking.stopPolling()
+
+// 使用nextTick确保在DOM更新后再次重置，防止状态残留
+nextTick(() => {
+  savingAnswer.value = false
+  submittingPractice.value = false
+  mockExamSubmittingPaper.value = false
+  aiMarking.loading.value = false
+  aiMarking.stopPolling()
+})
+
 const knowledgeCascaderProps = {
   value: 'value',
   label: 'label',
@@ -1926,7 +1942,7 @@ async function persistAnswer(questionId, answerValue) {
         elapsedSec: currentElapsedSec(),
         sourceType: isFreeModule.value ? 'FREE_PRACTICE' : 'CHAPTER_CHALLENGE',
         assignmentId: toText(route.query.assignmentId),
-        attemptId: createAttemptId(isFreeModule.value ? 'free' : 'chapter'),
+        attemptKey: createAttemptId(isFreeModule.value ? 'free' : 'chapter'),
       },
     )
     sessionState.answeredCount = Number(submitResult?.answeredCount || answeredQuestionCount.value)
@@ -1965,7 +1981,7 @@ async function persistMockAnswer(questionId, answerValue) {
       answer: normalizedAnswer,
       elapsedSec: currentElapsedSec(),
       sourceType: 'MOCK_EXAM',
-      attemptId: createAttemptId('mock'),
+      attemptKey: createAttemptId('mock'),
     })
     const submitResult = response?.data || response || {}
     sessionState.answeredCount = answeredQuestionCount.value
@@ -1998,11 +2014,12 @@ async function onAnswerChange(nextValue) {
     await persistMockAnswer(activeQuestionId.value, nextValue)
     return
   }
-  await persistAnswer(activeQuestionId.value, nextValue)
+  // 章节闯关和自由练习：只保存选择，不自动提交，等用户点击按钮再提交
 }
 
 function toPreviousQuestion() {
   activeQuestionIndex.value = Math.max(0, activeQuestionIndex.value - 1)
+  resetLoadingStates()
   if (isMockModule.value) {
     persistMockExamDraft(true)
   }
@@ -2010,6 +2027,7 @@ function toPreviousQuestion() {
 
 function toNextQuestion() {
   activeQuestionIndex.value = Math.min(questionRows.value.length - 1, activeQuestionIndex.value + 1)
+  resetLoadingStates()
   if (isMockModule.value) {
     persistMockExamDraft(true)
   }
@@ -2017,6 +2035,7 @@ function toNextQuestion() {
 
 function jumpToQuestion(index) {
   activeQuestionIndex.value = Math.max(0, Math.min(questionRows.value.length - 1, Number(index || 0)))
+  resetLoadingStates()
   if (isMockModule.value) {
     persistMockExamDraft(true)
   }
@@ -2370,8 +2389,18 @@ function startMockExamCountdown() {
   }, 1000)
 }
 
+function resetLoadingStates() {
+  // 重置所有loading相关状态，确保按钮不会一直转圈
+  savingAnswer.value = false
+  submittingPractice.value = false
+  mockExamSubmittingPaper.value = false
+  aiMarking.loading.value = false
+  aiMarking.stopPolling()
+}
+
 onMounted(() => {
   practiceRouteActive.value = true
+  resetLoadingStates()
   initializePage()
   installMockExamE2EHooks()
   startMockExamCountdown()
@@ -2402,6 +2431,15 @@ watch(
   () => route.path,
   () => {
     practiceRouteActive.value = true
+    resetLoadingStates()
+  },
+)
+
+watch(
+  () => activeQuestionIndex.value,
+  () => {
+    // 切换题目时重置所有loading状态，确保按钮不会一直转圈
+    resetLoadingStates()
   },
 )
 
@@ -2900,8 +2938,12 @@ watch(
             <el-button :disabled="activeQuestionIndex >= questionRows.length - 1" @click="toNextQuestion">下一题</el-button>
             <el-button
               type="primary"
-              :disabled="mockExamPaused || isMockExamSubmitted"
-              :loading="submittingPractice || savingAnswer || mockExamSubmittingPaper || (isChapterModule && aiMarking.loading)"
+              class="submit-practice-btn"
+              :disabled="
+                mockExamPaused || 
+                isMockExamSubmitted || 
+                (isChapterModule && activeQuestionIndex < questionRows.length - 1)
+              "
               @click="submitCurrentPractice"
             >
               {{ isChapterModule ? '提交并 AI 批改' : '确认本题' }}
@@ -4212,6 +4254,25 @@ watch(
   margin-top: 20px;
   padding-top: 18px;
   border-top: 1px solid rgba(226, 232, 240, 0.92);
+}
+
+/* 修改提交按钮的hover效果，避免变白导致字看不清 */
+.practice-actions :deep(.submit-practice-btn.el-button--primary:hover) {
+  background-color: #e5e7eb !important;
+  border-color: #e5e7eb !important;
+  color: #1f2937 !important;
+}
+
+.practice-actions :deep(.submit-practice-btn.el-button--primary:not(:disabled):hover) {
+  background-color: #e5e7eb !important;
+  border-color: #e5e7eb !important;
+  color: #1f2937 !important;
+}
+
+.practice-actions :deep(.submit-practice-btn.el-button--primary:focus-visible) {
+  background-color: #e5e7eb !important;
+  border-color: #e5e7eb !important;
+  color: #1f2937 !important;
 }
 
 .ai-progress-card p {

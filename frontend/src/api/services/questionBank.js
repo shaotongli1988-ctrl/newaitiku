@@ -2872,13 +2872,14 @@ export async function updateStudentSessionAnswer(sessionId, questionId, payload 
   const elapsed_sec = Number(payload.elapsedSec || 0)
   const answered_count = Number(payload.answeredCount || 0)
   const sourceType = normalize_string(payload.sourceType)
-  const attemptId = normalize_string(payload.attemptId || payload.attemptKey || payload.submissionId)
+  const attemptKey = normalize_string(payload.attemptKey || payload.attemptId || payload.submissionId)
 
   const answer_response = await submitPracticeAnswer(questionId, {
     answer: normalized_answer,
     elapsedSec: Number.isFinite(elapsed_sec) ? Math.max(0, elapsed_sec) : 0,
     sourceType: sourceType,
-    attemptId,
+    assignmentId: normalize_string(payload.assignmentId || ''),
+    attemptKey,
   })
 
   const session_response = await submitStudentSession({
