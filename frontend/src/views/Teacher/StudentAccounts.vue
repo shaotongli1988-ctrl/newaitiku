@@ -575,6 +575,13 @@ h3 {
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(2, minmax(320px, 1fr));
+  /* 防止下拉菜单被裁剪 */
+  overflow: visible;
+}
+
+/* 确保卡片容器不会裁剪下拉菜单 */
+.content-grid .el-card {
+  overflow: visible;
 }
 
 .card-header {
@@ -692,5 +699,19 @@ h3 {
   background-color: #f5f7fa !important;
   border-color: #dcdfe6 !important;
   color: #606266 !important;
+}
+
+/* 修复下拉菜单被遮挡问题 */
+:deep(.el-select) {
+  position: relative;
+  z-index: 10;
+}
+
+:deep(.el-select-dropdown) {
+  z-index: 9999 !important;
+}
+
+:deep(.el-popper) {
+  z-index: 9999 !important;
 }
 </style>
