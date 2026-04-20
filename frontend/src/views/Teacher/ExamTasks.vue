@@ -88,6 +88,17 @@ function statusTagType(value) {
   }[toText(value)] || 'info'
 }
 
+function subjectCodeToName(subjectCode) {
+  const code = toText(subjectCode)
+  const subjectMap = {
+    'ARTS_HISTORY_FOUNDATION': '文史基础',
+    'MODERN_CHINESE_HISTORY_OUTLINE': '中国近现代史纲要',
+    'NEW_MEDIA_INTRO': '新媒体概论',
+    'FOREIGN_LANGUAGE_COMPREHENSIVE': '外语专业综合',
+  }
+  return subjectMap[code] || code
+}
+
 const sourceFieldLabel = computed(() => {
   const taskType = toText(form.task_type)
   if (taskType === 'PAPER') {
@@ -279,15 +290,23 @@ async function loadSourceResourceOptions() {
 async function loadRows() {
   loading.value = true
   try {
+    console.log('开始加载考试任务，筛选条件:', filters)
     const response = await listExamTasks({
       page: 1,
       size: 100,
       status: filters.status,
       taskType: filters.taskType,
     })
+    console.log('API 原始响应:', response)
     const payload = normalizePage(response)
+    console.log('处理后的数据:', payload)
+    console.log('payload.items:', payload?.items)
+    console.log('payload.items 是否为数组:', Array.isArray(payload?.items))
+    console.log('payload.items 长度:', payload?.items?.length)
     rows.value = Array.isArray(payload?.items) ? payload.items : []
+    console.log('最终 rows.value:', rows.value)
   } catch (error) {
+    console.error('加载考试任务时出错:', error)
     ElMessage.error(String(error?.response?.data?.message || error?.message || '考试任务列表加载失败'))
     rows.value = []
   } finally {
@@ -457,31 +476,45 @@ watch(
       </el-select>
     </section>
 
-    <el-table :data="rows" border stripe empty-text="暂时还没有考试任务">
-      <el-table-column prop="taskName" label="任务名称" min-width="220" />
-      <el-table-column label="任务类型" min-width="120">
-        <template #default="{ row }">
-          {{ taskTypeLabel(row.taskType) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="状态" width="120">
-        <template #default="{ row }">
-          <el-tag :type="statusTagType(row.status)" effect="light">{{ statusLabel(row.status) }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="subjectCode" label="科目" min-width="140" />
-      <el-table-column prop="dueAt" label="截止时间" min-width="180">
-        <template #default="{ row }">
-          {{ formatDateTime(row.dueAt) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="发布对象" min-width="180">
-        <template #default="{ row }">
-          {{ Number(row?.assignmentSummary?.total || 0) }} 名学生 / {{ Number(row?.targets?.length || 0) }} 个目标
-        </template>
-      </el-table-column>
-      <el-table-column prop="teacherName" label="老师" min-width="120" />
-    </el-table>
+    <!-- 考试任务列表 -->
+    <div class="exam-tasks-list">
+      <div class="list-header">
+        <h3 class="list-title">查询结果列表</h3>
+      </div>
+      <div v-if="rows.length === 0" class="empty-state">
+        <p>暂时还没有考试任务</p>
+      </div>
+      <div v-else class="tasks-container">
+        <!-- 表头 -->
+        <div class="task-row task-header-row">
+          <div class="task-col col-index">序号</div>
+          <div class="task-col col-name">任务名称</div>
+          <div class="task-col col-type">任务类型</div>
+          <div class="task-col col-subject">考试科目</div>
+          <div class="task-col col-status">状态</div>
+        </div>
+        <!-- 数据行 -->
+        <div class="task-card" v-for="(task, index) in rows" :key="task.id">
+          <div class="task-row">
+            <div class="task-col col-index">
+              <span>{{ index + 1 }}</span>
+            </div>
+            <div class="task-col col-name">
+              <div class="task-name">{{ task.taskName }}</div>
+            </div>
+            <div class="task-col col-type">
+              <span class="type-badge">{{ taskTypeLabel(task.taskType) }}</span>
+            </div>
+            <div class="task-col col-subject">
+              {{ subjectCodeToName(task.subjectCode) }}
+            </div>
+            <div class="task-col col-status">
+              <el-tag :type="statusTagType(task.status)" effect="light" size="small">{{ statusLabel(task.status) }}</el-tag>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <el-dialog v-model="createDialogVisible" title="新建考试任务" width="720px" @closed="resetForm">
       <div class="teacher-exam-task-form">
@@ -621,11 +654,139 @@ watch(
   gap: 16px;
 }
 
+/* 考试任务列表样式 */
+.exam-tasks-list {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.list-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  background: #fafafa;
+}
+
+.list-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.empty-state {
+  padding: 48px;
+  text-align: center;
+  color: #9ca3af;
+}
+
+.tasks-container {
+  padding: 0;
+}
+
+/* 表头样式 */
+.task-header-row {
+  background: #f9fafb;
+  font-weight: 600;
+  font-size: 13px;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+/* 任务行样式 */
+.task-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s ease;
+}
+
+.task-card:hover .task-row {
+  background-color: #f9fafb;
+}
+
+/* 列样式 */
+.task-col {
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+}
+
+.col-index {
+  width: 60px;
+  min-width: 60px;
+  flex-shrink: 0;
+  justify-content: center;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.col-name {
+  flex: 2;
+  min-width: 0;
+}
+
+.task-name {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.col-type {
+  flex: 1;
+  min-width: 100px;
+  justify-content: center;
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 100px;
+}
+
+.col-subject {
+  flex: 1;
+  min-width: 120px;
+  font-size: 14px;
+  color: #374151;
+  justify-content: center;
+}
+
+.col-status {
+  flex: 1;
+  min-width: 80px;
+  justify-content: center;
+}
+
 @media (max-width: 768px) {
   .teacher-exam-task-page__hero,
   .teacher-exam-task-page__filters,
   .teacher-exam-task-form__grid {
     display: grid;
+  }
+  
+  .task-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .col-index,
+  .col-name,
+  .col-type,
+  .col-subject,
+  .col-status {
+    flex: 1 1 100%;
+    min-width: 100%;
+    justify-content: flex-start;
   }
 }
 </style>
