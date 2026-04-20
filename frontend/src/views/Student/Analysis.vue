@@ -973,8 +973,8 @@ async function loadKnowledgeTree(subjectCode, subjectId = '') {
   try {
     const response = await knowledgeTreeV2({
       status: 'ENABLED',
-      subject_code: normalizedSubjectCode,
-      subject_id: normalizedSubjectId,
+      subjectCode: normalizedSubjectCode,
+      subjectId: normalizedSubjectId,
     })
     currentTreePayload.value = buildKnowledgeSelectorState(unwrapData(response) || {})
     selectedSubjectCode.value = normalizedSubjectCode

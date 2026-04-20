@@ -453,7 +453,7 @@ async function loadWeakKnowledgeSnapshot() {
       try {
         const response = await knowledgeTreeV2({
           status: 'ENABLED',
-          subject_code: subjectCode,
+          subjectCode: subjectCode,
         })
         const payload = response?.data || response || {}
         nextGraphPayloadBySubject[subjectCode] = {

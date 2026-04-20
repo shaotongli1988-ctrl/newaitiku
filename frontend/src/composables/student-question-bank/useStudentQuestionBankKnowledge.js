@@ -72,7 +72,7 @@ export function useStudentQuestionBankKnowledge({
     try {
       const response = await fetchKnowledgeTree({
         status: 'ENABLED',
-        subject_code: effectiveSubjectCode.value,
+        subjectCode: effectiveSubjectCode.value,
       })
       const selectorState = buildKnowledgeSelectorState(response?.data || response || {})
       const levelTreeState = buildKnowledgeLevelTreeState(selectorState, { startLevel: 3, endLevel: 5 })

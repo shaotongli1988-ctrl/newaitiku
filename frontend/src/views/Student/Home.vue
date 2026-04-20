@@ -1012,7 +1012,7 @@ async function fetchSubjectInsightMetric(subjectItem = {}) {
   try {
     const response = await knowledgeTreeV2({
       status: 'ENABLED',
-      subject_code: subjectItem.subjectCode,
+      subjectCode: subjectItem.subjectCode,
     })
     const payload = response?.data || response || {}
     const graphIndex = buildKnowledgeGraphIndex(payload)

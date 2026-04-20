@@ -1538,7 +1538,7 @@ async function loadKnowledgeFilterTree() {
   try {
     const response = await knowledgeTreeV2({
       status: 'ENABLED',
-      subject_code: practiceSubjectCode.value,
+      subjectCode: practiceSubjectCode.value,
     })
     const selectorState = buildKnowledgeSelectorState(response?.data || response || {})
     const preciseLevelTreeState = buildKnowledgeLevelTreeState(selectorState, {
