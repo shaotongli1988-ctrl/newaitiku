@@ -165,8 +165,8 @@ const studentSubjectScope = computed(() => {
   })
 })
 
-const navigationItems = computed(() =>
-  router
+const navigationItems = computed(() => {
+  const items = router
     .getRoutes()
     .filter((routeItem) => typeof routeItem.meta?.navTitle === 'string' && routeItem.path.startsWith('/'))
     .filter((routeItem) => !(isStudentEntry.value && routeItem.path === '/messages'))
@@ -189,8 +189,25 @@ const navigationItems = computed(() =>
         requiredPermissions: routeItem.requiredPermissions,
       }).allowed,
     )
-    .sort((leftItem, rightItem) => leftItem.navOrder - rightItem.navOrder),
-)
+
+  if (userStore.role === 'super_admin') {
+    const modulesToHide = [
+      '/admin/syllabus', // 大纲仓库
+      '/teacher/home', // 教师工作台
+      '/teacher/student-accounts', // 学生账号
+      '/teacher/questions', // 题库管理
+      '/teacher/content-system', // 内容体系
+      '/teacher/papers', // 组卷中心
+      '/teacher/exam-tasks', // 考试任务
+      '/teacher/analytics', // 学情管理
+      '/teacher/knowledge', // 知识点管理
+    ]
+    return items.filter((item) => !modulesToHide.includes(item.path))
+  }
+
+  return items.sort((leftItem, rightItem) => leftItem.navOrder - rightItem.navOrder)
+})
+
 
 const practiceSubNavigationItems = computed(() => {
   const rows = [

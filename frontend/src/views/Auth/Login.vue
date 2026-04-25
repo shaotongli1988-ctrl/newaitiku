@@ -143,6 +143,54 @@ async function submitLogin() {
 
 <template>
   <section class="login-shell">
+    <div class="water-ripples">
+      <div class="ripple ripple-1"></div>
+      <div class="ripple ripple-2"></div>
+      <div class="ripple ripple-3"></div>
+    </div>
+    <div class="willow-tree willow-right">
+      <div class="branch branch-1">
+        <div class="leaf leaf-1"></div>
+        <div class="leaf leaf-2"></div>
+        <div class="leaf leaf-3"></div>
+      </div>
+      <div class="branch branch-2">
+        <div class="leaf leaf-4"></div>
+        <div class="leaf leaf-5"></div>
+        <div class="leaf leaf-6"></div>
+      </div>
+      <div class="branch branch-3">
+        <div class="leaf leaf-7"></div>
+        <div class="leaf leaf-8"></div>
+        <div class="leaf leaf-9"></div>
+      </div>
+    </div>
+    <div class="willow-tree willow-left">
+      <div class="branch branch-left-1">
+        <div class="leaf leaf-left-1"></div>
+        <div class="leaf leaf-left-2"></div>
+        <div class="leaf leaf-left-3"></div>
+        <div class="leaf leaf-left-4"></div>
+      </div>
+      <div class="branch branch-left-2">
+        <div class="leaf leaf-left-5"></div>
+        <div class="leaf leaf-left-6"></div>
+        <div class="leaf leaf-left-7"></div>
+        <div class="leaf leaf-left-8"></div>
+      </div>
+      <div class="branch branch-left-3">
+        <div class="leaf leaf-left-9"></div>
+        <div class="leaf leaf-left-10"></div>
+        <div class="leaf leaf-left-11"></div>
+        <div class="leaf leaf-left-12"></div>
+      </div>
+      <div class="branch branch-left-4">
+        <div class="leaf leaf-left-13"></div>
+        <div class="leaf leaf-left-14"></div>
+        <div class="leaf leaf-left-15"></div>
+        <div class="leaf leaf-left-16"></div>
+      </div>
+    </div>
     <article class="login-card">
       <header>
         <h2>账号登录</h2>
@@ -170,7 +218,6 @@ async function submitLogin() {
         <el-button type="primary" :loading="submitting" @click="submitLogin">登录并继续</el-button>
       </el-form>
     </article>
-
   </section>
 </template>
 
@@ -178,10 +225,451 @@ async function submitLogin() {
 .login-shell {
   min-height: 100vh;
   padding: 24px;
-  display: grid;
-  gap: 16px;
-  align-content: start;
-  background: linear-gradient(180deg, var(--qb-primary-soft-bg) 0%, var(--qb-primary-soft-bg) 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--qb-primary-soft-bg) 0%, var(--qb-primary-soft-bg) 100%);
+}
+
+.water-ripples {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(96, 165, 250, 0.15);
+  animation: ripple-effect 4s infinite;
+}
+
+.ripple-1 {
+  width: 400px;
+  height: 400px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 0s;
+}
+
+.ripple-2 {
+  width: 600px;
+  height: 600px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 1s;
+}
+
+.ripple-3 {
+  width: 800px;
+  height: 800px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 2s;
+}
+
+@keyframes ripple-effect {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
+}
+
+.willow-tree {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.willow-right {
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 500px;
+}
+
+.willow-left {
+  top: 0;
+  left: 0;
+  width: 500px;
+  height: 100%;
+}
+
+.branch {
+  position: absolute;
+  width: 3px;
+  background: linear-gradient(180deg, #8B7355 0%, #A0926C 100%);
+  border-radius: 2px;
+  transform-origin: top center;
+}
+
+.branch-1 {
+  top: 20px;
+  right: 280px;
+  height: 200px;
+  transform: rotate(15deg);
+  animation: branch-sway-1 4s ease-in-out infinite;
+}
+
+.branch-2 {
+  top: 40px;
+  right: 200px;
+  height: 250px;
+  transform: rotate(5deg);
+  animation: branch-sway-2 5s ease-in-out infinite;
+}
+
+.branch-3 {
+  top: 60px;
+  right: 120px;
+  height: 220px;
+  transform: rotate(-5deg);
+  animation: branch-sway-3 4.5s ease-in-out infinite;
+}
+
+.branch-left-1 {
+  top: 80px;
+  left: 100px;
+  height: 280px;
+  transform: rotate(-20deg);
+  animation: branch-left-sway-1 5s ease-in-out infinite;
+}
+
+.branch-left-2 {
+  top: 150px;
+  left: 80px;
+  height: 320px;
+  transform: rotate(-10deg);
+  animation: branch-left-sway-2 5.5s ease-in-out infinite;
+}
+
+.branch-left-3 {
+  top: 220px;
+  left: 60px;
+  height: 260px;
+  transform: rotate(5deg);
+  animation: branch-left-sway-3 4.8s ease-in-out infinite;
+}
+
+.branch-left-4 {
+  top: 300px;
+  left: 90px;
+  height: 200px;
+  transform: rotate(15deg);
+  animation: branch-left-sway-4 4.2s ease-in-out infinite;
+}
+
+@keyframes branch-sway-1 {
+  0%, 100% {
+    transform: rotate(15deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+}
+
+@keyframes branch-sway-2 {
+  0%, 100% {
+    transform: rotate(5deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes branch-sway-3 {
+  0%, 100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(-10deg);
+  }
+}
+
+@keyframes branch-left-sway-1 {
+  0%, 100% {
+    transform: rotate(-20deg);
+  }
+  50% {
+    transform: rotate(-15deg);
+  }
+}
+
+@keyframes branch-left-sway-2 {
+  0%, 100% {
+    transform: rotate(-10deg);
+  }
+  50% {
+    transform: rotate(-5deg);
+  }
+}
+
+@keyframes branch-left-sway-3 {
+  0%, 100% {
+    transform: rotate(5deg);
+  }
+  50% {
+    transform: rotate(10deg);
+  }
+}
+
+@keyframes branch-left-sway-4 {
+  0%, 100% {
+    transform: rotate(15deg);
+  }
+  50% {
+    transform: rotate(20deg);
+  }
+}
+
+.leaf {
+  position: absolute;
+  width: 20px;
+  height: 8px;
+  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+  border-radius: 50% 0 50% 50%;
+  transform-origin: left center;
+}
+
+.leaf-1 {
+  top: 50px;
+  left: -8px;
+  transform: rotate(-30deg);
+  animation: leaf-sway-1 3s ease-in-out infinite;
+}
+
+.leaf-2 {
+  top: 100px;
+  left: -5px;
+  transform: rotate(-45deg);
+  animation: leaf-sway-2 3.5s ease-in-out infinite;
+}
+
+.leaf-3 {
+  top: 150px;
+  left: -10px;
+  transform: rotate(-25deg);
+  animation: leaf-sway-3 2.8s ease-in-out infinite;
+}
+
+.leaf-4 {
+  top: 60px;
+  left: -6px;
+  transform: rotate(-35deg);
+  animation: leaf-sway-1 3.2s ease-in-out infinite;
+}
+
+.leaf-5 {
+  top: 120px;
+  left: -8px;
+  transform: rotate(-40deg);
+  animation: leaf-sway-2 3.8s ease-in-out infinite;
+}
+
+.leaf-6 {
+  top: 180px;
+  left: -5px;
+  transform: rotate(-30deg);
+  animation: leaf-sway-3 3s ease-in-out infinite;
+}
+
+.leaf-7 {
+  top: 70px;
+  left: -7px;
+  transform: rotate(-25deg);
+  animation: leaf-sway-1 2.9s ease-in-out infinite;
+}
+
+.leaf-8 {
+  top: 130px;
+  left: -9px;
+  transform: rotate(-35deg);
+  animation: leaf-sway-2 3.3s ease-in-out infinite;
+}
+
+.leaf-9 {
+  top: 170px;
+  left: -6px;
+  transform: rotate(-28deg);
+  animation: leaf-sway-3 3.6s ease-in-out infinite;
+}
+
+.leaf-left-1 {
+  top: 60px;
+  right: -10px;
+  transform: rotate(25deg);
+  animation: leaf-left-sway-1 2.8s ease-in-out infinite;
+}
+
+.leaf-left-2 {
+  top: 120px;
+  right: -8px;
+  transform: rotate(35deg);
+  animation: leaf-left-sway-2 3.2s ease-in-out infinite;
+}
+
+.leaf-left-3 {
+  top: 180px;
+  right: -12px;
+  transform: rotate(20deg);
+  animation: leaf-left-sway-3 3s ease-in-out infinite;
+}
+
+.leaf-left-4 {
+  top: 240px;
+  right: -6px;
+  transform: rotate(40deg);
+  animation: leaf-left-sway-1 3.5s ease-in-out infinite;
+}
+
+.leaf-left-5 {
+  top: 70px;
+  right: -9px;
+  transform: rotate(30deg);
+  animation: leaf-left-sway-2 2.9s ease-in-out infinite;
+}
+
+.leaf-left-6 {
+  top: 140px;
+  right: -11px;
+  transform: rotate(45deg);
+  animation: leaf-left-sway-3 3.3s ease-in-out infinite;
+}
+
+.leaf-left-7 {
+  top: 210px;
+  right: -7px;
+  transform: rotate(28deg);
+  animation: leaf-left-sway-1 3.6s ease-in-out infinite;
+}
+
+.leaf-left-8 {
+  top: 270px;
+  right: -10px;
+  transform: rotate(38deg);
+  animation: leaf-left-sway-2 3.1s ease-in-out infinite;
+}
+
+.leaf-left-9 {
+  top: 50px;
+  right: -8px;
+  transform: rotate(22deg);
+  animation: leaf-left-sway-3 3.4s ease-in-out infinite;
+}
+
+.leaf-left-10 {
+  top: 110px;
+  right: -11px;
+  transform: rotate(32deg);
+  animation: leaf-left-sway-1 2.7s ease-in-out infinite;
+}
+
+.leaf-left-11 {
+  top: 170px;
+  right: -9px;
+  transform: rotate(42deg);
+  animation: leaf-left-sway-2 3.7s ease-in-out infinite;
+}
+
+.leaf-left-12 {
+  top: 230px;
+  right: -7px;
+  transform: rotate(26deg);
+  animation: leaf-left-sway-3 3.0s ease-in-out infinite;
+}
+
+.leaf-left-13 {
+  top: 40px;
+  right: -10px;
+  transform: rotate(33deg);
+  animation: leaf-left-sway-1 3.2s ease-in-out infinite;
+}
+
+.leaf-left-14 {
+  top: 90px;
+  right: -8px;
+  transform: rotate(43deg);
+  animation: leaf-left-sway-2 2.9s ease-in-out infinite;
+}
+
+.leaf-left-15 {
+  top: 140px;
+  right: -12px;
+  transform: rotate(24deg);
+  animation: leaf-left-sway-3 3.5s ease-in-out infinite;
+}
+
+.leaf-left-16 {
+  top: 180px;
+  right: -6px;
+  transform: rotate(37deg);
+  animation: leaf-left-sway-1 3.1s ease-in-out infinite;
+}
+
+@keyframes leaf-sway-1 {
+  0%, 100% {
+    transform: rotate(-30deg) translateX(0);
+  }
+  50% {
+    transform: rotate(-25deg) translateX(5px);
+  }
+}
+
+@keyframes leaf-sway-2 {
+  0%, 100% {
+    transform: rotate(-45deg) translateX(0);
+  }
+  50% {
+    transform: rotate(-40deg) translateX(4px);
+  }
+}
+
+@keyframes leaf-sway-3 {
+  0%, 100% {
+    transform: rotate(-25deg) translateX(0);
+  }
+  50% {
+    transform: rotate(-20deg) translateX(6px);
+  }
+}
+
+@keyframes leaf-left-sway-1 {
+  0%, 100% {
+    transform: rotate(25deg) translateX(0);
+  }
+  50% {
+    transform: rotate(30deg) translateX(-5px);
+  }
+}
+
+@keyframes leaf-left-sway-2 {
+  0%, 100% {
+    transform: rotate(35deg) translateX(0);
+  }
+  50% {
+    transform: rotate(40deg) translateX(-4px);
+  }
+}
+
+@keyframes leaf-left-sway-3 {
+  0%, 100% {
+    transform: rotate(20deg) translateX(0);
+  }
+  50% {
+    transform: rotate(25deg) translateX(-6px);
+  }
 }
 
 .login-card {
@@ -190,6 +678,9 @@ async function submitLogin() {
   border-radius: 14px;
   background: var(--qb-bg-card);
   padding: 18px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
 }
 
 .login-card h2,
