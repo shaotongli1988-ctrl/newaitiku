@@ -194,7 +194,6 @@ async function submitLogin() {
     <article class="login-card">
       <header>
         <h2>账号登录</h2>
-        <p>登录后会自动跳转到你请求的业务页面。</p>
       </header>
 
       <el-form label-position="top" @submit.prevent>
@@ -691,5 +690,15 @@ async function submitLogin() {
 .login-card p {
   margin-top: 8px;
   color: var(--qb-text-subtle-7);
+}
+
+.login-card header {
+  margin-bottom: 10px;
+  padding-left: 15px;
+}
+
+.login-card :deep(.el-form-item__label) {
+  padding-left: 15px;
+  padding-bottom: 5px;
 }
 </style>
